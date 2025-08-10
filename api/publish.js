@@ -33,6 +33,9 @@ export default async function handler(req, res) {
   }
   
   try {
+    console.log('Request body type:', typeof req.body);
+    console.log('Request body:', req.body);
+    
     const { toolName: requestedName, metadata, files } = req.body;
     
     // Validate request

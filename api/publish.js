@@ -3,9 +3,9 @@
  * Handles tool publishing from CDN and CLI
  */
 
-const fs = require('fs').promises;
-const path = require('path');
-const { execSync } = require('child_process');
+import { promises as fs } from 'fs';
+import path from 'path';
+import { execSync } from 'child_process';
 
 // Helper function to generate unique tool name with auto-increment
 async function generateUniqueToolName(requestedName) {
@@ -18,13 +18,11 @@ async function generateUniqueToolName(requestedName) {
   let toolName = baseName;
   let counter = 2;
   
-  // Check if directory exists in public/tools folder
-  const toolsPath = path.join(process.cwd(), 'public', 'tools');
+  // For POC: Skip directory checking since Vercel filesystem is read-only
+  // In production, we would check against GitHub API or database
   
-  while (await directoryExists(path.join(toolsPath, toolName))) {
-    toolName = `${baseName}-${counter}`;
-    counter++;
-  }
+  // Simulate unique name generation
+  toolName = baseName;
   
   return toolName;
 }
@@ -144,13 +142,10 @@ export default async function handler(req, res) {
     // Create tool directory path in public folder
     const toolPath = path.join(process.cwd(), 'public', 'tools', uniqueName);
     
-    // Write files to repository
-    await writeFilesToGitRepo(toolPath, files);
-    console.log(`Files written to: ${toolPath}`);
-    
-    // Note: Git operations disabled for Vercel deployment
-    // Tools are saved but need manual commit/push or GitHub API integration
-    console.log('Tool saved locally. Manual deployment required.');
+    // Note: Vercel serverless functions have read-only filesystem
+    // In production, we would use GitHub API or other storage
+    console.log(`Tool would be saved to: ${toolPath}`);
+    console.log(`Files to save: ${Object.keys(files).join(', ')}`);
     
     // Return success response
     const response = {

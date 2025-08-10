@@ -2,8 +2,7 @@
 
 class ChatoolyHub {
     constructor() {
-        this.liveToolsGrid = document.getElementById('live-tools-grid');
-        this.stagingToolsGrid = document.getElementById('staging-tools-grid');
+        this.toolsGrid = document.getElementById('tools-grid');
         this.init();
     }
 
@@ -31,22 +30,82 @@ class ChatoolyHub {
 
     async loadTools() {
         try {
-            // Load live tools
-            const liveTools = await this.fetchTools('live');
-            this.renderTools(liveTools, this.liveToolsGrid);
-
-            // Load staging tools
-            const stagingTools = await this.fetchTools('staging');
-            this.renderTools(stagingTools, this.stagingToolsGrid);
+            // Load all tools
+            const tools = await this.fetchTools();
+            this.renderTools(tools, this.toolsGrid);
         } catch (error) {
             console.error('Error loading tools:', error);
+            this.toolsGrid.innerHTML = '<div class="no-tools">Error loading tools. Please try again later.</div>';
         }
     }
 
-    async fetchTools(environment) {
-        // In a real implementation, this would make API calls
-        // For now, return empty array as placeholder
-        return [];
+    async fetchTools() {
+        try {
+            // Use the catalog API to get all tools
+            const response = await fetch('/api/catalog');
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            const data = await response.json();
+            
+            return data.tools || [];
+        } catch (error) {
+            console.warn('Could not fetch tools from API, trying static discovery:', error);
+            
+            // Fallback: try to discover tools by making requests to known paths
+            return this.discoverToolsStatic();
+        }
+    }
+
+    async discoverToolsStatic() {
+        const knownTools = [
+            'test-api',
+            'windy-text',
+            'fisheye-tool'
+        ];
+        
+        const discoveredTools = [];
+        
+        for (const toolSlug of knownTools) {
+            try {
+                // Check if tool exists by trying to fetch its index.html
+                const response = await fetch(`/tools/${toolSlug}/index.html`, { method: 'HEAD' });
+                if (response.ok) {
+                    // Try to get metadata from chatooly-config.js if it exists
+                    const configResponse = await fetch(`/tools/${toolSlug}/js/chatooly-config.js`);
+                    let metadata = {
+                        name: toolSlug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                        description: 'A Chatooly design tool',
+                        author: 'Anonymous',
+                        category: 'tools',
+                        slug: toolSlug,
+                        createdAt: new Date().toISOString()
+                    };
+                    
+                    if (configResponse.ok) {
+                        try {
+                            const configText = await configResponse.text();
+                            // Extract metadata from config file (basic parsing)
+                            const nameMatch = configText.match(/name:\s*["']([^"']+)["']/);
+                            const descMatch = configText.match(/description:\s*["']([^"']+)["']/);
+                            const authorMatch = configText.match(/author:\s*["']([^"']+)["']/);
+                            
+                            if (nameMatch) metadata.name = nameMatch[1];
+                            if (descMatch) metadata.description = descMatch[1];
+                            if (authorMatch) metadata.author = authorMatch[1];
+                        } catch (e) {
+                            console.warn(`Could not parse config for ${toolSlug}:`, e);
+                        }
+                    }
+                    
+                    discoveredTools.push(metadata);
+                }
+            } catch (e) {
+                // Tool doesn't exist, continue
+            }
+        }
+        
+        return discoveredTools;
     }
 
     renderTools(tools, container) {
@@ -58,7 +117,7 @@ class ChatoolyHub {
         container.innerHTML = tools.map(tool => `
             <div class="tool-card">
                 <h3 class="tool-name">
-                    <a href="/tools/${tool.environment}/${tool.slug}" class="tool-link">
+                    <a href="/tools/${tool.slug}" class="tool-link">
                         ${tool.name}
                     </a>
                 </h3>
@@ -67,18 +126,21 @@ class ChatoolyHub {
                     <span class="tool-author">by ${tool.author}</span>
                     <span class="tool-category">${tool.category}</span>
                 </div>
+                <div class="tool-date">
+                    ${new Date(tool.createdAt).toLocaleDateString()}
+                </div>
             </div>
         `).join('');
     }
 
     addTool(tool) {
-        const container = tool.environment === 'live' ? this.liveToolsGrid : this.stagingToolsGrid;
+        const container = this.toolsGrid;
         
         const toolCard = document.createElement('div');
         toolCard.className = 'tool-card';
         toolCard.innerHTML = `
             <h3 class="tool-name">
-                <a href="/tools/${tool.environment}/${tool.slug}" class="tool-link">
+                <a href="/tools/${tool.slug}" class="tool-link">
                     ${tool.name}
                 </a>
             </h3>
@@ -86,6 +148,9 @@ class ChatoolyHub {
             <div class="tool-meta">
                 <span class="tool-author">by ${tool.author}</span>
                 <span class="tool-category">${tool.category}</span>
+            </div>
+            <div class="tool-date">
+                ${new Date(tool.createdAt).toLocaleDateString()}
             </div>
         `;
 

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Example Tool - Chatooly</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="tool-container">
+        <header>
+            <h1>Example Design Tool</h1>
+            <p>A simple example tool to demonstrate the Chatooly platform</p>
+        </header>
+        
+        <main class="tool-interface">
+            <div class="controls">
+                <label>
+                    Background Color:
+                    <input type="color" id="bgColor" value="#667eea">
+                </label>
+                <label>
+                    Text Color:
+                    <input type="color" id="textColor" value="#ffffff">
+                </label>
+                <label>
+                    Text Size:
+                    <input type="range" id="textSize" min="16" max="72" value="32">
+                    <span id="sizeValue">32px</span>
+                </label>
+                <label>
+                    Sample Text:
+                    <input type="text" id="sampleText" value="Hello Chatooly!" placeholder="Enter text...">
+                </label>
+            </div>
+            
+            <div class="preview" id="preview">
+                <div class="preview-text" id="previewText">Hello Chatooly!</div>
+            </div>
+            
+            <div class="export-controls">
+                <button id="exportBtn">Export as Image</button>
+            </div>
+        </main>
+    </div>
+    
+    <script src="tool.js"></script>
+</body>
+</html>

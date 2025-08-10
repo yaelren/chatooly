@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Tool Publishing</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        button:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        button:disabled {
+            background: #999;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background: #cfe2ff;
+            border: 1px solid #b6d4fe;
+            color: #084298;
+        }
+        .result a {
+            color: inherit;
+            font-weight: bold;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Test Tool Publishing</h1>
+        <p class="subtitle">Publish a simple test tool to Chatooly Hub</p>
+        
+        <div class="form-group">
+            <label for="toolName">Tool Name:</label>
+            <input type="text" id="toolName" value="my-awesome-tool" placeholder="Enter a unique tool name" />
+        </div>
+        
+        <button id="publishBtn" onclick="publishTool()">Publish Test Tool</button>
+        
+        <div id="result"></div>
+    </div>
+    
+    <script>
+        async function publishTool() {
+            const toolName = document.getElementById('toolName').value;
+            const resultDiv = document.getElementById('result');
+            const button = document.getElementById('publishBtn');
+            
+            if (!toolName) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = '❌ Please provide a tool name';
+                return;
+            }
+            
+            button.disabled = true;
+            resultDiv.className = 'result info';
+            resultDiv.innerHTML = '⏳ Publishing tool...<span class="loading"></span>';
+            
+            // Create a simple interactive tool
+            const toolHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${toolName} - Published Tool</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .tool-container {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 500px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-bottom: 20px;
+        }
+        p {
+            color: #666;
+            line-height: 1.6;
+        }
+        .timestamp {
+            color: #999;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+        .counter {
+            margin: 30px 0;
+        }
+        .count {
+            font-size: 48px;
+            font-weight: bold;
+            color: #667eea;
+            margin: 20px 0;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 0 5px;
+            transition: all 0.2s;
+        }
+        button:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <div class="badge">LIVE TOOL</div>
+        <h1>🎉 ${toolName}</h1>
+        <p>This tool was successfully published to Chatooly Hub!</p>
+        
+        <div class="counter">
+            <p>Interactive Counter Demo:</p>
+            <div class="count" id="count">0</div>
+            <button onclick="increment()">+ Increment</button>
+            <button onclick="decrement()">- Decrement</button>
+        </div>
+        
+        <p class="timestamp">Published at: <span id="time"></span></p>
+    </div>
+    <script>
+        document.getElementById('time').textContent = new Date().toLocaleString();
+        
+        let count = 0;
+        function increment() {
+            count++;
+            document.getElementById('count').textContent = count;
+        }
+        function decrement() {
+            count--;
+            document.getElementById('count').textContent = count;
+        }
+    </script>
+</body>
+</html>`;
+            
+            try {
+                // Try local first, then production
+                const isLocal = window.location.hostname === 'localhost';
+                const apiUrl = isLocal 
+                    ? 'http://localhost:3000/api/publish'
+                    : 'https://studiovideotoolhub.vercel.app/api/publish';
+                
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Chatooly-Source': 'test-page'
+                    },
+                    body: JSON.stringify({
+                        toolName: toolName,
+                        metadata: {
+                            author: 'Test User',
+                            description: 'Interactive test tool with counter',
+                            version: '1.0.0'
+                        },
+                        files: {
+                            'index.html': toolHtml
+                        }
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        ✅ <strong>Success!</strong><br><br>
+                        Tool published as: <strong>${data.actualName}</strong><br>
+                        ${data.actualName !== toolName ? `(Name was adjusted for uniqueness)<br>` : ''}
+                        <br>
+                        📍 URL: <a href="${data.url}" target="_blank">${data.url}</a><br>
+                        <br>
+                        <em>Note: The tool is saved but requires manual deployment. Check the server logs for details.</em>
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `❌ <strong>Error:</strong> ${data.message || 'Unknown error'}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    ❌ <strong>Network Error:</strong> ${error.message}<br><br>
+                    This might mean:<br>
+                    • The server is not running locally (run: npm run dev)<br>
+                    • The API endpoint is not accessible<br>
+                    • CORS is blocking the request
+                `;
+            } finally {
+                button.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

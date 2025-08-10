@@ -18,8 +18,8 @@ async function generateUniqueToolName(requestedName) {
   let toolName = baseName;
   let counter = 2;
   
-  // Check if directory exists in tools folder
-  const toolsPath = path.join(process.cwd(), 'tools');
+  // Check if directory exists in public/tools folder
+  const toolsPath = path.join(process.cwd(), 'public', 'tools');
   
   while (await directoryExists(path.join(toolsPath, toolName))) {
     toolName = `${baseName}-${counter}`;
@@ -141,27 +141,21 @@ export default async function handler(req, res) {
     const uniqueName = await generateUniqueToolName(requestedName);
     console.log(`Unique name generated: ${uniqueName}`);
     
-    // Create tool directory path
-    const toolPath = path.join(process.cwd(), 'tools', uniqueName);
+    // Create tool directory path in public folder
+    const toolPath = path.join(process.cwd(), 'public', 'tools', uniqueName);
     
     // Write files to repository
     await writeFilesToGitRepo(toolPath, files);
     console.log(`Files written to: ${toolPath}`);
     
-    // Commit and push changes (this triggers Vercel deployment)
-    const gitSuccess = await commitAndPush(uniqueName);
-    
-    if (!gitSuccess) {
-      return res.status(500).json({
-        success: false,
-        message: 'Failed to commit changes to repository'
-      });
-    }
+    // Note: Git operations disabled for Vercel deployment
+    // Tools are saved but need manual commit/push or GitHub API integration
+    console.log('Tool saved locally. Manual deployment required.');
     
     // Return success response
     const response = {
       success: true,
-      url: `https://tools.chatooly.com/${uniqueName}`,
+      url: `https://studiovideotoolhub.vercel.app/tools/${uniqueName}`,
       actualName: uniqueName,
       requestedName: requestedName,
       publishedAt: new Date().toISOString(),

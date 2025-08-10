@@ -53,7 +53,7 @@ async function writeFilesToGitRepo(toolPath, files) {
       // Extract base64 data and write as binary
       const matches = content.match(/^data:([^;]+);base64,(.+)$/);
       if (matches) {
-        const [, mimeType, base64Data] = matches;
+        const [, , base64Data] = matches; // mimeType not needed for file writing
         const buffer = Buffer.from(base64Data, 'base64');
         await fs.writeFile(filePath, buffer);
       }

@@ -19,7 +19,7 @@ async function readToolMetadata(toolPath, toolSlug) {
         author: 'Anonymous',
         category: 'tools',
         version: '1.0.0',
-        url: `/tools/${toolSlug}`,
+        url: `/tools/${toolSlug}/`,
         createdAt: new Date().toISOString()
     };
 

@@ -117,7 +117,7 @@ class ChatoolyHub {
         container.innerHTML = tools.map(tool => `
             <div class="tool-card">
                 <h3 class="tool-name">
-                    <a href="/tools/${tool.slug}" class="tool-link">
+                    <a href="/tools/${tool.slug}/" class="tool-link">
                         ${tool.name}
                     </a>
                 </h3>
@@ -140,7 +140,7 @@ class ChatoolyHub {
         toolCard.className = 'tool-card';
         toolCard.innerHTML = `
             <h3 class="tool-name">
-                <a href="/tools/${tool.slug}" class="tool-link">
+                <a href="/tools/${tool.slug}/" class="tool-link">
                     ${tool.name}
                 </a>
             </h3>

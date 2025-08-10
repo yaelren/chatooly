@@ -14,6 +14,19 @@ export default async function handler(req, res) {
   try {
     const body = req.body;
     
+    // Log what we received
+    console.log('=== TOOL PUBLISH REQUEST ===');
+    console.log('Tool Name:', body.toolName);
+    console.log('Metadata:', body.metadata);
+    console.log('Files:', Object.keys(body.files || {}));
+    console.log('File Sizes:');
+    if (body.files) {
+      Object.entries(body.files).forEach(([filename, content]) => {
+        console.log(`  ${filename}: ${content.length} chars`);
+      });
+    }
+    console.log('============================');
+    
     return res.status(200).json({
       success: true,
       message: 'Publish API working!',

@@ -29,12 +29,14 @@ export default async function handler(req, res) {
     
     return res.status(200).json({
       success: true,
-      message: 'Publish API working!',
+      message: `Received tool "${body.toolName}" with ${Object.keys(body.files || {}).length} files. Data logged to Vercel console but NOT SAVED anywhere!`,
       url: `https://studiovideotoolhub.vercel.app/tools/${body.toolName || 'test'}`,
       actualName: body.toolName || 'test',
       requestedName: body.toolName || 'test',
       publishedAt: new Date().toISOString(),
-      metadata: body.metadata || {}
+      metadata: body.metadata || {},
+      filesReceived: Object.keys(body.files || {}),
+      note: "This is just a mock response - files are not actually saved yet!"
     });
   } catch (error) {
     return res.status(500).json({

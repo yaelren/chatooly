@@ -3,6 +3,9 @@
 class ChatoolyHub {
     constructor() {
         this.toolsGrid = document.getElementById('tools-grid');
+        this.allTools = []; // Store all tools for filtering
+        this.currentFilter = 'all';
+        this.searchTerm = '';
         this.init();
     }
 
@@ -26,17 +29,69 @@ class ChatoolyHub {
                 }
             });
         });
+
+        // Search functionality
+        const searchInput = document.getElementById('search-input');
+        const searchBtn = document.getElementById('search-btn');
+        
+        if (searchInput && searchBtn) {
+            searchInput.addEventListener('input', (e) => {
+                this.searchTerm = e.target.value.toLowerCase();
+                this.filterAndDisplayTools();
+            });
+            
+            searchBtn.addEventListener('click', () => {
+                searchInput.focus();
+            });
+        }
+
+        // Filter buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                // Remove active class from all buttons
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                // Add active class to clicked button
+                e.target.classList.add('active');
+                
+                this.currentFilter = e.target.dataset.category;
+                this.filterAndDisplayTools();
+            });
+        });
     }
 
     async loadTools() {
         try {
             // Load all tools
             const tools = await this.fetchTools();
-            this.renderTools(tools, this.toolsGrid);
+            this.allTools = tools;
+            this.filterAndDisplayTools();
         } catch (error) {
             console.error('Error loading tools:', error);
             this.toolsGrid.innerHTML = '<div class="no-tools">Error loading tools. Please try again later.</div>';
         }
+    }
+
+    filterAndDisplayTools() {
+        let filteredTools = this.allTools;
+
+        // Apply category filter
+        if (this.currentFilter !== 'all') {
+            filteredTools = filteredTools.filter(tool => 
+                tool.category.toLowerCase() === this.currentFilter.toLowerCase()
+            );
+        }
+
+        // Apply search filter
+        if (this.searchTerm) {
+            filteredTools = filteredTools.filter(tool =>
+                tool.name.toLowerCase().includes(this.searchTerm) ||
+                tool.description.toLowerCase().includes(this.searchTerm) ||
+                tool.author.toLowerCase().includes(this.searchTerm) ||
+                (tool.tags && tool.tags.some(tag => tag.toLowerCase().includes(this.searchTerm)))
+            );
+        }
+
+        this.renderTools(filteredTools, this.toolsGrid);
     }
 
     async fetchTools() {
@@ -116,21 +171,47 @@ class ChatoolyHub {
 
         container.innerHTML = tools.map(tool => `
             <div class="tool-card">
-                <h3 class="tool-name">
-                    <a href="/tools/${tool.slug}/" class="tool-link">
-                        ${tool.name}
-                    </a>
-                </h3>
-                <p class="tool-description">${tool.description}</p>
-                <div class="tool-meta">
-                    <span class="tool-author">by ${tool.author}</span>
-                    <span class="tool-category">${tool.category}</span>
-                </div>
-                <div class="tool-date">
-                    ${new Date(tool.createdAt).toLocaleDateString()}
-                </div>
+                <a href="/tools/${tool.slug}/" class="tool-link">
+                    <div class="tool-thumbnail">
+                        ${tool.emoji || '🎨'}
+                    </div>
+                    <div class="tool-info">
+                        <div class="tool-name">${tool.name}</div>
+                        <div class="tool-creator">by ${tool.author}</div>
+                    </div>
+                </a>
             </div>
         `).join('');
+
+        // Add some sample tools if none exist
+        this.addSampleToolsIfEmpty(container, tools);
+    }
+
+    addSampleToolsIfEmpty(container, tools) {
+        if (tools.length === 0) {
+            const sampleTools = [
+                { name: 'Gradient Generator', author: 'DesignPro', slug: 'gradient-gen', emoji: '🌈' },
+                { name: 'Text Animator', author: 'CreativeCoder', slug: 'text-animator', emoji: '✨' },
+                { name: 'Pattern Maker', author: 'ArtistDev', slug: 'pattern-maker', emoji: '🔶' },
+                { name: 'Color Palette', author: 'ColorMaster', slug: 'color-palette', emoji: '🎨' },
+                { name: 'Shape Builder', author: 'GeometryPro', slug: 'shape-builder', emoji: '🔺' },
+                { name: 'Noise Generator', author: 'AbstractArt', slug: 'noise-gen', emoji: '🌊' }
+            ];
+
+            container.innerHTML = sampleTools.map(tool => `
+                <div class="tool-card">
+                    <a href="/tools/${tool.slug}/" class="tool-link">
+                        <div class="tool-thumbnail">
+                            ${tool.emoji}
+                        </div>
+                        <div class="tool-info">
+                            <div class="tool-name">${tool.name}</div>
+                            <div class="tool-creator">by ${tool.author}</div>
+                        </div>
+                    </a>
+                </div>
+            `).join('');
+        }
     }
 
     addTool(tool) {

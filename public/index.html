@@ -3,32 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatooly - Design Tools Hub</title>
+    <title>Studio Video Tool Hub</title>
     <link rel="stylesheet" href="styles/main.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <script src="js/reaction-diffusion.js"></script>
 </head>
 <body>
+    <div id="background-canvas"></div>
     <div class="container">
         <header>
-            <h1>Chatooly</h1>
-            <p class="subtitle">Create Amazing Design Tools with AI Assistance</p>
-            <div class="nav-buttons">
-                <a href="#live-tools" class="btn">Browse Tools</a>
-                <a href="https://github.com/chatooly" class="btn">Create a Tool</a>
-            </div>
+            <h1>Studio Video Tool Hub</h1>
         </header>
         
         <main>
             <div class="tools-section">
                 <h2 class="section-title" id="live-tools">Available Tools</h2>
+                
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-category="all">All</button>
+                    <button class="filter-btn" data-category="art">🎨 Art</button>
+                    <button class="filter-btn" data-category="animation">🎬 Animation</button>
+                    <button class="filter-btn" data-category="text">📝 Text</button>
+                    <button class="filter-btn" data-category="generators">✨ Generators</button>
+                </div>
+                
                 <div class="tools-grid" id="tools-grid">
                     <div class="no-tools">No tools available yet. Check back soon!</div>
                 </div>
             </div>
         </main>
-        
-        <footer>
-            <p>&copy; 2024 Chatooly. Design tools for everyone.</p>
-        </footer>
     </div>
     
     <script src="js/main.js"></script>

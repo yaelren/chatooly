@@ -6,11 +6,19 @@
 Chatooly is the central platform where design tools are published, hosted, discovered, and used. Tools are served directly at tools.chatooly.com/[toolname] for optimal performance and user experience.
 
 ### 1.2 Repository Information
-- **Repository Name**: chatooly
-- **Main Site URL**: chatooly.com
-- **Tools URL Pattern**: tools.chatooly.com/[toolname]
-- **Technologies**: Node.js, Express/Vercel, Wix Headless
+- **Repository Name**: studio-video-tool-hub
+- **Main Site URL**: studiovideotoolhub.com
+- **Tools URL Pattern**: tools.studiovideotoolhub.com/[toolname]
+- **Technologies**: Node.js, Next.js/Vercel, Enhanced CDN System
 - **Hosting**: Vercel with subdomain routing
+
+### 1.3 Platform Vision
+Studio Video Tool Hub revolutionizes creative tool creation by providing:
+- **Ultra-minimal templates** (10 lines of HTML)
+- **Config-driven UI generation** (JSON-based tool definition)
+- **Unified design system** (automatic styling via CDN)
+- **Direct tool hosting** (native performance, no iframes)
+- **Creator-first experience** (powerful analytics and publishing)
 
 ## 2. System Architecture
 

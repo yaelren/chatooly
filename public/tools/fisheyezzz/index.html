@@ -1,0 +1,96 @@
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- ========== EDIT THIS: Your Tool Name ========== -->
+    <title>fisheyezzz - Chatooly</title>
+    
+    <!-- ========== DO NOT EDIT: Required CDN Styles ========== -->
+    <link id="chatooly-unified-styles" rel="stylesheet" href="https://yaelren.github.io/chatooly-cdn/css/unified.min.css"><link rel="stylesheet" href="https://yaelren.github.io/chatooly-cdn/css/unified.min.css">
+<style id="chatooly-canvas-area-styles"> #chatooly-canvas-area{box-sizing:border-box;transition:all 0.3s ease}#chatooly-canvas-area canvas{display:block;margin:auto;max-width:100%;max-height:100%;object-fit:contain;image-rendering:crisp-edges;image-rendering:-moz-crisp-edges;image-rendering:-webkit-crisp-edges;image-rendering:pixelated}#chatooly-canvas-area.zoomed{overflow:auto;cursor:grab}#chatooly-canvas-area.zoomed.dragging{cursor:grabbing;user-select:none}#chatooly-canvas-area::-webkit-scrollbar{width:12px;height:12px}#chatooly-canvas-area::-webkit-scrollbar-track{background:#f1f1f1;border-radius:6px}#chatooly-canvas-area::-webkit-scrollbar-thumb{background:#888;border-radius:6px}#chatooly-canvas-area::-webkit-scrollbar-thumb:hover{background:#555}#chatooly-canvas-area .zoom-indicator{position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.7);color:white;padding:5px 10px;border-radius:4px;font-family:monospace;font-size:12px;pointer-events:none;z-index:10}#chatooly-canvas-area[data-fit="contain"] canvas{width:100%;height:100%;object-fit:contain}#chatooly-canvas-area[data-fit="cover"] canvas{width:100%;height:100%;object-fit:cover}#chatooly-canvas-area[data-fit="actual"] canvas{width:auto;height:auto;max-width:none;max-height:none}</style><style id="chatooly-button-styles"> #chatooly-export-btn .chatooly-btn-main{min-width:120px;height:50px;background:#2b2b2b;color:#ffffff;border:2px solid #ffffff;border-radius:0px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.3);font-size:14px;font-family:'Lucida Console',Monaco,monospace;font-weight:bold;padding:5px 15px;transition:all 0.2s ease;user-select:none;text-align:center}#chatooly-export-btn .chatooly-btn-main:hover{background:#3b3b3b;border-color:#007bff;transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,0.4)}#chatooly-export-btn .chatooly-btn-main:active{transform:translateY(0);box-shadow:0 2px 8px rgba(0,123,255,0.3)}#chatooly-export-btn .chatooly-btn-menu{position:absolute;bottom:60px;right:0;background:#2b2b2b;color:#ffffff;border:2px solid #ffffff;border-radius:0px;box-shadow:0 4px 12px rgba(0,0,0,0.3);padding:12px;min-width:240px;max-width:280px;opacity:0;transform:translateY(10px);transition:all 0.2s ease;pointer-events:none}#chatooly-export-btn .chatooly-btn-menu.show{opacity:1;transform:translateY(0);pointer-events:auto}#chatooly-export-btn .chatooly-btn-menu button{display:block;width:100%;padding:8px 12px;border:2px solid #ffffff;background:#2b2b2b;color:#ffffff;text-align:left;cursor:pointer;border-radius:0px;margin:2px 0;font-size:14px;font-family:'Lucida Console',Monaco,monospace;transition:background 0.1s ease}#chatooly-export-btn .chatooly-btn-menu button:hover{background:#3b3b3b;border-color:#007bff}#chatooly-export-btn .chatooly-btn-menu button:active{background:#1b1b1b}@media(max-width:768px){#chatooly-export-btn{bottom:10px !important;right:10px !important}#chatooly-export-btn .chatooly-btn-main{width:45px;height:45px;font-size:18px}#chatooly-export-btn .chatooly-btn-menu{min-width:110px;padding:6px}#chatooly-export-btn .chatooly-btn-menu button{padding:6px 10px;font-size:13px}}#chatooly-export-btn .chatooly-menu-section{border-bottom:1px solid #ffffff;padding:8px 0;margin:8px 0}#chatooly-export-btn .chatooly-menu-section:last-child{border-bottom:none;margin-bottom:0}#chatooly-export-btn .chatooly-menu-section:first-child{margin-top:0}#chatooly-export-btn .chatooly-menu-section h4{font-size:11px;color:#ffffff;margin:0 0 8px 0;text-transform:uppercase;font-weight:600;letter-spacing:0.5px;font-family:'Lucida Console',Monaco,monospace}#chatooly-export-btn .chatooly-canvas-inputs{display:flex;gap:6px;margin:8px 0;align-items:center}#chatooly-export-btn .chatooly-canvas-inputs input[type="number"]{flex:1;width:70px;padding:6px 8px;border:2px solid #ffffff;border-radius:0px;background:#2b2b2b;color:#ffffff;font-size:12px;font-family:'Lucida Console',Monaco,monospace;text-align:center}#chatooly-export-btn .chatooly-canvas-inputs input[type="number"]:focus{outline:none;border-color:#007bff;box-shadow:0 0 0 2px rgba(0,123,255,0.25)}#chatooly-export-btn .chatooly-apply-btn{padding:6px 10px !important;background:#007bff !important;color:white !important;border-radius:4px;font-size:11px;font-weight:600;min-width:50px}#chatooly-export-btn .chatooly-apply-btn:hover{background:#0056b3 !important}#chatooly-export-btn .chatooly-canvas-presets{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:8px}#chatooly-export-btn .chatooly-canvas-presets button{padding:4px 8px !important;font-size:10px !important;font-weight:500;background:#2b2b2b;color:#ffffff;border:2px solid #ffffff;border-radius:0px;margin:0 !important;font-family:'Lucida Console',Monaco,monospace}#chatooly-export-btn .chatooly-canvas-presets button:hover{background:#3b3b3b !important;border-color:#007bff}#chatooly-export-btn .chatooly-canvas-controls{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:8px}#chatooly-export-btn .chatooly-control-btn{padding:6px 8px !important;font-size:11px !important;font-weight:500;background:#007bff !important;color:white !important;border:2px solid #007bff !important;border-radius:4px;margin:0 !important;font-family:'Lucida Console',Monaco,monospace}#chatooly-export-btn .chatooly-control-btn:hover{background:#0056b3 !important;border-color:#0056b3 !important}#chatooly-export-btn .chatooly-canvas-help{padding:8px;background:#1a1a1a;border-radius:4px;border:1px solid #333}#chatooly-export-btn .chatooly-canvas-help small{color:#ccc;font-size:10px;line-height:1.3;font-family:'Lucida Console',Monaco,monospace}</style></head>
+<body class="chatooly-styles-loaded">
+    <div class="chatooly-app-container">
+        <!-- Left Panel: Tool Controls -->
+        <div class="chatooly-controls-panel">
+            <!-- ========== EDIT THIS: Your Tool Title ========== -->
+            <div class="chatooly-controls-header">
+                <h1>fisheyezzz</h1>
+                <p>Create fisheye distortion effects on your images</p>
+            </div>
+            
+            <div class="chatooly-controls-content">
+                <!-- ========== EDIT BELOW: Add Your Tool Controls Here ========== -->
+                
+                <!-- Image Upload -->
+                <div class="chatooly-control-group">
+                    <label for="image-upload">Upload Image</label>
+                    <input type="file" id="image-upload" accept="image/*">
+                </div>
+                
+                <!-- Fisheye Points List -->
+                <div class="chatooly-control-group">
+                    <h3>Fisheye Points</h3>
+                    <div id="fisheye-points-list">
+                        <p class="chatooly-text-muted">Click on the image to add fisheye points</p>
+                    </div>
+                </div>
+                
+                <!-- Global Settings -->
+                <div class="chatooly-control-group">
+                    <h3>Settings</h3>
+                    <label for="global-strength">Global Strength</label>
+                    <input type="range" id="global-strength" min="0" max="2" step="0.1" value="1">
+                    <span class="chatooly-value-display">1.0</span>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="chatooly-control-group">
+                    <button id="clear-all-btn" class="chatooly-btn chatooly-btn-danger">Clear All Points</button>
+                    <button id="reset-image-btn" class="chatooly-btn chatooly-btn-secondary">Reset Image</button>
+                </div>
+                
+                <!-- Instructions -->
+                <div class="chatooly-control-group">
+                    <h3>How to Use</h3>
+                    <ul class="chatooly-text-small">
+                        <li>Upload an image</li>
+                        <li>Click anywhere to add fisheye points</li>
+                        <li>Drag points to move them</li>
+                        <li>Use sliders to adjust intensity</li>
+                        <li>Click the X or press Delete/Backspace to remove points</li>
+                        <li>Press Escape to deselect</li>
+                        <li>Hover over points for visual feedback</li>
+                    </ul>
+                </div>
+                
+                <!-- ========== END EDIT SECTION ========== -->
+            </div>
+        </div>
+        
+        <!-- Right Panel: Preview/Canvas Area -->
+        <div class="chatooly-preview-panel">
+            <!-- ========== DO NOT EDIT: Required Export Container ========== -->
+            <div id="chatooly-container" style="display: flex; justify-content: center; align-items: center; min-height: 600px; background: var(--chatooly-color-background);">
+                <!-- ========== EDIT BELOW: Add Your Visual Output Here ========== -->
+                <!-- This content will be exported as PNG -->
+                <div id="upload-prompt" style="text-align: center; color: var(--chatooly-color-text-muted);">
+                    <h2>Upload an image to get started</h2>
+                    <p>Click the upload button on the left to begin</p>
+                </div>
+                
+                <!-- ========== END EDIT SECTION ========== -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- ========== DO NOT EDIT: Chatooly CDN v2.0 Integration ========== -->
+    <!-- This script automatically provides: Dark theme styling + Export functionality -->
+    <script src="https://yaelren.github.io/chatooly-cdn/js/core.min.js"></script>
+    
+    <!-- ========== DO NOT EDIT: Chatooly Configuration ========== -->
+    <script src="js/chatooly-config.js"></script>
+    
+    <!-- ========== DO NOT EDIT: Your Tool Logic ========== -->
+    <script src="js/main.js"></script>
+
+<div id="chatooly-canvas-area" style="position: fixed; background-color: rgb(245, 245, 245); border: 1px solid rgb(221, 221, 221); overflow: auto; display: flex; align-items: center; justify-content: center; z-index: 1; inset: 60px 0px;"><canvas id="chatooly-canvas" style="display: none; position: relative; width: 300px; height: 150px; transform-origin: center center;"></canvas></div><browser-mcp-container data-wxt-shadow-root=""></browser-mcp-container></body></html>

@@ -1,0 +1,284 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Lucida Console', 'Monaco', monospace;
+    line-height: 1.6;
+    color: #333;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* P5.js Background Canvas */
+#background-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+}
+
+#background-canvas canvas {
+    display: block;
+}
+
+/* Main Container */
+.container {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+
+/* Header */
+header {
+    text-align: center;
+    margin-bottom: 60px;
+    padding: 40px 20px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    position: relative;
+}
+
+/* Animated Header */
+.animated-header {
+    height: 300px;
+    width: 100%;
+    margin-bottom: 20px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+.animated-header canvas {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 10px;
+}
+
+.header-content {
+    position: relative;
+    z-index: 2;
+}
+
+/* Frame Info */
+.frame-info {
+    margin-top: 15px;
+    padding: 10px 20px;
+    background: rgba(0, 255, 0, 0.1);
+    border: 1px solid #00ff00;
+    border-radius: 5px;
+    display: inline-block;
+    font-family: 'Lucida Console', 'Monaco', monospace;
+    color: #333;
+    font-size: 0.9em;
+}
+
+.controls-hint {
+    margin-top: 5px;
+    font-size: 0.8em;
+    opacity: 0.8;
+    color: #555;
+}
+
+h1 {
+    font-size: 3.5em;
+    margin-bottom: 10px;
+    font-weight: 700;
+    color: #00ff00;
+    font-family: 'Lucida Console', 'Monaco', monospace;
+}
+
+/* Tools Section */
+.tools-section {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 40px;
+}
+
+.section-title {
+    font-size: 2.2em;
+    margin-bottom: 40px;
+    text-align: center;
+    color: #333;
+    font-weight: 600;
+    font-family: 'Lucida Console', 'Monaco', monospace;
+}
+
+.filter-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 40px;
+}
+
+.filter-btn {
+    padding: 10px 18px;
+    border: 2px solid #333;
+    background: rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    color: #333;
+    font-family: 'Lucida Console', 'Monaco', monospace;
+}
+
+.filter-btn:hover {
+    border-color: #667eea;
+    color: #667eea;
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.filter-btn.active {
+    background: #00ff00;
+    color: black;
+    border-color: #00ff00;
+}
+
+/* 3-Column Square Grid */
+.tools-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+/* Square Tool Cards */
+.tool-card {
+    position: relative;
+    background: rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    aspect-ratio: 1 / 1;
+}
+
+.tool-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Tool Thumbnail */
+.tool-thumbnail {
+    width: 100%;
+    height: 75%;
+    background: rgba(240, 240, 240, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3em;
+    color: #666;
+}
+
+.tool-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Tool Info */
+.tool-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.tool-name {
+    font-size: 1.2em;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 5px;
+    font-family: 'Lucida Console', 'Monaco', monospace;
+}
+
+.tool-creator {
+    font-size: 0.9em;
+    color: rgba(255, 255, 255, 0.8);
+    font-family: 'Lucida Console', 'Monaco', monospace;
+}
+
+.tool-link {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    text-decoration: none;
+}
+
+/* No Tools Message */
+.no-tools {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: #666;
+    font-style: italic;
+    padding: 60px 20px;
+    font-size: 1.1em;
+    font-family: 'Lucida Console', 'Monaco', monospace;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .tools-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 25px;
+    }
+}
+
+@media (max-width: 768px) {
+    h1 {
+        font-size: 2.5em;
+    }
+    
+    .container {
+        padding: 20px 15px;
+    }
+    
+    .tools-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .filter-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    header {
+        padding: 30px 15px;
+    }
+    
+    .tools-section {
+        padding: 30px 20px;
+    }
+    
+    .animated-header {
+        height: 200px;
+    }
+}
+
+/* Loading Animation */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.loading {
+    animation: pulse 2s infinite;
+}

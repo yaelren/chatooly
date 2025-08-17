@@ -6,6 +6,31 @@
 class FisheyeTool {
     constructor() {
         this.canvas = document.getElementById('chatooly-canvas');
+        if (!this.canvas) {
+            console.error('Canvas element not found. Waiting for initialization...');
+            setTimeout(() => this.initializeCanvas(), 100);
+            return;
+        }
+        this.ctx = this.canvas.getContext('2d');
+        this.originalImage = null;
+        this.fisheyePoints = [];
+        this.selectedPoint = null;
+        this.isDragging = false;
+        this.globalStrength = 1.0;
+        this.hoveredPoint = null;
+        this.renderTimeout = null;
+        this.previousCanvasSize = { width: 0, height: 0 };
+        
+        this.init();
+    }
+    
+    initializeCanvas() {
+        this.canvas = document.getElementById('chatooly-canvas');
+        if (!this.canvas) {
+            console.error('Canvas still not found. Retrying...');
+            setTimeout(() => this.initializeCanvas(), 100);
+            return;
+        }
         this.ctx = this.canvas.getContext('2d');
         this.originalImage = null;
         this.fisheyePoints = [];

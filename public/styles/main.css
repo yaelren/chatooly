@@ -43,6 +43,49 @@ header {
     padding: 40px 20px;
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
+    position: relative;
+}
+
+/* Animated Header */
+.animated-header {
+    height: 300px;
+    width: 100%;
+    margin-bottom: 20px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+.animated-header canvas {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 10px;
+}
+
+.header-content {
+    position: relative;
+    z-index: 2;
+}
+
+/* Frame Info */
+.frame-info {
+    margin-top: 15px;
+    padding: 10px 20px;
+    background: rgba(0, 255, 0, 0.1);
+    border: 1px solid #00ff00;
+    border-radius: 5px;
+    display: inline-block;
+    font-family: 'Lucida Console', 'Monaco', monospace;
+    color: #333;
+    font-size: 0.9em;
+}
+
+.controls-hint {
+    margin-top: 5px;
+    font-size: 0.8em;
+    opacity: 0.8;
+    color: #555;
 }
 
 h1 {

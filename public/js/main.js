@@ -116,7 +116,8 @@ class ChatoolyHub {
         const knownTools = [
             'test-api',
             'windy-text',
-            'fisheye-tool'
+            'fisheye-tool',
+            'fisheyezzz'
         ];
         
         const discoveredTools = [];

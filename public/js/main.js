@@ -249,4 +249,13 @@ class ChatoolyHub {
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     window.chatoolyHub = new ChatoolyHub();
+    
+    // Initialize Chatooly CDN for export functionality
+    if (window.Chatooly) {
+        Chatooly.init({
+            name: 'Chatooly Hub',
+            enableZoom: false,
+            enableCanvasArea: false
+        });
+    }
 });

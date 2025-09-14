@@ -316,4 +316,9 @@ window.renderHighResolution = function(targetCanvas, scale) {
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     window.stickerMaker = new StickerMaker();
+    
+    // Initialize Chatooly CDN for export functionality
+    if (window.Chatooly && window.ChatoolyConfig) {
+        Chatooly.init(window.ChatoolyConfig);
+    }
 });

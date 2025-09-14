@@ -19,8 +19,7 @@
   "license": "MIT",
   "devDependencies": {
     "serve": "^14.0.0",
-    "three": "^0.179.1",
-    "vite": "^7.1.2"
+    "three": "^0.179.1"
   },
   "engines": {
     "node": ">=14.0.0"

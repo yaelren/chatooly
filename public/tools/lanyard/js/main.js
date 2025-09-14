@@ -321,6 +321,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof THREE !== 'undefined') {
         lanyardTool = new LanyardTool();
     }
+    
+    // Initialize Chatooly CDN for export functionality
+    if (window.Chatooly && window.ChatoolyConfig) {
+        Chatooly.init(window.ChatoolyConfig);
+    }
 });
 
 // Basic export function

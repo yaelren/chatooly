@@ -1,0 +1,572 @@
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- ========== EDIT THIS: Your Tool Name ========== -->
+    <title>Text Waves - Chatooly</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link id="chatooly-unified-styles" rel="stylesheet" href="https://yaelren.github.io/chatooly-cdn/css/unified.min.css"><link href="https://fonts.googleapis.com/css2?family=Wix+Madefor+Display:wght@400;500;600;700;800&amp;family=Wix+Madefor+Text:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+
+    <!-- ========== DO NOT EDIT: Required CDN Styles ========== -->
+    <link rel="stylesheet" href="https://yaelren.github.io/chatooly-cdn/css/unified.min.css">
+<style id="chatooly-canvas-area-styles"> #chatooly-container,#chatooly-canvas-area{box-sizing:border-box;transition:all 0.3s ease}.chatooly-preview-panel{display:flex !important;align-items:center !important;justify-content:center !important}#chatooly-container{display:flex !important;align-items:center !important;justify-content:center !important;width:100%;height:100%}#chatooly-container canvas,#chatooly-canvas-area canvas{display:block;margin:0;max-width:100%;max-height:100%;object-fit:contain;image-rendering:crisp-edges;image-rendering:-moz-crisp-edges;image-rendering:-webkit-crisp-edges;image-rendering:pixelated;flex-shrink:0}#chatooly-container.zoomed,#chatooly-canvas-area.zoomed{overflow:auto;cursor:grab}#chatooly-container.zoomed.dragging,#chatooly-canvas-area.zoomed.dragging{cursor:grabbing;user-select:none}#chatooly-container::-webkit-scrollbar,#chatooly-canvas-area::-webkit-scrollbar{width:12px;height:12px}#chatooly-container::-webkit-scrollbar-track,#chatooly-canvas-area::-webkit-scrollbar-track{background:#f1f1f1;border-radius:6px}#chatooly-container::-webkit-scrollbar-thumb,#chatooly-canvas-area::-webkit-scrollbar-thumb{background:#888;border-radius:6px}#chatooly-container::-webkit-scrollbar-thumb:hover,#chatooly-canvas-area::-webkit-scrollbar-thumb:hover{background:#555}#chatooly-container .zoom-indicator,#chatooly-canvas-area .zoom-indicator{position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.7);color:white;padding:5px 10px;border-radius:4px;font-family:monospace;font-size:12px;pointer-events:none;z-index:10}#chatooly-container[data-fit="contain"] canvas,#chatooly-canvas-area[data-fit="contain"] canvas{width:100%;height:100%;object-fit:contain}#chatooly-container[data-fit="cover"] canvas,#chatooly-canvas-area[data-fit="cover"] canvas{width:100%;height:100%;object-fit:cover}#chatooly-container[data-fit="actual"] canvas,#chatooly-canvas-area[data-fit="actual"] canvas{width:auto;height:auto;max-width:none;max-height:none}</style><style id="chatooly-new-button-styles"> #chatooly-export-btn .chatooly-btn-main{display:none !important}#chatooly-export-btn .chatooly-minimized-btn{display:flex !important;align-items:center !important;justify-content:center !important;gap:var(--chatooly-spacing-2,8px)!important;background:var(--chatooly-color-surface,#ffffff)!important;border:var(--chatooly-border-width-thin,1px)solid var(--chatooly-color-border,#e5e7eb)!important;border-radius:var(--chatooly-border-radius-lg,12px)!important;box-shadow:var(--chatooly-shadow-lg,0 10px 25px rgba(0,0,0,0.15))!important;padding:var(--chatooly-spacing-3,12px)var(--chatooly-spacing-4,16px)!important;cursor:pointer !important;transition:all var(--chatooly-transition-normal,0.2s ease)!important;min-width:120px !important;font-family:var(--chatooly-font-family,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif)!important;flex-direction:row !important;height:auto !important;width:auto !important}#chatooly-export-btn .chatooly-minimized-btn:hover{background:var(--chatooly-color-surface-hover,#f9fafb);transform:translateY(-2px);box-shadow:var(--chatooly-shadow-xl,0 20px 40px rgba(0,0,0,0.2))}#chatooly-export-btn .chatooly-minimized-icon{font-size:var(--chatooly-font-size-md,14px)}#chatooly-export-btn .chatooly-minimized-label{font-size:var(--chatooly-font-size-sm,12px);color:var(--chatooly-color-text-muted,#6b7280);font-weight:var(--chatooly-font-weight-semibold,600);text-transform:uppercase;letter-spacing:0.5px}#chatooly-export-btn .chatooly-export-panel{display:flex;flex-direction:row;background:var(--chatooly-color-surface);border:var(--chatooly-border-width-thin)solid var(--chatooly-color-border);border-radius:var(--chatooly-border-radius-lg);box-shadow:var(--chatooly-shadow-lg);overflow:hidden;min-width:500px;max-width:600px;font-family:var(--chatooly-font-family);position:absolute;bottom:100%;right:0;margin-bottom:var(--chatooly-spacing-2);transform:translateY(20px);opacity:0;transition:all var(--chatooly-transition-normal)}#chatooly-export-btn .chatooly-export-panel.show{transform:translateY(0);opacity:1}#chatooly-export-btn .chatooly-sidebar{display:flex;flex-direction:column;background:var(--chatooly-color-surface);padding:var(--chatooly-spacing-4)0;border-right:var(--chatooly-border-width-thin)solid var(--chatooly-color-border);width:120px;flex-shrink:0}#chatooly-export-btn .chatooly-nav-item{display:flex;align-items:center;padding:var(--chatooly-spacing-3)var(--chatooly-spacing-5);color:var(--chatooly-color-text-muted);cursor:pointer;transition:all var(--chatooly-transition-normal);border-left:3px solid transparent}#chatooly-export-btn .chatooly-nav-item:hover{color:var(--chatooly-color-text);background:var(--chatooly-color-surface-hover)}#chatooly-export-btn .chatooly-nav-item.active{color:var(--chatooly-color-text);background:var(--chatooly-color-surface-active);border-left-color:var(--chatooly-color-primary)}#chatooly-export-btn .chatooly-nav-icon{margin-right:var(--chatooly-spacing-3);font-size:var(--chatooly-font-size-md)}#chatooly-export-btn .chatooly-nav-label{font-size:var(--chatooly-font-size-sm);font-weight:var(--chatooly-font-weight-medium)}#chatooly-export-btn .chatooly-settings-panel{flex:1;display:flex;flex-direction:column;background:var(--chatooly-color-surface)}#chatooly-export-btn .chatooly-settings-content{flex:1;padding:var(--chatooly-spacing-6)}#chatooly-export-btn .chatooly-settings-section{margin-bottom:var(--chatooly-spacing-6)}#chatooly-export-btn .chatooly-settings-section:last-child{margin-bottom:0}#chatooly-export-btn .chatooly-section-title{font-size:var(--chatooly-font-size-sm);font-weight:var(--chatooly-font-weight-semibold);color:var(--chatooly-color-text);margin:0 0 var(--chatooly-spacing-4)0;text-transform:uppercase;letter-spacing:0.5px}#chatooly-export-btn .chatooly-size-inputs{display:flex;gap:var(--chatooly-spacing-4);align-items:center}#chatooly-export-btn .chatooly-input-group{display:flex;align-items:center;gap:var(--chatooly-spacing-2)}#chatooly-export-btn .chatooly-input-group label{font-size:var(--chatooly-font-size-sm);color:var(--chatooly-color-text);font-weight:var(--chatooly-font-weight-medium);min-width:20px}#chatooly-export-btn .chatooly-size-input{width:80px;padding:var(--chatooly-spacing-2)var(--chatooly-spacing-3);background:var(--chatooly-color-surface-hover);border:var(--chatooly-border-width-thin)solid var(--chatooly-color-border);border-radius:var(--chatooly-border-radius);color:var(--chatooly-color-text);font-size:var(--chatooly-font-size-sm);text-align:center;transition:all var(--chatooly-transition-normal)}#chatooly-export-btn .chatooly-size-input:focus{outline:none;border-color:var(--chatooly-color-primary);box-shadow:var(--chatooly-shadow-focus)}#chatooly-export-btn .chatooly-unit{font-size:var(--chatooly-font-size-xs);color:var(--chatooly-color-text-muted)}#chatooly-export-btn .chatooly-scale-buttons{display:flex;gap:var(--chatooly-spacing-2)}#chatooly-export-btn .chatooly-scale-btn{padding:var(--chatooly-spacing-2)var(--chatooly-spacing-4);background:transparent;border:var(--chatooly-border-width-thin)solid var(--chatooly-color-border);border-radius:var(--chatooly-border-radius);color:var(--chatooly-color-text-muted);font-size:var(--chatooly-font-size-sm);font-weight:var(--chatooly-font-weight-medium);cursor:pointer;transition:all var(--chatooly-transition-normal)}#chatooly-export-btn .chatooly-scale-btn:hover{color:var(--chatooly-color-text);background:var(--chatooly-color-surface-hover)}#chatooly-export-btn .chatooly-scale-btn.active{background:var(--chatooly-color-surface-active);color:var(--chatooly-color-text);border-color:var(--chatooly-color-primary)}#chatooly-export-btn .chatooly-format-buttons{display:flex;gap:var(--chatooly-spacing-2)}#chatooly-export-btn .chatooly-format-btn{padding:var(--chatooly-spacing-2)var(--chatooly-spacing-4);background:transparent;border:var(--chatooly-border-width-thin)solid var(--chatooly-color-border);border-radius:var(--chatooly-border-radius);color:var(--chatooly-color-text-muted);font-size:var(--chatooly-font-size-sm);font-weight:var(--chatooly-font-weight-medium);cursor:pointer;transition:all var(--chatooly-transition-normal)}#chatooly-export-btn .chatooly-format-btn:hover{color:var(--chatooly-color-text);background:var(--chatooly-color-surface-hover)}#chatooly-export-btn .chatooly-format-btn.active{background:var(--chatooly-color-surface-active);color:var(--chatooly-color-text);border-color:var(--chatooly-color-primary)}#chatooly-export-btn .chatooly-tab-content{display:block}#chatooly-export-btn .chatooly-tab-content.hidden{display:none}#chatooly-export-btn .chatooly-ratio-buttons{display:grid;grid-template-columns:1fr 1fr;gap:var(--chatooly-spacing-2)}#chatooly-export-btn .chatooly-ratio-btn{padding:var(--chatooly-spacing-2)var(--chatooly-spacing-3);background:transparent;border:var(--chatooly-border-width-thin)solid var(--chatooly-color-border);border-radius:var(--chatooly-border-radius);color:var(--chatooly-color-text-muted);font-size:var(--chatooly-font-size-xs);font-weight:var(--chatooly-font-weight-medium);cursor:pointer;transition:all var(--chatooly-transition-normal)}#chatooly-export-btn .chatooly-ratio-btn:hover{color:var(--chatooly-color-text);background:var(--chatooly-color-surface-hover)}#chatooly-export-btn .chatooly-ratio-btn.active{background:var(--chatooly-color-surface-active);color:var(--chatooly-color-text);border-color:var(--chatooly-color-primary)}#chatooly-export-btn .chatooly-export-type-buttons{display:flex;gap:var(--chatooly-spacing-2)}#chatooly-export-btn .chatooly-export-type-btn{flex:1;padding:var(--chatooly-spacing-2)var(--chatooly-spacing-4);background:transparent;border:var(--chatooly-border-width-thin)solid var(--chatooly-color-border);border-radius:var(--chatooly-border-radius);color:var(--chatooly-color-text-muted);font-size:var(--chatooly-font-size-sm);font-weight:var(--chatooly-font-weight-medium);cursor:pointer;transition:all var(--chatooly-transition-normal)}#chatooly-export-btn .chatooly-export-type-btn:hover{color:var(--chatooly-color-text);background:var(--chatooly-color-surface-hover)}#chatooly-export-btn .chatooly-export-type-btn.active{background:var(--chatooly-color-surface-active);color:var(--chatooly-color-text);border-color:var(--chatooly-color-primary)}#chatooly-export-btn .chatooly-form-group{margin-bottom:var(--chatooly-spacing-4)}#chatooly-export-btn .chatooly-form-group label{display:block;margin-bottom:var(--chatooly-spacing-2);font-size:var(--chatooly-font-size-sm);font-weight:var(--chatooly-font-weight-medium);color:var(--chatooly-color-text)}#chatooly-export-btn .chatooly-text-input{width:100%;padding:var(--chatooly-spacing-2)var(--chatooly-spacing-3);background:var(--chatooly-color-surface-hover);border:var(--chatooly-border-width-thin)solid var(--chatooly-color-border);border-radius:var(--chatooly-border-radius);color:var(--chatooly-color-text);font-size:var(--chatooly-font-size-sm);transition:all var(--chatooly-transition-normal)}#chatooly-export-btn .chatooly-text-input:focus{outline:none;border-color:var(--chatooly-color-primary);box-shadow:var(--chatooly-shadow-focus)}#chatooly-export-btn .chatooly-textarea{width:100%;padding:var(--chatooly-spacing-2)var(--chatooly-spacing-3);background:var(--chatooly-color-surface-hover);border:var(--chatooly-border-width-thin)solid var(--chatooly-color-border);border-radius:var(--chatooly-border-radius);color:var(--chatooly-color-text);font-size:var(--chatooly-font-size-sm);resize:vertical;min-height:80px;transition:all var(--chatooly-transition-normal)}#chatooly-export-btn .chatooly-textarea:focus{outline:none;border-color:var(--chatooly-color-primary);box-shadow:var(--chatooly-shadow-focus)}#chatooly-export-btn .chatooly-description{font-size:var(--chatooly-font-size-sm);color:var(--chatooly-color-text-muted);line-height:var(--chatooly-line-height-normal);margin-bottom:var(--chatooly-spacing-4)}#chatooly-export-btn .chatooly-info-list{display:flex;flex-direction:column;gap:var(--chatooly-spacing-2)}#chatooly-export-btn .chatooly-info-item{font-size:var(--chatooly-font-size-sm);color:var(--chatooly-color-text);padding:var(--chatooly-spacing-2);background:var(--chatooly-color-surface-hover);border-radius:var(--chatooly-border-radius)}#chatooly-export-btn .chatooly-export-options{margin-top:var(--chatooly-spacing-4)}#chatooly-export-btn .chatooly-info-box{background:var(--chatooly-color-primary-light);border:var(--chatooly-border-width-thin)solid var(--chatooly-color-primary);border-radius:var(--chatooly-border-radius-md);padding:var(--chatooly-spacing-3);margin-top:var(--chatooly-spacing-2)}#chatooly-export-btn .chatooly-btn-primary{padding:var(--chatooly-spacing-3)var(--chatooly-spacing-6);background:var(--chatooly-color-primary);border:none;border-radius:var(--chatooly-border-radius-lg);color:var(--chatooly-color-text-inverse);font-size:var(--chatooly-font-size-sm);font-weight:var(--chatooly-font-weight-semibold);cursor:pointer;transition:all var(--chatooly-transition-normal)}#chatooly-export-btn .chatooly-btn-primary:hover{background:var(--chatooly-color-primary-hover);transform:translateY(-1px)}#chatooly-export-btn .chatooly-btn-secondary{padding:var(--chatooly-spacing-3)var(--chatooly-spacing-6);background:var(--chatooly-color-surface-active);border:var(--chatooly-border-width-thin)solid var(--chatooly-color-border);border-radius:var(--chatooly-border-radius-lg);color:var(--chatooly-color-text);font-size:var(--chatooly-font-size-sm);font-weight:var(--chatooly-font-weight-semibold);cursor:pointer;transition:all var(--chatooly-transition-normal)}#chatooly-export-btn .chatooly-btn-secondary:hover{background:var(--chatooly-color-surface-hover);border-color:var(--chatooly-color-border-dark)}@media(max-width:768px){#chatooly-export-btn .chatooly-export-panel{min-width:320px;max-width:90vw}#chatooly-export-btn .chatooly-sidebar{flex-direction:row;overflow-x:auto;padding:var(--chatooly-spacing-3)0}#chatooly-export-btn .chatooly-nav-item{flex-shrink:0;padding:var(--chatooly-spacing-2)var(--chatooly-spacing-4);border-left:none;border-bottom:3px solid transparent}#chatooly-export-btn .chatooly-nav-item.active{border-left:none;border-bottom-color:var(--chatooly-color-primary)}#chatooly-export-btn .chatooly-nav-label{display:none}#chatooly-export-btn .chatooly-settings-content{padding:var(--chatooly-spacing-4)}#chatooly-export-btn .chatooly-size-inputs{flex-direction:column;gap:var(--chatooly-spacing-3)}#chatooly-export-btn .chatooly-scale-buttons,#chatooly-export-btn .chatooly-format-buttons{flex-wrap:wrap}}</style><style id="chatooly-export-animation"> @keyframes chatooly-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.8;transform:scale(1.05)}}</style></head>
+<body class="chatooly-styles-loaded">
+    <!-- ========== EDIT THIS: Update header title to match your tool ========== -->
+    <header class="chatooly-header">
+        <div class="chatooly-header-title">Text Waves</div>
+        <div class="chatooly-header-credit">MADE BY STUDIO VIDEO</div>
+    </header>
+
+    <div class="chatooly-app-container">
+        <!-- Left Panel: Tool Controls -->
+        <div class="chatooly-controls-panel">
+            <!-- ========== EDIT THIS: Tool Description ========== -->
+            <div class="chatooly-controls-header">
+                <p>Create animated text flowing along customizable wave patterns. Choose from preset motion patterns or create your own custom movements.</p>
+            </div>
+
+            <div class="chatooly-controls-content">
+                <!-- ========== SURPRISE ME BUTTON ========== -->
+                <button id="surprise-me-btn" class="surprise-btn">✦ Surprise Me ✦</button>
+
+                <!-- ========== TEXT SECTION ========== -->
+                <h3 class="section-header" id="text-header">
+                    ✎ Text <span class="section-toggle">▼</span>
+                </h3>
+                <div id="text-section" class="section-content">
+                    <div class="chatooly-control-group">
+                        <label for="text-input">Text Content</label>
+                        <textarea id="text-input" rows="3" placeholder="Enter your text here...">WAVE TEXT ANIMATION</textarea>
+                    </div>
+
+                    <div class="chatooly-control-group">
+                        <label for="split-mode">Break Text Into</label>
+                        <select id="split-mode">
+                            <option value="character">Character</option>
+                            <option value="word">Word</option>
+                            <option value="sentence">Sentence</option>
+                        </select>
+                    </div>
+
+                    <div class="chatooly-control-group">
+                        <label for="repetitions">Text Repetitions: <span id="repetitions-value">2</span></label>
+                        <input type="range" id="repetitions" min="1" max="10" value="3">
+                    </div>
+
+                    <div class="chatooly-control-group">
+                        <label for="font-family">Font Family</label>
+                        <select id="font-family">
+                            <option value="Wix Madefor Display" selected="">Wix Madefor Display</option>
+                            <option value="Wix Madefor Text">Wix Madefor Text</option>
+                            <option value="Arial">Arial</option>
+                            <option value="Helvetica">Helvetica</option>
+                            <option value="Times New Roman">Times New Roman</option>
+                            <option value="Georgia">Georgia</option>
+                            <option value="Courier New">Courier New</option>
+                            <option value="Verdana">Verdana</option>
+                            <option value="Impact">Impact</option>
+                            <option value="Comic Sans MS">Comic Sans MS</option>
+                            <option value="Trebuchet MS">Trebuchet MS</option>
+                            <option value="Arial Black">Arial Black</option>
+                            <option value="Palatino">Palatino</option>
+                            <option value="Garamond">Garamond</option>
+                            <option value="Bookman">Bookman</option>
+                            <option value="Monaco">Monaco</option>
+                            <option value="__upload__" style="border-top: 1px solid #444; margin-top: 4px;">─── Upload Custom Font ───</option>
+                        </select>
+                    </div>
+
+                    <input type="file" id="custom-font-upload" accept=".woff,.woff2,.ttf,.otf" style="display: none;">
+
+                    <div class="chatooly-control-group">
+                        <label for="font-size">Font Size (px)</label>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <input type="range" id="font-size" min="12" max="1000" value="24" style="flex: 1;">
+                            <input type="number" id="font-size-input" min="12" max="1000" value="24" style="width: 70px;">
+                        </div>
+                    </div>
+
+                    <div class="chatooly-control-group">
+                        <label>Text Colors</label>
+                        <div id="text-colors-container"><div class="color-item"><input type="color"><button type="button">×</button></div><div class="color-item"><input type="color"><button type="button">×</button></div><div class="color-item"><input type="color"><button type="button">×</button></div></div>
+                        <button id="add-color-btn" type="button" style="margin-top: 8px; width: 100%;">+ Add Color</button>
+                    </div>
+
+                    <div class="chatooly-control-group">
+                        <label for="blend-mode">Blend Mode</label>
+                        <select id="blend-mode">
+                            <option value="source-over">Normal</option>
+                            <option value="multiply">Multiply</option>
+                            <option value="screen">Screen</option>
+                            <option value="overlay">Overlay</option>
+                            <option value="darken">Darken</option>
+                            <option value="lighten">Lighten</option>
+                            <option value="color-dodge">Color Dodge</option>
+                            <option value="color-burn">Color Burn</option>
+                            <option value="hard-light">Hard Light</option>
+                            <option value="soft-light">Soft Light</option>
+                            <option value="difference">Difference</option>
+                            <option value="exclusion">Exclusion</option>
+                            <option value="hue">Hue</option>
+                            <option value="saturation">Saturation</option>
+                            <option value="color">Color</option>
+                            <option value="luminosity">Luminosity</option>
+                        </select>
+                    </div>
+
+                    <div class="chatooly-control-group">
+                        <label for="segment-icon">Separator Icon</label>
+                        <input type="file" id="segment-icon" accept="image/*,.gif">
+                    </div>
+
+                    <div class="chatooly-control-group" id="icon-size-group" style="display: none;">
+                        <label for="icon-size">Separator Size (px)</label>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <input type="range" id="icon-size" min="10" max="500" value="20" style="flex: 1;">
+                            <input type="number" id="icon-size-input" min="10" value="20" style="width: 70px;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== ANIMATION SECTION ========== -->
+                <h3 class="section-header" id="animation-header">
+                    ▶ Animation <span class="section-toggle">▼</span>
+                </h3>
+                <div id="animation-section" class="section-content">
+                    <div class="chatooly-control-group">
+                        <label for="pattern-preset">Pattern Preset</label>
+                        <select id="pattern-preset">
+                            <option value="custom">Custom</option>
+                            <option value="wave">Wave</option>
+                            <option value="circle">Circle</option>
+                            <option value="bounce">Bounce</option>
+                            <option value="zigzag">Zigzag</option>
+                            <option value="figure8">Figure-8</option>
+                            <option value="spiral">Spiral</option>
+                            <option value="infinity">Infinity</option>
+                            <option value="vertical-wave">Vertical Wave</option>
+                            <option value="straight">Straight</option>
+                        </select>
+                    </div>
+
+                    <div class="chatooly-control-group">
+                        <label for="overall-speed">Overall Speed</label>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <input type="range" id="overall-speed" min="0" max="5" step="0.1" value="1" style="flex: 1;">
+                            <input type="number" id="overall-speed-input" min="0" step="0.1" value="1" style="width: 70px;">
+                        </div>
+                    </div>
+
+                    <div class="chatooly-control-group">
+                        <label for="pattern-size">Pattern Size (px)</label>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <input type="range" id="pattern-size" min="10" max="500" value="50" style="flex: 1;">
+                            <input type="number" id="pattern-size-input" min="10" value="50" style="width: 70px;">
+                        </div>
+                    </div>
+
+                    <div class="chatooly-control-group">
+                        <label>
+                            <input type="checkbox" id="rotate-text" checked=""> Follow Wave Path
+                        </label>
+                        <small style="opacity: 0.7; font-size: 0.85em; display: block; margin-top: 4px;">Rotates each character to follow the wave direction</small>
+                    </div>
+
+                    <div class="chatooly-control-group">
+                        <label for="direction">Movement Direction</label>
+                        <select id="direction">
+                            <option value="right">Right →</option>
+                            <option value="left">Left ←</option>
+                            <option value="none">None (Static)</option>
+                        </select>
+                    </div>
+
+                    <!-- Custom Animation Parameters (Collapsible) -->
+                    <h4 class="sub-section-header" id="custom-params-header">
+                        ⚙ Custom Parameters <span class="sub-section-toggle">▼</span>
+                    </h4>
+                    <div id="custom-params-section" class="sub-section-content collapsed">
+                        <!-- Horizontal Movement -->
+                        <div class="param-section">
+                            <h5 class="param-header" id="horizontal-header">
+                                Horizontal <span class="param-toggle">▼</span>
+                            </h5>
+                            <div id="horizontal-movement-section" class="param-content collapsed">
+                                <div class="chatooly-control-group">
+                                    <label for="wave-type-x">Wave Pattern</label>
+                                    <select id="wave-type-x">
+                                        <option value="sine" selected="">Smooth Wave</option>
+                                        <option value="cosine">Offset Wave</option>
+                                        <option value="tangent">Sharp Wave</option>
+                                        <option value="none">None</option>
+                                    </select>
+                                </div>
+
+                                <div class="chatooly-control-group">
+                                    <label for="amplitude-x">Wave Height (px)</label>
+                                    <div style="display: flex; gap: 8px; align-items: center;">
+                                        <input type="range" id="amplitude-x" min="0" max="1000" value="50" style="flex: 1;">
+                                        <input type="number" id="amplitude-x-input" min="0" value="50" style="width: 70px;">
+                                    </div>
+                                </div>
+
+                                <div class="chatooly-control-group">
+                                    <label for="frequency-x">Wave Tightness</label>
+                                    <div style="display: flex; gap: 8px; align-items: center;">
+                                        <input type="range" id="frequency-x" min="0.001" max="1" step="0.001" value="0.02" style="flex: 1;">
+                                        <input type="number" id="frequency-x-input" min="0" step="0.001" value="0.02" style="width: 70px;">
+                                    </div>
+                                </div>
+
+                                <div class="chatooly-control-group">
+                                    <label for="speed-x">Animation Speed</label>
+                                    <div style="display: flex; gap: 8px; align-items: center;">
+                                        <input type="range" id="speed-x" min="0" max="20" step="0.1" value="1" style="flex: 1;">
+                                        <input type="number" id="speed-x-input" min="0" step="0.1" value="1" style="width: 70px;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Vertical Movement -->
+                        <div class="param-section">
+                            <h5 class="param-header" id="vertical-header">
+                                Vertical <span class="param-toggle">▼</span>
+                            </h5>
+                            <div id="vertical-movement-section" class="param-content collapsed">
+                                <div class="chatooly-control-group">
+                                    <label for="wave-type-y">Wave Pattern</label>
+                                    <select id="wave-type-y">
+                                        <option value="sine" selected="">Smooth Wave</option>
+                                        <option value="cosine">Offset Wave</option>
+                                        <option value="tangent">Sharp Wave</option>
+                                        <option value="none">None</option>
+                                    </select>
+                                </div>
+
+                                <div class="chatooly-control-group">
+                                    <label for="amplitude-y">Wave Height (px)</label>
+                                    <div style="display: flex; gap: 8px; align-items: center;">
+                                        <input type="range" id="amplitude-y" min="0" max="1000" value="50" style="flex: 1;">
+                                        <input type="number" id="amplitude-y-input" min="0" value="50" style="width: 70px;">
+                                    </div>
+                                </div>
+
+                                <div class="chatooly-control-group">
+                                    <label for="frequency-y">Wave Tightness</label>
+                                    <div style="display: flex; gap: 8px; align-items: center;">
+                                        <input type="range" id="frequency-y" min="0.001" max="1" step="0.001" value="0.02" style="flex: 1;">
+                                        <input type="number" id="frequency-y-input" min="0" step="0.001" value="0.02" style="width: 70px;">
+                                    </div>
+                                </div>
+
+                                <div class="chatooly-control-group">
+                                    <label for="speed-y">Animation Speed</label>
+                                    <div style="display: flex; gap: 8px; align-items: center;">
+                                        <input type="range" id="speed-y" min="0" max="20" step="0.1" value="1" style="flex: 1;">
+                                        <input type="number" id="speed-y-input" min="0" step="0.1" value="1" style="width: 70px;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Swap Button -->
+                        <div class="chatooly-control-group">
+                            <button id="swap-movement-btn" type="button" style="width: 100%; margin-top: 10px;">↔️ Swap Horizontal &amp; Vertical</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== BACKGROUND SECTION ========== -->
+                <h3 class="section-header" id="background-header">
+                    ◼ Background <span class="section-toggle">▼</span>
+                </h3>
+                <div id="background-section" class="section-content">
+                    <div class="chatooly-control-group">
+                        <label>
+                            <input type="checkbox" id="transparent-bg"> Transparent Background
+                        </label>
+                    </div>
+
+                    <div class="chatooly-control-group" id="bg-color-group" style="display: block;">
+                        <label for="bg-color">Background Color</label>
+                        <input type="color" id="bg-color" value="#000000">
+                    </div>
+
+                    <div class="chatooly-control-group">
+                        <label for="bg-image">Background Image</label>
+                        <input type="file" id="bg-image" accept="image/*">
+                    </div>
+
+                    <div class="chatooly-control-group" id="bg-fit-group" style="display: block;">
+                        <label for="bg-fit">Background Fit</label>
+                        <select id="bg-fit">
+                            <option value="cover">Fill Frame</option>
+                            <option value="contain">Fit in Frame</option>
+                            <option value="fill">Stretch to Fill</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- ========== WAVE GUIDE SECTION ========== -->
+                <h3 class="section-header" id="wave-guide-header">
+                    ∿ Wave Guide <span class="section-toggle">▼</span>
+                </h3>
+                <div id="wave-guide-section" class="section-content">
+                    <div class="chatooly-control-group">
+                        <label>
+                            <input type="checkbox" id="show-wave-path"> Show wave guide
+                        </label>
+                    </div>
+
+                    <div id="wave-guide-options" style="display: none;">
+                        <div class="chatooly-control-group">
+                            <label for="wave-shape">Guide Point Shape</label>
+                            <select id="wave-shape">
+                                <option value="circle">Circle</option>
+                                <option value="square">Square</option>
+                                <option value="cross">Cross</option>
+                                <option value="rhombus">Rhombus</option>
+                            </select>
+                        </div>
+
+                        <div class="chatooly-control-group">
+                            <label for="wave-color">Guide Color</label>
+                            <input type="color" id="wave-color" value="#ff00ff">
+                        </div>
+
+                        <div class="chatooly-control-group">
+                            <label for="wave-opacity">Guide Opacity</label>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <input type="range" id="wave-opacity" min="0" max="1" step="0.01" value="1" style="flex: 1;">
+                                <input type="number" id="wave-opacity-input" min="0" max="1" step="0.01" value="1" style="width: 70px;">
+                            </div>
+                        </div>
+
+                        <div class="chatooly-control-group">
+                            <label for="wave-marker-size">Point Size (px)</label>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <input type="range" id="wave-marker-size" min="2" max="100" value="5" style="flex: 1;">
+                                <input type="number" id="wave-marker-size-input" min="2" value="5" style="width: 70px;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Preview/Canvas Area -->
+        <div class="chatooly-preview-panel" style="display: flex; align-items: center; justify-content: center;">
+            <!-- ========== DO NOT EDIT: Required Export Container ========== -->
+            <div id="chatooly-container" style="position: relative; display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 100%; height: 100%; overflow: auto;">
+                <!-- ========== EDIT BELOW: Add Your Visual Output Here ========== -->
+                <!-- This content will be exported as PNG/Video -->
+                <!-- IMPORTANT: Your main canvas MUST have id="chatooly-canvas" -->
+                <!-- For animations: CDN automatically detects canvas animations and provides video export options -->
+                <canvas id="chatooly-canvas" width="1200" height="800" class="" style="position: static; margin: 0px; width: 1200px; height: 800px; transform-origin: center center; cursor: default;"></canvas>
+                <!-- ========== END EDIT SECTION ========== -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== DO NOT EDIT: Chatooly CDN v2.0 Integration ========== -->
+    <!-- This script automatically provides: Dark theme styling + Static/Video export functionality -->
+    <!-- Video support: Detects p5.js, Three.js, Canvas animations and provides MediaRecorder API export -->
+    <script src="https://yaelren.github.io/chatooly-cdn/js/core.min.js"></script>
+
+    <!-- ========== DO NOT EDIT: Chatooly Configuration ========== -->
+    <script src="js/chatooly-config.js"></script>
+
+    <!-- ========== DO NOT EDIT: Your Tool Logic ========== -->
+    <script src="js/main.js"></script>
+
+    <style>
+        /* Surprise Me Button */
+        .surprise-btn {
+            width: auto;
+            padding: 8px 16px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .surprise-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .surprise-btn:active {
+            transform: translateY(0);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Transparency checkerboard pattern */
+        #chatooly-canvas.transparent-bg {
+            background-image:
+                linear-gradient(45deg, #ccc 25%, transparent 25%),
+                linear-gradient(-45deg, #ccc 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #ccc 75%),
+                linear-gradient(-45deg, transparent 75%, #ccc 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            background-color: #fff;
+        }
+
+        /* Color picker items */
+        .color-item {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .color-item input[type="color"] {
+            flex: 1;
+        }
+
+        .color-item button {
+            width: auto;
+            padding: 4px 12px;
+            background: var(--chatooly-color-error, #ff4444);
+        }
+
+        .color-item button:hover {
+            background: var(--chatooly-color-error-hover, #ff6666);
+        }
+
+        /* Main section headers */
+        .section-header {
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: opacity 0.2s;
+            margin-bottom: 5px;
+            padding: 5px 0;
+        }
+
+        .section-header:hover {
+            opacity: 0.8;
+        }
+
+        .section-toggle {
+            font-size: 0.8em;
+            transition: transform 0.3s ease;
+        }
+
+        .section-header.expanded .section-toggle {
+            transform: rotate(180deg);
+        }
+
+        .section-content {
+            max-height: 3000px;
+            overflow: hidden;
+            transition: max-height 0.4s ease, opacity 0.4s ease;
+            opacity: 1;
+            margin-bottom: 10px;
+        }
+
+        .section-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+        }
+
+        /* Sub-section headers (Custom Parameters) */
+        .sub-section-header {
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.95em;
+            font-weight: 600;
+            padding: 8px 0;
+            margin: 15px 0 5px 0;
+            border-top: 1px solid var(--chatooly-border-color, #333);
+            transition: opacity 0.2s;
+        }
+
+        .sub-section-header:hover {
+            opacity: 0.8;
+        }
+
+        .sub-section-toggle {
+            font-size: 0.8em;
+            transition: transform 0.3s ease;
+        }
+
+        .sub-section-header.expanded .sub-section-toggle {
+            transform: rotate(180deg);
+        }
+
+        .sub-section-content {
+            max-height: 2000px;
+            overflow: hidden;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+            opacity: 1;
+        }
+
+        .sub-section-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+        }
+
+        /* Parameter sections (Horizontal/Vertical) */
+        .param-section {
+            margin: 10px 0;
+        }
+
+        .param-header {
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85em;
+            font-weight: 600;
+            padding: 6px 0;
+            margin-bottom: 8px;
+            border-bottom: 1px solid var(--chatooly-border-color, #333);
+            transition: opacity 0.2s;
+        }
+
+        .param-header:hover {
+            opacity: 0.8;
+        }
+
+        .param-toggle {
+            font-size: 0.8em;
+            transition: transform 0.3s ease;
+        }
+
+        .param-header.expanded .param-toggle {
+            transform: rotate(180deg);
+        }
+
+        .param-content {
+            max-height: 1000px;
+            overflow: hidden;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+            opacity: 1;
+            padding-left: 10px;
+            border-left: 2px solid var(--chatooly-border-color, #333);
+        }
+
+        .param-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+        }
+    </style>
+
+
+</body></html>

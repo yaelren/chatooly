@@ -48,8 +48,11 @@
             transition: opacity 0.2s;
             margin-bottom: 4px;
             margin-top: 8px;
-            padding: 4px 0;
-            color: #CCFD50;
+            padding: 4px 8px;
+            color: #000000;
+            background-color: #CCFD50;
+            font-weight: bold;
+            border-radius: 4px;
         }
 
         .section-header:hover {
@@ -118,6 +121,53 @@
             opacity: 0;
         }
 
+        /* Subsection headers (Entrance/Wave Animation) */
+        .subsection {
+            margin: 16px 0;
+        }
+
+        .subsection-header {
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.1em;
+            font-weight: 700;
+            padding: 8px 0;
+            margin-bottom: 12px;
+            color: white;
+            border-bottom: 2px solid white;
+            transition: all 0.2s;
+        }
+
+        .subsection-header:hover {
+            opacity: 0.8;
+        }
+
+        .subsection-toggle {
+            font-size: 0.8em;
+            transition: transform 0.3s ease;
+        }
+
+        .subsection-header.expanded .subsection-toggle {
+            transform: rotate(180deg);
+        }
+
+        .subsection-content {
+            max-height: 2000px;
+            overflow: hidden;
+            transition: max-height 0.4s ease, opacity 0.4s ease;
+            opacity: 1;
+            padding: 8px 4px;
+        }
+
+        .subsection-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+            padding: 0 4px;
+        }
+
         /* Parameter sections (Horizontal/Vertical) */
         .param-section {
             margin: 6px 0;
@@ -162,6 +212,16 @@
         .param-content.collapsed {
             max-height: 0;
             opacity: 0;
+        }
+
+        /* Reduce spacing between controls */
+        .chatooly-control-group {
+            margin-bottom: 16px !important;
+        }
+
+        /* Make labels bold */
+        .chatooly-control-group label {
+            font-weight: 600;
         }
     
  @keyframes chatooly-spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}

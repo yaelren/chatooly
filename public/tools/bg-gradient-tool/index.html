@@ -719,7 +719,7 @@
                         <input type="range" id="ellipse-ratio" min="0.5" max="2" step="0.01" value="1.20">
                     </div>
 
-                    <div class="chatooly-control-group" id="random-path-group" style="display: block;">
+                    <div class="chatooly-control-group" id="random-path-group" style="display: none;">
                         <label>Random Path Options</label>
                         <div class="chatooly-input-row">
                             <label for="random-points" style="margin-right: 8px;">Vertices</label>
@@ -735,7 +735,7 @@
                         <label for="blend-mode">Blend Mode</label>
                         <select id="blend-mode">
                             <option value="lighter">Lighter (Add)</option>
-                            <option value="source-over">Normal</option>
+                            <option value="source-over" selected="">Normal</option>
                             <option value="screen">Screen</option>
                             <option value="overlay">Overlay</option>
                             <option value="multiply">Multiply</option>
@@ -777,7 +777,7 @@
                             <div class="color-row"><input type="color" class="color-stop" value="#ff6b6b"></div>
                             <div class="color-row"><input type="color" class="color-stop" value="#4d96ff"></div>
                             <div class="color-row"><input type="color" class="color-stop" value="#ffd93d"></div>
-                        <div class="color-row"><input type="color" class="color-stop"></div></div>
+                        </div>
                         <div class="chatooly-mt-3">
                             <button id="add-color" type="button">Add Color</button>
                             <button id="remove-color" type="button">Remove Color</button>
@@ -807,7 +807,7 @@
                     <!-- Background Color Picker -->
                     <div class="chatooly-control-group" id="bg-color-group">
                         <label for="bg-color">Background Color</label>
-                        <input type="color" id="bg-color" value="#CCFD50">
+                        <input type="color" id="bg-color" value="#ffffff">
                     </div>
 
                     <!-- Background Image Upload with Remove Button (X) -->
@@ -838,7 +838,7 @@
         <!-- Right Panel: Preview/Canvas Area -->
         <div class="chatooly-preview-panel" style="display: flex; align-items: center; justify-content: center;">
             <!-- ========== DO NOT EDIT: Required Export Container ========== -->
-            <div id="chatooly-container" class="" style="position: relative; display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 100%; height: 100%; overflow: auto;">
+            <div id="chatooly-container" style="position: relative; display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 100%; height: 100%; overflow: auto;">
                 <!-- ========== EDIT BELOW: Add Your Visual Output Here ========== -->
                 <!-- This content will be exported as PNG/Video -->
                 <!-- IMPORTANT: Your main canvas MUST have id="chatooly-canvas" -->

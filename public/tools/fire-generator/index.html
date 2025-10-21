@@ -1,0 +1,893 @@
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- ========== EDIT THIS: Your Tool Name ========== -->
+    <title>Fire Generator - Chatooly</title>
+    
+    <!-- ========== DO NOT EDIT: Required CDN Styles ========== -->
+    <link id="chatooly-unified-styles" rel="stylesheet" href="https://yaelren.github.io/chatooly-cdn/css/unified.min.css"><link rel="stylesheet" href="https://yaelren.github.io/chatooly-cdn/css/unified.min.css">
+<style id="chatooly-canvas-area-styles">
+                /* Canvas area container - works with both template and legacy */
+                #chatooly-container, #chatooly-canvas-area {
+                    box-sizing: border-box;
+                    transition: all 0.3s ease;
+                }
+                
+                /* Template structure - ensure proper centering */
+                .chatooly-preview-panel {
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                }
+                
+                #chatooly-container {
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    width: 100%;
+                    height: 100%;
+                }
+                
+                /* Canvas inside the area - universal rules */
+                #chatooly-container canvas, #chatooly-canvas-area canvas {
+                    display: block;
+                    margin: 0; /* Remove auto margin - let flexbox handle centering */
+                    max-width: 100%;
+                    max-height: 100%;
+                    object-fit: contain;
+                    image-rendering: crisp-edges;
+                    image-rendering: -moz-crisp-edges;
+                    image-rendering: -webkit-crisp-edges;
+                    image-rendering: pixelated;
+                    /* Ensure canvas is centered by flexbox parent */
+                    flex-shrink: 0;
+                }
+                
+                /* When zoomed, allow canvas to exceed container bounds */
+                #chatooly-container.zoomed, #chatooly-canvas-area.zoomed {
+                    overflow: auto;
+                    cursor: grab;
+                }
+                
+                #chatooly-container.zoomed.dragging, #chatooly-canvas-area.zoomed.dragging {
+                    cursor: grabbing;
+                    user-select: none;
+                }
+                
+                /* Custom scrollbar for canvas area */
+                #chatooly-container::-webkit-scrollbar, #chatooly-canvas-area::-webkit-scrollbar {
+                    width: 12px;
+                    height: 12px;
+                }
+                
+                #chatooly-container::-webkit-scrollbar-track, #chatooly-canvas-area::-webkit-scrollbar-track {
+                    background: #f1f1f1;
+                    border-radius: 6px;
+                }
+                
+                #chatooly-container::-webkit-scrollbar-thumb, #chatooly-canvas-area::-webkit-scrollbar-thumb {
+                    background: #888;
+                    border-radius: 6px;
+                }
+                
+                #chatooly-container::-webkit-scrollbar-thumb:hover, #chatooly-canvas-area::-webkit-scrollbar-thumb:hover {
+                    background: #555;
+                }
+                
+                /* Zoom indicator inside canvas area */
+                #chatooly-container .zoom-indicator, #chatooly-canvas-area .zoom-indicator {
+                    position: absolute;
+                    top: 10px;
+                    right: 10px;
+                    background: rgba(0, 0, 0, 0.7);
+                    color: white;
+                    padding: 5px 10px;
+                    border-radius: 4px;
+                    font-family: monospace;
+                    font-size: 12px;
+                    pointer-events: none;
+                    z-index: 10;
+                }
+                
+                /* Canvas fit modes */
+                #chatooly-container[data-fit="contain"] canvas, #chatooly-canvas-area[data-fit="contain"] canvas {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: contain;
+                }
+                
+                #chatooly-container[data-fit="cover"] canvas, #chatooly-canvas-area[data-fit="cover"] canvas {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                }
+                
+                #chatooly-container[data-fit="actual"] canvas, #chatooly-canvas-area[data-fit="actual"] canvas {
+                    width: auto;
+                    height: auto;
+                    max-width: none;
+                    max-height: none;
+                }
+            </style><style id="chatooly-new-button-styles">
+                /* Noto Emoji font for icons only */
+                @import url('https://fonts.googleapis.com/css2?family=Noto+Emoji&display=swap');
+
+                /* Hide old button styles completely */
+                #chatooly-export-btn .chatooly-btn-main {
+                    display: none !important;
+                }
+
+                /* Icon styling with Noto Emoji font and B&W filter */
+                #chatooly-export-btn .chatooly-minimized-icon,
+                #chatooly-export-btn .chatooly-nav-icon,
+                #chatooly-export-btn .chatooly-emoji,
+                .chatooly-export-indicator {
+                    font-family: 'Noto Emoji', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                    filter: grayscale(100%) contrast(1.2);
+                }
+                
+                /* Minimized Floating Button - Override any cached styles */
+                #chatooly-export-btn .chatooly-minimized-btn {
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    gap: var(--chatooly-spacing-2, 8px) !important;
+                    background: var(--chatooly-color-surface, #ffffff) !important;
+                    border: var(--chatooly-border-width-thin, 1px) solid var(--chatooly-color-border, #e5e7eb) !important;
+                    border-radius: var(--chatooly-border-radius-lg, 12px) !important;
+                    box-shadow: var(--chatooly-shadow-lg, 0 10px 25px rgba(0, 0, 0, 0.15)) !important;
+                    padding: var(--chatooly-spacing-3, 12px) var(--chatooly-spacing-4, 16px) !important;
+                    cursor: pointer !important;
+                    transition: all var(--chatooly-transition-normal, 0.2s ease) !important;
+                    min-width: 120px !important;
+                    font-family: var(--chatooly-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif) !important;
+                    /* Hide any old button styles */
+                    flex-direction: row !important;
+                    height: auto !important;
+                    width: auto !important;
+                }
+                
+                #chatooly-export-btn .chatooly-minimized-btn:hover {
+                    background: var(--chatooly-color-surface-hover, #f9fafb);
+                    transform: translateY(-2px);
+                    box-shadow: var(--chatooly-shadow-xl, 0 20px 40px rgba(0, 0, 0, 0.2));
+                }
+                
+                #chatooly-export-btn .chatooly-minimized-icon {
+                    font-size: var(--chatooly-font-size-md, 14px);
+                }
+                
+                #chatooly-export-btn .chatooly-minimized-label {
+                    font-size: var(--chatooly-font-size-sm, 12px);
+                    color: var(--chatooly-color-text-muted, #6b7280);
+                    font-weight: var(--chatooly-font-weight-semibold, 600);
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
+                
+                /* Main Export Panel */
+                #chatooly-export-btn .chatooly-export-panel {
+                    display: flex;
+                    flex-direction: row;
+                    background: var(--chatooly-color-surface);
+                    border: var(--chatooly-border-width-thin) solid var(--chatooly-color-border);
+                    border-radius: var(--chatooly-border-radius-lg);
+                    box-shadow: var(--chatooly-shadow-lg);
+                    overflow: hidden;
+                    min-width: 500px;
+                    max-width: 600px;
+                    font-family: var(--chatooly-font-family);
+                    position: absolute;
+                    bottom: 100%;
+                    right: 0;
+                    margin-bottom: var(--chatooly-spacing-2);
+                    transform: translateY(20px);
+                    opacity: 0;
+                    transition: all var(--chatooly-transition-normal);
+                }
+                
+                #chatooly-export-btn .chatooly-export-panel.show {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
+                
+                /* Sidebar Navigation */
+                #chatooly-export-btn .chatooly-sidebar {
+                    display: flex;
+                    flex-direction: column;
+                    background: var(--chatooly-color-surface);
+                    padding: var(--chatooly-spacing-4) 0;
+                    border-right: var(--chatooly-border-width-thin) solid var(--chatooly-color-border);
+                    width: 120px;
+                    flex-shrink: 0;
+                }
+                
+                #chatooly-export-btn .chatooly-nav-item {
+                    display: flex;
+                    align-items: center;
+                    padding: var(--chatooly-spacing-3) var(--chatooly-spacing-5);
+                    color: var(--chatooly-color-text-muted);
+                    cursor: pointer;
+                    transition: all var(--chatooly-transition-normal);
+                    border-left: 3px solid transparent;
+                }
+                
+                #chatooly-export-btn .chatooly-nav-item:hover {
+                    color: var(--chatooly-color-text);
+                    background: var(--chatooly-color-surface-hover);
+                }
+                
+                #chatooly-export-btn .chatooly-nav-item.active {
+                    color: var(--chatooly-color-text);
+                    background: var(--chatooly-color-surface-active);
+                    border-left-color: var(--chatooly-color-primary);
+                }
+                
+                #chatooly-export-btn .chatooly-nav-icon {
+                    margin-right: var(--chatooly-spacing-3);
+                    font-size: var(--chatooly-font-size-md);
+                }
+                
+                #chatooly-export-btn .chatooly-nav-label {
+                    font-size: var(--chatooly-font-size-sm);
+                    font-weight: var(--chatooly-font-weight-medium);
+                }
+                
+                /* Settings Panel */
+                #chatooly-export-btn .chatooly-settings-panel {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    background: var(--chatooly-color-surface);
+                }
+                
+                #chatooly-export-btn .chatooly-settings-content {
+                    flex: 1;
+                    padding: var(--chatooly-spacing-6);
+                }
+                
+                #chatooly-export-btn .chatooly-settings-section {
+                    margin-bottom: var(--chatooly-spacing-6);
+                }
+                
+                #chatooly-export-btn .chatooly-settings-section:last-child {
+                    margin-bottom: 0;
+                }
+                
+                #chatooly-export-btn .chatooly-section-title {
+                    font-size: var(--chatooly-font-size-sm);
+                    font-weight: var(--chatooly-font-weight-semibold);
+                    color: var(--chatooly-color-text);
+                    margin: 0 0 var(--chatooly-spacing-4) 0;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
+                
+                /* Size Inputs */
+                #chatooly-export-btn .chatooly-size-inputs {
+                    display: flex;
+                    gap: var(--chatooly-spacing-4);
+                    align-items: center;
+                }
+                
+                #chatooly-export-btn .chatooly-input-group {
+                    display: flex;
+                    align-items: center;
+                    gap: var(--chatooly-spacing-2);
+                }
+                
+                #chatooly-export-btn .chatooly-input-group label {
+                    font-size: var(--chatooly-font-size-sm);
+                    color: var(--chatooly-color-text);
+                    font-weight: var(--chatooly-font-weight-medium);
+                    min-width: 20px;
+                }
+                
+                #chatooly-export-btn .chatooly-size-input {
+                    width: 80px;
+                    padding: var(--chatooly-spacing-2) var(--chatooly-spacing-3);
+                    background: var(--chatooly-color-surface-hover);
+                    border: var(--chatooly-border-width-thin) solid var(--chatooly-color-border);
+                    border-radius: var(--chatooly-border-radius);
+                    color: var(--chatooly-color-text);
+                    font-size: var(--chatooly-font-size-sm);
+                    text-align: center;
+                    transition: all var(--chatooly-transition-normal);
+                }
+                
+                #chatooly-export-btn .chatooly-size-input:focus {
+                    outline: none;
+                    border-color: var(--chatooly-color-primary);
+                    box-shadow: var(--chatooly-shadow-focus);
+                }
+                
+                #chatooly-export-btn .chatooly-unit {
+                    font-size: var(--chatooly-font-size-xs);
+                    color: var(--chatooly-color-text-muted);
+                }
+                
+                /* Scale Buttons */
+                #chatooly-export-btn .chatooly-scale-buttons {
+                    display: flex;
+                    gap: var(--chatooly-spacing-2);
+                }
+                
+                #chatooly-export-btn .chatooly-scale-btn {
+                    padding: var(--chatooly-spacing-2) var(--chatooly-spacing-4);
+                    background: transparent;
+                    border: var(--chatooly-border-width-thin) solid var(--chatooly-color-border);
+                    border-radius: var(--chatooly-border-radius);
+                    color: var(--chatooly-color-text-muted);
+                    font-size: var(--chatooly-font-size-sm);
+                    font-weight: var(--chatooly-font-weight-medium);
+                    cursor: pointer;
+                    transition: all var(--chatooly-transition-normal);
+                }
+                
+                #chatooly-export-btn .chatooly-scale-btn:hover {
+                    color: var(--chatooly-color-text);
+                    background: var(--chatooly-color-surface-hover);
+                }
+                
+                #chatooly-export-btn .chatooly-scale-btn.active {
+                    background: var(--chatooly-color-surface-active);
+                    color: var(--chatooly-color-text);
+                    border-color: var(--chatooly-color-primary);
+                }
+                
+                /* Format Buttons */
+                #chatooly-export-btn .chatooly-format-buttons {
+                    display: flex;
+                    gap: var(--chatooly-spacing-2);
+                }
+                
+                #chatooly-export-btn .chatooly-format-btn {
+                    padding: var(--chatooly-spacing-2) var(--chatooly-spacing-4);
+                    background: transparent;
+                    border: var(--chatooly-border-width-thin) solid var(--chatooly-color-border);
+                    border-radius: var(--chatooly-border-radius);
+                    color: var(--chatooly-color-text-muted);
+                    font-size: var(--chatooly-font-size-sm);
+                    font-weight: var(--chatooly-font-weight-medium);
+                    cursor: pointer;
+                    transition: all var(--chatooly-transition-normal);
+                }
+                
+                #chatooly-export-btn .chatooly-format-btn:hover {
+                    color: var(--chatooly-color-text);
+                    background: var(--chatooly-color-surface-hover);
+                }
+                
+                #chatooly-export-btn .chatooly-format-btn.active {
+                    background: var(--chatooly-color-surface-active);
+                    color: var(--chatooly-color-text);
+                    border-color: var(--chatooly-color-primary);
+                }
+                
+                /* Tab Content */
+                #chatooly-export-btn .chatooly-tab-content {
+                    display: block;
+                }
+                
+                #chatooly-export-btn .chatooly-tab-content.hidden {
+                    display: none;
+                }
+                
+                /* Ratio Buttons */
+                #chatooly-export-btn .chatooly-ratio-buttons {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: var(--chatooly-spacing-2);
+                }
+                
+                #chatooly-export-btn .chatooly-ratio-btn {
+                    padding: var(--chatooly-spacing-2) var(--chatooly-spacing-3);
+                    background: transparent;
+                    border: var(--chatooly-border-width-thin) solid var(--chatooly-color-border);
+                    border-radius: var(--chatooly-border-radius);
+                    color: var(--chatooly-color-text-muted);
+                    font-size: var(--chatooly-font-size-xs);
+                    font-weight: var(--chatooly-font-weight-medium);
+                    cursor: pointer;
+                    transition: all var(--chatooly-transition-normal);
+                }
+                
+                #chatooly-export-btn .chatooly-ratio-btn:hover {
+                    color: var(--chatooly-color-text);
+                    background: var(--chatooly-color-surface-hover);
+                }
+                
+                #chatooly-export-btn .chatooly-ratio-btn.active {
+                    background: var(--chatooly-color-surface-active);
+                    color: var(--chatooly-color-text);
+                    border-color: var(--chatooly-color-primary);
+                }
+                
+                /* Export Type Buttons */
+                #chatooly-export-btn .chatooly-export-type-buttons {
+                    display: flex;
+                    gap: var(--chatooly-spacing-2);
+                }
+                
+                #chatooly-export-btn .chatooly-export-type-btn {
+                    flex: 1;
+                    padding: var(--chatooly-spacing-2) var(--chatooly-spacing-4);
+                    background: transparent;
+                    border: var(--chatooly-border-width-thin) solid var(--chatooly-color-border);
+                    border-radius: var(--chatooly-border-radius);
+                    color: var(--chatooly-color-text-muted);
+                    font-size: var(--chatooly-font-size-sm);
+                    font-weight: var(--chatooly-font-weight-medium);
+                    cursor: pointer;
+                    transition: all var(--chatooly-transition-normal);
+                }
+                
+                #chatooly-export-btn .chatooly-export-type-btn:hover {
+                    color: var(--chatooly-color-text);
+                    background: var(--chatooly-color-surface-hover);
+                }
+                
+                #chatooly-export-btn .chatooly-export-type-btn.active {
+                    background: var(--chatooly-color-surface-active);
+                    color: var(--chatooly-color-text);
+                    border-color: var(--chatooly-color-primary);
+                }
+                
+                /* Form Elements */
+                #chatooly-export-btn .chatooly-form-group {
+                    margin-bottom: var(--chatooly-spacing-4);
+                }
+                
+                #chatooly-export-btn .chatooly-form-group label {
+                    display: block;
+                    margin-bottom: var(--chatooly-spacing-2);
+                    font-size: var(--chatooly-font-size-sm);
+                    font-weight: var(--chatooly-font-weight-medium);
+                    color: var(--chatooly-color-text);
+                }
+                
+                #chatooly-export-btn .chatooly-text-input {
+                    width: 100%;
+                    padding: var(--chatooly-spacing-2) var(--chatooly-spacing-3);
+                    background: var(--chatooly-color-surface-hover);
+                    border: var(--chatooly-border-width-thin) solid var(--chatooly-color-border);
+                    border-radius: var(--chatooly-border-radius);
+                    color: var(--chatooly-color-text);
+                    font-size: var(--chatooly-font-size-sm);
+                    transition: all var(--chatooly-transition-normal);
+                }
+                
+                #chatooly-export-btn .chatooly-text-input:focus {
+                    outline: none;
+                    border-color: var(--chatooly-color-primary);
+                    box-shadow: var(--chatooly-shadow-focus);
+                }
+                
+                #chatooly-export-btn .chatooly-textarea {
+                    width: 100%;
+                    padding: var(--chatooly-spacing-2) var(--chatooly-spacing-3);
+                    background: var(--chatooly-color-surface-hover);
+                    border: var(--chatooly-border-width-thin) solid var(--chatooly-color-border);
+                    border-radius: var(--chatooly-border-radius);
+                    color: var(--chatooly-color-text);
+                    font-size: var(--chatooly-font-size-sm);
+                    resize: vertical;
+                    min-height: 80px;
+                    transition: all var(--chatooly-transition-normal);
+                }
+                
+                #chatooly-export-btn .chatooly-textarea:focus {
+                    outline: none;
+                    border-color: var(--chatooly-color-primary);
+                    box-shadow: var(--chatooly-shadow-focus);
+                }
+
+                /* Readonly inputs */
+                #chatooly-export-btn .chatooly-readonly {
+                    background: var(--chatooly-color-surface);
+                    border-color: transparent;
+                    cursor: default;
+                    color: var(--chatooly-color-text-muted);
+                    opacity: 0.7;
+                    font-style: italic;
+                }
+
+                /* Info Message */
+                #chatooly-export-btn .chatooly-info-message {
+                    background: var(--chatooly-color-surface-hover);
+                    border-left: 3px solid var(--chatooly-color-primary);
+                    padding: var(--chatooly-spacing-3);
+                    border-radius: var(--chatooly-border-radius);
+                    font-size: var(--chatooly-font-size-xs);
+                    color: var(--chatooly-color-text-muted);
+                    margin-top: var(--chatooly-spacing-3);
+                }
+
+                #chatooly-export-btn .chatooly-info-message code {
+                    background: var(--chatooly-color-surface-active);
+                    padding: 2px 6px;
+                    border-radius: 3px;
+                    font-family: monospace;
+                    font-size: var(--chatooly-font-size-xs);
+                    color: var(--chatooly-color-text);
+                }
+
+                /* Description Text */
+                #chatooly-export-btn .chatooly-description {
+                    font-size: var(--chatooly-font-size-sm);
+                    color: var(--chatooly-color-text-muted);
+                    line-height: var(--chatooly-line-height-normal);
+                    margin-bottom: var(--chatooly-spacing-4);
+                }
+                
+                /* Info List */
+                #chatooly-export-btn .chatooly-info-list {
+                    display: flex;
+                    flex-direction: column;
+                    gap: var(--chatooly-spacing-2);
+                }
+                
+                #chatooly-export-btn .chatooly-info-item {
+                    font-size: var(--chatooly-font-size-sm);
+                    color: var(--chatooly-color-text);
+                    padding: var(--chatooly-spacing-2);
+                    background: var(--chatooly-color-surface-hover);
+                    border-radius: var(--chatooly-border-radius);
+                }
+                
+                /* Export Options */
+                #chatooly-export-btn .chatooly-export-options {
+                    margin-top: var(--chatooly-spacing-4);
+                }
+
+                /* Compact Form Layout */
+                #chatooly-export-btn .chatooly-compact-form {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: var(--chatooly-spacing-3);
+                    align-items: end;
+                }
+
+                #chatooly-export-btn .chatooly-compact-field {
+                    display: flex;
+                    flex-direction: column;
+                    gap: var(--chatooly-spacing-2);
+                }
+
+                #chatooly-export-btn .chatooly-compact-field-wide {
+                    grid-column: 1 / -1;
+                }
+
+                #chatooly-export-btn .chatooly-compact-field label {
+                    font-size: var(--chatooly-font-size-xs);
+                    font-weight: var(--chatooly-font-weight-medium);
+                    color: var(--chatooly-color-text-muted);
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
+
+                #chatooly-export-btn .chatooly-compact-input {
+                    width: 100%;
+                    padding: var(--chatooly-spacing-2) var(--chatooly-spacing-3);
+                    background: var(--chatooly-color-surface-hover);
+                    border: var(--chatooly-border-width-thin) solid var(--chatooly-color-border);
+                    border-radius: var(--chatooly-border-radius);
+                    color: var(--chatooly-color-text);
+                    font-size: var(--chatooly-font-size-sm);
+                    transition: all var(--chatooly-transition-normal);
+                }
+
+                #chatooly-export-btn .chatooly-compact-input:focus {
+                    outline: none;
+                    border-color: var(--chatooly-color-primary);
+                    box-shadow: var(--chatooly-shadow-focus);
+                }
+                
+                /* Info Box */
+                #chatooly-export-btn .chatooly-info-box {
+                    background: var(--chatooly-color-primary-light);
+                    border: var(--chatooly-border-width-thin) solid var(--chatooly-color-primary);
+                    border-radius: var(--chatooly-border-radius-md);
+                    padding: var(--chatooly-spacing-3);
+                    margin-top: var(--chatooly-spacing-2);
+                }
+                
+                /* Buttons */
+                #chatooly-export-btn .chatooly-btn-primary {
+                    width: 100%;
+                    padding: var(--chatooly-spacing-3) var(--chatooly-spacing-6);
+                    background: var(--chatooly-color-primary);
+                    border: none;
+                    border-radius: var(--chatooly-border-radius-lg);
+                    color: var(--chatooly-color-text-inverse);
+                    font-size: var(--chatooly-font-size-sm);
+                    font-weight: var(--chatooly-font-weight-semibold);
+                    cursor: pointer;
+                    transition: all var(--chatooly-transition-normal);
+                }
+
+                #chatooly-export-btn .chatooly-btn-primary:hover {
+                    background: var(--chatooly-color-primary-hover);
+                    transform: translateY(-1px);
+                }
+
+                #chatooly-export-btn .chatooly-btn-secondary {
+                    flex: 1;
+                    padding: var(--chatooly-spacing-3) var(--chatooly-spacing-6);
+                    background: var(--chatooly-color-surface-active);
+                    border: var(--chatooly-border-width-thin) solid var(--chatooly-color-border);
+                    border-radius: var(--chatooly-border-radius-lg);
+                    color: var(--chatooly-color-text);
+                    font-size: var(--chatooly-font-size-sm);
+                    font-weight: var(--chatooly-font-weight-semibold);
+                    cursor: pointer;
+                    transition: all var(--chatooly-transition-normal);
+                }
+
+                #chatooly-export-btn .chatooly-btn-secondary:hover {
+                    background: var(--chatooly-color-surface-hover);
+                    border-color: var(--chatooly-color-border-dark);
+                }
+                
+                /* Mobile Responsive */
+                @media (max-width: 768px) {
+                    #chatooly-export-btn .chatooly-export-panel {
+                        min-width: 320px;
+                        max-width: 90vw;
+                    }
+                    
+                    #chatooly-export-btn .chatooly-sidebar {
+                        flex-direction: row;
+                        overflow-x: auto;
+                        padding: var(--chatooly-spacing-3) 0;
+                    }
+                    
+                    #chatooly-export-btn .chatooly-nav-item {
+                        flex-shrink: 0;
+                        padding: var(--chatooly-spacing-2) var(--chatooly-spacing-4);
+                        border-left: none;
+                        border-bottom: 3px solid transparent;
+                    }
+                    
+                    #chatooly-export-btn .chatooly-nav-item.active {
+                        border-left: none;
+                        border-bottom-color: var(--chatooly-color-primary);
+                    }
+                    
+                    #chatooly-export-btn .chatooly-nav-label {
+                        display: none;
+                    }
+                    
+                    #chatooly-export-btn .chatooly-settings-content {
+                        padding: var(--chatooly-spacing-4);
+                    }
+                    
+                    #chatooly-export-btn .chatooly-size-inputs {
+                        flex-direction: column;
+                        gap: var(--chatooly-spacing-3);
+                    }
+                    
+                    #chatooly-export-btn .chatooly-scale-buttons,
+                    #chatooly-export-btn .chatooly-format-buttons {
+                        flex-wrap: wrap;
+                    }
+                }
+            </style></head>
+<body class="chatooly-styles-loaded">
+    <!-- ========== EDIT THIS: Update header title to match your tool ========== -->
+    <header class="chatooly-header">
+        <div class="chatooly-header-title">Fire Generator</div>
+        <div class="chatooly-header-credit">MADE WITH CHATOOLY</div>
+    </header>
+
+    <div class="chatooly-app-container">
+        <!-- Left Panel: Tool Controls -->
+        <div class="chatooly-controls-panel">
+            <!-- ========== EDIT THIS: Tool Description ========== -->
+            <div class="chatooly-controls-header">
+                <p>Create mesmerizing 8-bit fire and flame animations with customizable effects</p>
+            </div>
+            
+            <div class="chatooly-controls-content">
+                <!-- ========== CANVAS CONTROLS AUTO-INJECTED BY CDN ========== -->
+                <!-- The Chatooly CDN automatically injects canvas controls here when it detects chatooly-canvas -->
+
+                <!-- ========== EDIT BELOW: Add Your Custom Tool Controls Here ========== -->
+
+                <!-- Fire Style Control -->
+                <div class="chatooly-control-group">
+                    <label for="fire-style">Fire Style</label>
+                    <select id="fire-style">
+                        <option value="flame" selected="">Flame 🔥</option>
+                        <option value="fireball">Fireball 🔮</option>
+                        <option value="campfire">Campfire 🏕️</option>
+                    </select>
+                </div>
+
+                <!-- Fire Size Control -->
+                <div class="chatooly-control-group">
+                    <label for="fire-size">Fire Size</label>
+                    <select id="fire-size">
+                        <option value="small">Small 🔥</option>
+                        <option value="medium" selected="">Medium 🔥🔥</option>
+                        <option value="large">Large 🔥🔥🔥</option>
+                    </select>
+                </div>
+
+                <!-- Fire Intensity Control -->
+                <div class="chatooly-control-group">
+                    <label for="fire-intensity">Fire Intensity</label>
+                    <input type="range" id="fire-intensity" min="0.3" max="1.5" step="0.1" value="1.0">
+                    <span id="intensity-value">1.0</span>
+                </div>
+
+                <!-- Animation Speed Control -->
+                <div class="chatooly-control-group">
+                    <label for="animation-speed">Animation Speed (8 FPS base)</label>
+                    <input type="range" id="animation-speed" min="0.2" max="3" step="0.2" value="1.0">
+                    <span id="animation-speed-value">1.0x</span>
+                </div>
+
+                <!-- Flame Height Control -->
+                <div class="chatooly-control-group">
+                    <label for="flame-height">Flame Height</label>
+                    <input type="range" id="flame-height" min="1" max="5" step="0.5" value="3">
+                    <span id="flame-height-value">3</span>
+                </div>
+
+                <!-- Pixel Size Control -->
+                <div class="chatooly-control-group">
+                    <label for="pixel-size">Pixel Size (8-bit Effect)</label>
+                    <input type="range" id="pixel-size" min="2" max="12" step="1" value="6">
+                    <span id="pixel-size-value">6</span>
+                </div>
+
+                <!-- Turbulence Control -->
+                <div class="chatooly-control-group">
+                    <label for="turbulence">Turbulence</label>
+                    <input type="range" id="turbulence" min="0" max="100" step="5" value="30">
+                    <span id="turbulence-value">30</span>
+                </div>
+
+                <!-- Wind Control -->
+                <div class="chatooly-control-group">
+                    <label for="wind">Wind</label>
+                    <input type="range" id="wind" min="-50" max="50" step="5" value="0">
+                    <span id="wind-value">0</span>
+                </div>
+
+                <!-- Smoke Toggle -->
+                <div class="chatooly-control-group">
+                    <label>
+                        <input type="checkbox" id="smoke-toggle" checked=""> Add Smoke
+                    </label>
+                </div>
+
+                <!-- Color Palette Control -->
+                <div class="chatooly-control-group">
+                    <label for="color-palette">Color Palette</label>
+                    <select id="color-palette">
+                        <option value="classic" selected="">Classic Fire 🔥</option>
+                        <option value="blue">Blue Flame 💙</option>
+                        <option value="green">Green Fire 💚</option>
+                        <option value="purple">Purple Flame 💜</option>
+                        <option value="white">White Hot 🤍</option>
+                    </select>
+                </div>
+
+                <!-- Reset Button -->
+                <div class="chatooly-control-group">
+                    <button id="reset-btn">Reset to Default</button>
+                </div>
+
+                <!-- ========== BACKGROUND CONTROLS ========== -->
+                <h3 class="section-header" id="background-header" style="cursor: pointer;">
+                    ◼ Background <span class="section-toggle">▼</span>
+                </h3>
+                <div id="background-section" class="section-content">
+                    <!-- Transparent Background Checkbox -->
+                    <div class="chatooly-control-group">
+                        <label>
+                            <input type="checkbox" id="transparent-bg"> Transparent Background
+                        </label>
+                    </div>
+
+                    <!-- Background Color Picker -->
+                    <div class="chatooly-control-group" id="bg-color-group">
+                        <label for="bg-color">Background Color</label>
+                        <input type="color" id="bg-color" value="#CCFD50">
+                    </div>
+
+                    <!-- Background Image Upload with Remove Button (X) -->
+                    <div class="chatooly-control-group">
+                        <label for="bg-image">Background Image</label>
+                        <div class="chatooly-bg-image-wrapper">
+                            <input type="file" id="bg-image" accept="image/*">
+                            <button id="clear-bg-image" type="button" class="chatooly-bg-image-remove" style="display: none;" title="Remove image">×</button>
+                        </div>
+                    </div>
+
+                    <!-- Image Fit Dropdown (hidden until image uploaded) -->
+                    <div class="chatooly-control-group" id="bg-fit-group" style="display: none;">
+                        <label for="bg-fit">Image Fit</label>
+                        <select id="bg-fit">
+                            <option value="cover">Fill Frame</option>
+                            <option value="contain">Fit in Frame</option>
+                            <option value="fill">Stretch to Fill</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- ========== END BACKGROUND CONTROLS ========== -->
+
+                <!-- ========== END EDIT SECTION ========== -->
+            </div>
+        </div>
+        
+        <!-- Right Panel: Preview/Canvas Area -->
+        <div class="chatooly-preview-panel" style="display: flex; align-items: center; justify-content: center;">
+            <!-- ========== DO NOT EDIT: Required Export Container ========== -->
+            <div id="chatooly-container" style="position: relative; display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 100%; height: 100%; overflow: auto;">
+                <!-- ========== EDIT BELOW: Add Your Visual Output Here ========== -->
+                <!-- This content will be exported as PNG/Video -->
+                <!-- IMPORTANT: Your main canvas MUST have id="chatooly-canvas" -->
+                <!-- For animations: CDN automatically detects canvas animations and provides video export options -->
+                <canvas id="chatooly-canvas" width="800" height="600" style="position: static; margin: 0px; width: 300px; height: 150px; transform-origin: center center;"></canvas>
+                <!-- ========== END EDIT SECTION ========== -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- ========== DO NOT EDIT: Chatooly CDN v2.0 Integration ========== -->
+    <!-- This script automatically provides: Dark theme styling + Static/Video export functionality -->
+    <!-- Video support: Detects p5.js, Three.js, Canvas animations and provides MediaRecorder API export -->
+    <script src="https://yaelren.github.io/chatooly-cdn/js/core.min.js"></script>
+    
+    <!-- ========== DO NOT EDIT: Chatooly Configuration ========== -->
+    <script src="js/chatooly-config.js"></script>
+
+    <!-- ========== DO NOT EDIT: UI Controls ========== -->
+    <script src="js/ui.js"></script>
+
+    <!-- ========== DO NOT EDIT: Your Tool Logic ========== -->
+    <script src="js/main.js"></script>
+<!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
+
+</body></html>

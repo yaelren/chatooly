@@ -51,7 +51,7 @@ function init() {
     }
 
     // Default blobs/colors (synced with UI defaults)
-    const defaultColors = ['#ff6b6b', '#4d96ff', '#ffd93d'];
+    const defaultColors = ['#BAB6FF', '#E1FF97', '#B6D3FE'];
     createBlobs(defaultColors);
 
     setupEventListeners();

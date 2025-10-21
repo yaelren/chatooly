@@ -674,7 +674,7 @@
                     }
                 }
             </style></head>
-<body class="chatooly-styles-loaded">
+<body class="chatooly-styles-loaded" style="overscroll-behavior-x: auto;">
     <!-- ========== EDIT THIS: Update header title to match your tool ========== -->
     <header class="chatooly-header">
         <div class="chatooly-header-title">homriki</div>
@@ -782,7 +782,7 @@
                 <!-- This content will be exported as PNG/Video -->
                 <!-- IMPORTANT: Your main canvas MUST have id="chatooly-canvas" -->
                 <!-- For animations: CDN automatically detects canvas animations and provides video export options -->
-                <canvas id="chatooly-canvas" width="900" height="900" style="position: static; margin: 0px; width: 842px; height: 842px; transform-origin: center center;"></canvas>
+                <canvas id="chatooly-canvas" style="position: static; margin: 0px; width: 300px; height: 150px; transform-origin: center center; cursor: default;"></canvas>
                 <!-- ========== END EDIT SECTION ========== -->
             </div>
         </div>
@@ -801,5 +801,43 @@
 
     <!-- ========== DO NOT EDIT: Your Tool Logic ========== -->
     <script src="js/main.js"></script>
+<!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
 
 </body></html>

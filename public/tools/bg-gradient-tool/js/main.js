@@ -18,7 +18,7 @@ const gradientState = {
     loopDurationSec: 5,
     speedFactor: 0.5, // retained for compatibility (not used in wiggle)
     movementStyle: 'wiggle',
-    blendMode: 'lighter',
+    blendMode: 'source-over',
     blurPx: 20,
     shapeType: 'circle',
     ellipseRatio: 1.20,
@@ -35,6 +35,19 @@ const gradientState = {
 function init() {
     if (window.Chatooly && window.Chatooly.backgroundManager) {
         window.Chatooly.backgroundManager.init(canvas);
+        // Set default background to white on init
+        const bgColorInput = document.getElementById('bg-color');
+        const transparentCb = document.getElementById('transparent-bg');
+        if (bgColorInput) {
+            window.Chatooly.backgroundManager.setTransparent(transparentCb ? !!transparentCb.checked : false);
+            window.Chatooly.backgroundManager.setBackgroundColor(bgColorInput.value || '#ffffff');
+        }
+    }
+
+    // Ensure UI reflects default blend mode
+    const blendModeSelect = document.getElementById('blend-mode');
+    if (blendModeSelect) {
+        blendModeSelect.value = 'source-over';
     }
 
     // Default blobs/colors (synced with UI defaults)

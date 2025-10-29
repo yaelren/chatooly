@@ -721,28 +721,28 @@
                 <div class="chatooly-control-group">
                     <label for="cell-size">Cell Size</label>
                     <input type="range" id="cell-size" min="2" max="20" value="8">
-                    <span id="cell-size-value">9</span>
+                    <span id="cell-size-value">8</span>
                 </div>
 
                 <!-- Brightness -->
                 <div class="chatooly-control-group">
                     <label for="brightness">Brightness</label>
                     <input type="range" id="brightness" min="-100" max="100" value="0">
-                    <span id="brightness-value">12</span>
+                    <span id="brightness-value">0</span>
                 </div>
 
                 <!-- Contrast -->
                 <div class="chatooly-control-group">
                     <label for="contrast">Contrast</label>
                     <input type="range" id="contrast" min="-100" max="100" value="0">
-                    <span id="contrast-value">15</span>
+                    <span id="contrast-value">0</span>
                 </div>
 
                 <!-- Dither Intensity -->
                 <div class="chatooly-control-group">
                     <label for="dither-intensity">Dither Intensity</label>
                     <input type="range" id="dither-intensity" min="0" max="100" value="30">
-                    <span id="dither-intensity-value">23%</span>
+                    <span id="dither-intensity-value">30%</span>
                 </div>
 
                 <!-- Monochrome Toggle -->
@@ -755,7 +755,7 @@
                 <!-- Multi-Color Palette (shown when not monochrome) -->
                 <div class="chatooly-control-group" id="multi-color-controls" style="display: block;">
                     <label>Color Palette</label>
-                    <div id="color-palette-list"><div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;"><input type="color"><button type="button" style="padding: 2px 6px;">×</button></div><div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;"><input type="color"><button type="button" style="padding: 2px 6px;">×</button></div><div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;"><input type="color"><button type="button" style="padding: 2px 6px;">×</button></div></div>
+                    <div id="color-palette-list"><div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;"><input type="color"><button type="button" style="padding: 2px 6px;">×</button></div><div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;"><input type="color"><button type="button" style="padding: 2px 6px;">×</button></div></div>
                     <button type="button" id="add-color-btn" style="margin-top: 8px;">Add Color</button>
                 </div>
 
@@ -767,14 +767,14 @@
                 </div>
 
                 <!-- Animation Speed (hidden when not animated) -->
-                <div class="chatooly-control-group" id="speed-control" style="display: block;">
+                <div class="chatooly-control-group" id="speed-control" style="display: none;">
                     <label for="animation-speed">Animation Speed</label>
                     <input type="range" id="animation-speed" min="1" max="100" value="50">
                     <span id="speed-value">50</span>
                 </div>
 
                 <!-- Animation Percentage (hidden when not animated) -->
-                <div class="chatooly-control-group" id="percentage-control" style="display: block;">
+                <div class="chatooly-control-group" id="percentage-control" style="display: none;">
                     <label for="animation-percentage">Random Change %</label>
                     <input type="range" id="animation-percentage" min="1" max="50" value="10">
                     <span id="percentage-value">10%</span>
@@ -828,7 +828,7 @@
         <!-- Right Panel: Preview/Canvas Area -->
         <div class="chatooly-preview-panel" style="display: flex; align-items: center; justify-content: center;">
             <!-- ========== DO NOT EDIT: Required Export Container ========== -->
-            <div id="chatooly-container" class="" style="position: relative; display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 100%; height: 100%; overflow: auto;">
+            <div id="chatooly-container" style="position: relative; display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 100%; height: 100%; overflow: auto;">
                 <!-- ========== EDIT BELOW: Add Your Visual Output Here ========== -->
                 <!-- This content will be exported as PNG/Video -->
                 <!-- IMPORTANT: Your main canvas MUST have id="chatooly-canvas" -->

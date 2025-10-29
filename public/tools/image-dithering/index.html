@@ -695,10 +695,16 @@
 
                 <!-- ========== EDIT BELOW: Add Your Custom Tool Controls Here ========== -->
 
-                <!-- Image Upload -->
+                <!-- Image/Video Upload -->
                 <div class="chatooly-control-group">
-                    <label for="image-upload">Upload Image</label>
-                    <input type="file" id="image-upload" accept="image/*">
+                    <label for="image-upload">Upload Image or Video</label>
+                    <input type="file" id="image-upload" accept="image/*,video/*">
+                </div>
+
+                <!-- Video Controls (hidden until video loaded) -->
+                <div class="chatooly-control-group" id="video-controls" style="display: block;">
+                    <button type="button" id="play-pause-btn">Pause</button>
+                    <button type="button" id="mute-btn">Mute</button>
                 </div>
 
                 <!-- Dither Fill Mode -->
@@ -728,21 +734,21 @@
                 <div class="chatooly-control-group">
                     <label for="brightness">Brightness</label>
                     <input type="range" id="brightness" min="-100" max="100" value="0">
-                    <span id="brightness-value">0</span>
+                    <span id="brightness-value">12</span>
                 </div>
 
                 <!-- Contrast -->
                 <div class="chatooly-control-group">
                     <label for="contrast">Contrast</label>
                     <input type="range" id="contrast" min="-100" max="100" value="0">
-                    <span id="contrast-value">0</span>
+                    <span id="contrast-value">14</span>
                 </div>
 
                 <!-- Dither Intensity -->
                 <div class="chatooly-control-group">
                     <label for="dither-intensity">Dither Intensity</label>
                     <input type="range" id="dither-intensity" min="0" max="100" value="30">
-                    <span id="dither-intensity-value">30%</span>
+                    <span id="dither-intensity-value">67%</span>
                 </div>
 
                 <!-- Monochrome Toggle -->
@@ -828,12 +834,14 @@
         <!-- Right Panel: Preview/Canvas Area -->
         <div class="chatooly-preview-panel" style="display: flex; align-items: center; justify-content: center;">
             <!-- ========== DO NOT EDIT: Required Export Container ========== -->
-            <div id="chatooly-container" style="position: relative; display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 100%; height: 100%; overflow: auto;">
+            <div id="chatooly-container" class="" style="position: relative; display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 100%; height: 100%; overflow: auto;">
                 <!-- ========== EDIT BELOW: Add Your Visual Output Here ========== -->
                 <!-- This content will be exported as PNG/Video -->
                 <!-- IMPORTANT: Your main canvas MUST have id="chatooly-canvas" -->
                 <!-- For animations: CDN automatically detects canvas animations and provides video export options -->
                 <canvas id="chatooly-canvas" width="800" height="600" style="position: static; margin: 0px; width: 800px; height: 600px; transform-origin: center center;"></canvas>
+                <!-- Hidden video element for processing -->
+                <video id="video-source" style="display: none;" muted="" loop="" src="blob:http://127.0.0.1:5501/40aaa3e4-7953-4d8f-9676-6bdddd3db219" width="800" height="450"></video>
                 <!-- ========== END EDIT SECTION ========== -->
             </div>
         </div>

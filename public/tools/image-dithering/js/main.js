@@ -13,10 +13,13 @@ const ctx = canvas.getContext('2d');
 
 // ========== STATE ==========
 let originalImage = null;
+let videoSource = null;
+let isVideo = false;
 let imageData = null;
 let ditherData = null; // Store brightness map
 let animationFrame = 0;
 let animationId = null;
+let videoAnimationId = null;
 let previousCanvasSize = { width: canvas.width, height: canvas.height };
 let animatedCells = new Set(); // Track which cells should be randomly animated
 
@@ -66,20 +69,167 @@ function getDitherThreshold(x, y) {
 
 function loadImage(file) {
     return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const img = new Image();
-            img.onload = () => {
-                originalImage = img;
-                processImage();
-                resolve(img);
+        // Check if it's a video file
+        if (file.type.startsWith('video/')) {
+            const video = document.getElementById('video-source');
+            const url = URL.createObjectURL(file);
+            video.src = url;
+            video.onloadedmetadata = () => {
+                videoSource = video;
+                isVideo = true;
+                originalImage = null;
+                
+                // Show video controls
+                const videoControls = document.getElementById('video-controls');
+                if (videoControls) {
+                    videoControls.style.display = 'block';
+                }
+                
+                // Set video dimensions to match canvas aspect
+                const canvasAspect = canvas.width / canvas.height;
+                const videoAspect = video.videoWidth / video.videoHeight;
+                
+                if (videoAspect > canvasAspect) {
+                    video.width = canvas.width;
+                    video.height = canvas.width / videoAspect;
+                } else {
+                    video.width = canvas.height * videoAspect;
+                    video.height = canvas.height;
+                }
+                
+                // Set video to loop automatically
+                video.loop = true;
+                
+                // Process first frame immediately
+                processVideoToDither();
+                
+                resolve(video);
             };
-            img.onerror = reject;
-            img.src = e.target.result;
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
+            video.onerror = reject;
+            video.load();
+        } else {
+            // Image file
+            isVideo = false;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    originalImage = img;
+                    videoSource = null;
+                    
+                    // Hide video controls
+                    const videoControls = document.getElementById('video-controls');
+                    if (videoControls) {
+                        videoControls.style.display = 'none';
+                    }
+                    
+                    processImage();
+                    resolve(img);
+                };
+                img.onerror = reject;
+                img.src = e.target.result;
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        }
     });
+}
+
+function processVideoFrame() {
+    if (!videoSource || !isVideo) return;
+    
+    // Stop any existing video processing
+    if (videoAnimationId) {
+        cancelAnimationFrame(videoAnimationId);
+    }
+    
+    // Check if video is playing
+    if (videoSource.paused || videoSource.ended) {
+        // Still render the current frame
+        processVideoToDither();
+        return;
+    }
+    
+    // Process current video frame
+    processVideoToDither();
+    
+    // Continue processing on next frame
+    videoAnimationId = requestAnimationFrame(() => processVideoFrame());
+}
+
+function processVideoToDither() {
+    if (!videoSource || !isVideo) return;
+    
+    // Create temporary canvas to extract video frame
+    const tempCanvas = document.createElement('canvas');
+    const dims = calculateImageDimensions(
+        settings.imageFit,
+        videoSource.videoWidth,
+        videoSource.videoHeight,
+        canvas.width,
+        canvas.height
+    );
+    
+    tempCanvas.width = dims.drawWidth;
+    tempCanvas.height = dims.drawHeight;
+    const tempCtx = tempCanvas.getContext('2d');
+    
+    // Draw current video frame
+    if (settings.imageFit === 'cover') {
+        tempCtx.drawImage(
+            videoSource,
+            dims.sourceX, dims.sourceY, dims.sourceWidth, dims.sourceHeight,
+            0, 0, dims.drawWidth, dims.drawHeight
+        );
+    } else {
+        tempCtx.drawImage(videoSource, 0, 0, dims.drawWidth, dims.drawHeight);
+    }
+    
+    // Get image data and process
+    imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+    
+    // Store brightness map for dithering
+    ditherData = {
+        width: tempCanvas.width,
+        height: tempCanvas.height,
+        pixels: []
+    };
+
+    // Apply brightness and contrast adjustments
+    for (let y = 0; y < tempCanvas.height; y++) {
+        for (let x = 0; x < tempCanvas.width; x++) {
+            const idx = (y * tempCanvas.width + x) * 4;
+            let r = imageData.data[idx];
+            let g = imageData.data[idx + 1];
+            let b = imageData.data[idx + 2];
+            
+            // Apply brightness (-100 to 100, maps to -1 to 1)
+            const brightnessAdj = settings.brightness / 100;
+            r = Math.max(0, Math.min(255, r + (brightnessAdj * 255)));
+            g = Math.max(0, Math.min(255, g + (brightnessAdj * 255)));
+            b = Math.max(0, Math.min(255, b + (brightnessAdj * 255)));
+            
+            // Apply contrast (-100 to 100)
+            const contrastAdj = settings.contrast / 100;
+            const factor = (259 * (contrastAdj * 255 + 255)) / (255 * (259 - contrastAdj * 255));
+            r = Math.max(0, Math.min(255, factor * (r - 128) + 128));
+            g = Math.max(0, Math.min(255, factor * (g - 128) + 128));
+            b = Math.max(0, Math.min(255, factor * (b - 128) + 128));
+            
+            // Calculate brightness (luminance formula)
+            const brightness = 0.299 * r + 0.587 * g + 0.114 * b;
+            ditherData.pixels.push({
+                x: x,
+                y: y,
+                brightness: brightness / 255,
+                r: Math.round(r),
+                g: Math.round(g),
+                b: Math.round(b)
+            });
+        }
+    }
+
+    render();
 }
 
 function calculateImageDimensions(fitMode, imgWidth, imgHeight, canvasWidth, canvasHeight) {
@@ -416,7 +566,8 @@ function render() {
 }
 
 function animate() {
-    if (settings.animated) {
+    if (settings.animated && !isVideo) {
+        // Only run character animation if not processing video
         animationFrame++;
         // Control animation speed: 1 = slowest, 100 = fastest
         // Convert speed to milliseconds between updates
@@ -449,14 +600,52 @@ function stopAnimation() {
 
 // ========== EVENT LISTENERS ==========
 document.addEventListener('DOMContentLoaded', () => {
-    // Image upload
+    // Image/Video upload
     const imageUpload = document.getElementById('image-upload');
     if (imageUpload) {
         imageUpload.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
+                // Stop any existing animations
+                stopAnimation();
+                if (videoAnimationId) {
+                    cancelAnimationFrame(videoAnimationId);
+                    videoAnimationId = null;
+                }
                 loadImage(file);
             }
+        });
+    }
+
+    // Video controls
+    const playPauseBtn = document.getElementById('play-pause-btn');
+    const muteBtn = document.getElementById('mute-btn');
+    const videoElement = document.getElementById('video-source');
+    
+    if (playPauseBtn && videoElement) {
+        playPauseBtn.addEventListener('click', () => {
+            if (videoElement.paused || videoElement.ended) {
+                videoElement.play().then(() => {
+                    playPauseBtn.textContent = 'Pause';
+                    processVideoFrame(); // Start processing
+                }).catch(err => {
+                    console.error('Error playing video:', err);
+                });
+            } else {
+                videoElement.pause();
+                playPauseBtn.textContent = 'Play';
+                if (videoAnimationId) {
+                    cancelAnimationFrame(videoAnimationId);
+                    videoAnimationId = null;
+                }
+            }
+        });
+    }
+    
+    if (muteBtn && videoElement) {
+        muteBtn.addEventListener('click', () => {
+            videoElement.muted = !videoElement.muted;
+            muteBtn.textContent = videoElement.muted ? 'Unmute' : 'Mute';
         });
     }
 
@@ -551,7 +740,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (brightness) {
         brightness.addEventListener('input', (e) => {
             settings.brightness = parseInt(e.target.value);
-            if (originalImage) {
+            if (isVideo && videoSource) {
+                processVideoToDither();
+            } else if (originalImage) {
                 processImage();
             }
         });
@@ -562,7 +753,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (contrast) {
         contrast.addEventListener('input', (e) => {
             settings.contrast = parseInt(e.target.value);
-            if (originalImage) {
+            if (isVideo && videoSource) {
+                processVideoToDither();
+            } else if (originalImage) {
                 processImage();
             }
         });

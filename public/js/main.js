@@ -2,10 +2,7 @@
 
 class ChatoolyHub {
     constructor() {
-        this.toolsGrid = document.getElementById('tools-grid');
-        this.allTools = []; // Store all tools for filtering
-        this.currentFilter = 'all';
-        this.searchTerm = '';
+        this.toolsList = document.getElementById('tools-list');
         this.init();
     }
 
@@ -29,69 +26,16 @@ class ChatoolyHub {
                 }
             });
         });
-
-        // Search functionality
-        const searchInput = document.getElementById('search-input');
-        const searchBtn = document.getElementById('search-btn');
-        
-        if (searchInput && searchBtn) {
-            searchInput.addEventListener('input', (e) => {
-                this.searchTerm = e.target.value.toLowerCase();
-                this.filterAndDisplayTools();
-            });
-            
-            searchBtn.addEventListener('click', () => {
-                searchInput.focus();
-            });
-        }
-
-        // Filter buttons
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                // Remove active class from all buttons
-                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                // Add active class to clicked button
-                e.target.classList.add('active');
-                
-                this.currentFilter = e.target.dataset.category;
-                this.filterAndDisplayTools();
-            });
-        });
     }
 
     async loadTools() {
         try {
-            // Load all tools
             const tools = await this.fetchTools();
-            this.allTools = tools;
-            this.filterAndDisplayTools();
+            this.renderTools(tools);
         } catch (error) {
             console.error('Error loading tools:', error);
-            this.toolsGrid.innerHTML = '<div class="no-tools">Error loading tools. Please try again later.</div>';
+            this.toolsList.innerHTML = '<div class="no-tools">Error loading tools. Please try again later.</div>';
         }
-    }
-
-    filterAndDisplayTools() {
-        let filteredTools = this.allTools;
-
-        // Apply category filter
-        if (this.currentFilter !== 'all') {
-            filteredTools = filteredTools.filter(tool => 
-                tool.category.toLowerCase() === this.currentFilter.toLowerCase()
-            );
-        }
-
-        // Apply search filter
-        if (this.searchTerm) {
-            filteredTools = filteredTools.filter(tool =>
-                tool.name.toLowerCase().includes(this.searchTerm) ||
-                tool.description.toLowerCase().includes(this.searchTerm) ||
-                tool.author.toLowerCase().includes(this.searchTerm) ||
-                (tool.tags && tool.tags.some(tag => tag.toLowerCase().includes(this.searchTerm)))
-            );
-        }
-
-        this.renderTools(filteredTools, this.toolsGrid);
     }
 
     async fetchTools() {
@@ -113,136 +57,75 @@ class ChatoolyHub {
     }
 
     async discoverToolsStatic() {
-        const knownTools = [
-            'test-api',
-            'windy-text',
-            'fisheye-tool',
-            'fisheyezzz'
-        ];
-        
-        const discoveredTools = [];
-        
-        for (const toolSlug of knownTools) {
-            try {
-                // Check if tool exists by trying to fetch its index.html
-                const response = await fetch(`/tools/${toolSlug}/index.html`, { method: 'HEAD' });
-                if (response.ok) {
-                    // Try to get metadata from chatooly-config.js if it exists
-                    const configResponse = await fetch(`/tools/${toolSlug}/js/chatooly-config.js`);
-                    let metadata = {
-                        name: toolSlug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-                        description: 'A Chatooly design tool',
-                        author: 'Anonymous',
-                        category: 'tools',
-                        slug: toolSlug,
-                        createdAt: new Date().toISOString()
-                    };
-                    
-                    if (configResponse.ok) {
-                        try {
-                            const configText = await configResponse.text();
-                            // Extract metadata from config file (basic parsing)
-                            const nameMatch = configText.match(/name:\s*["']([^"']+)["']/);
-                            const descMatch = configText.match(/description:\s*["']([^"']+)["']/);
-                            const authorMatch = configText.match(/author:\s*["']([^"']+)["']/);
-                            
-                            if (nameMatch) metadata.name = nameMatch[1];
-                            if (descMatch) metadata.description = descMatch[1];
-                            if (authorMatch) metadata.author = authorMatch[1];
-                        } catch (e) {
-                            console.warn(`Could not parse config for ${toolSlug}:`, e);
-                        }
-                    }
-                    
-                    discoveredTools.push(metadata);
-                }
-            } catch (e) {
-                // Tool doesn't exist, continue
+        // Static tool data for local development
+        const tools = [
+            {
+                name: 'BG Gradient Tool',
+                slug: 'bg-gradient-tool',
+                author: 'Studio Video',
+                category: 'art'
+            },
+            {
+                name: 'Dragon Generator',
+                slug: 'dragon-generator',
+                author: 'Studio Video',
+                category: 'generators'
+            },
+            {
+                name: 'Fire Generator',
+                slug: 'fire-generator',
+                author: 'Studio Video',
+                category: 'generators'
+            },
+            {
+                name: 'Homriki',
+                slug: 'homriki',
+                author: 'Studio Video',
+                category: 'art'
+            },
+            {
+                name: 'Image Dithering',
+                slug: 'image-dithering',
+                author: 'Studio Video',
+                category: 'editors'
+            },
+            {
+                name: 'Sticker Maker',
+                slug: 'sticker-maker',
+                author: 'Studio Video',
+                category: 'art'
+            },
+            {
+                name: 'Text Waves',
+                slug: 'text-waves',
+                author: 'Studio Video',
+                category: 'text'
+            },
+            {
+                name: 'Type Shaper',
+                slug: 'type-shaper',
+                author: 'Studio Video',
+                category: 'text'
             }
-        }
-        
-        return discoveredTools;
+        ];
+
+        return tools;
     }
 
-    renderTools(tools, container) {
+    renderTools(tools) {
         if (!tools.length) {
-            container.innerHTML = '<div class="no-tools">No tools available yet. Check back soon!</div>';
+            this.toolsList.innerHTML = '<div class="no-tools">No tools available yet. Check back soon!</div>';
             return;
         }
 
-        container.innerHTML = tools.map(tool => `
-            <div class="tool-card">
+        this.toolsList.innerHTML = tools.map(tool => `
+            <div class="tool-item">
                 <a href="/tools/${tool.slug}/" class="tool-link">
-                    <div class="tool-thumbnail">
-                        ${tool.emoji || '🎨'}
-                    </div>
-                    <div class="tool-info">
-                        <div class="tool-name">${tool.name}</div>
-                        <div class="tool-creator">by ${tool.author}</div>
-                    </div>
+                    <span class="tool-name">${tool.name}</span>
+                    <span class="tool-creator">by ${tool.author}</span>
                 </a>
             </div>
         `).join('');
-
-        // Add some sample tools if none exist
-        this.addSampleToolsIfEmpty(container, tools);
-    }
-
-    addSampleToolsIfEmpty(container, tools) {
-        if (tools.length === 0) {
-            const sampleTools = [
-                { name: 'Gradient Generator', author: 'DesignPro', slug: 'gradient-gen', emoji: '🌈' },
-                { name: 'Text Animator', author: 'CreativeCoder', slug: 'text-animator', emoji: '✨' },
-                { name: 'Pattern Maker', author: 'ArtistDev', slug: 'pattern-maker', emoji: '🔶' },
-                { name: 'Color Palette', author: 'ColorMaster', slug: 'color-palette', emoji: '🎨' },
-                { name: 'Shape Builder', author: 'GeometryPro', slug: 'shape-builder', emoji: '🔺' },
-                { name: 'Noise Generator', author: 'AbstractArt', slug: 'noise-gen', emoji: '🌊' }
-            ];
-
-            container.innerHTML = sampleTools.map(tool => `
-                <div class="tool-card">
-                    <a href="/tools/${tool.slug}/" class="tool-link">
-                        <div class="tool-thumbnail">
-                            ${tool.emoji}
-                        </div>
-                        <div class="tool-info">
-                            <div class="tool-name">${tool.name}</div>
-                            <div class="tool-creator">by ${tool.author}</div>
-                        </div>
-                    </a>
-                </div>
-            `).join('');
-        }
-    }
-
-    addTool(tool) {
-        const container = this.toolsGrid;
-        
-        const toolCard = document.createElement('div');
-        toolCard.className = 'tool-card';
-        toolCard.innerHTML = `
-            <h3 class="tool-name">
-                <a href="/tools/${tool.slug}/" class="tool-link">
-                    ${tool.name}
-                </a>
-            </h3>
-            <p class="tool-description">${tool.description}</p>
-            <div class="tool-meta">
-                <span class="tool-author">by ${tool.author}</span>
-                <span class="tool-category">${tool.category}</span>
-            </div>
-            <div class="tool-date">
-                ${new Date(tool.createdAt).toLocaleDateString()}
-            </div>
-        `;
-
-        // Remove "no tools" message if it exists
-        const noToolsMsg = container.querySelector('.no-tools');
-        if (noToolsMsg) {
-            container.removeChild(noToolsMsg);
-        }
-
-        container.appendChild(toolCard);
     }
 }
 

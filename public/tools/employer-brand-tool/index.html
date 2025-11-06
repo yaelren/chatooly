@@ -3,33 +3,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <!-- ========== EDIT THIS: Your Tool Name ========== -->
-    <title>Employer Brand Tool POC - Chatooly</title>
-
-    <!-- ========== Import Map for Wix SDK (Cloud Presets) ========== -->
-    <script type="importmap">
-    {
-        "imports": {
-            "@wix/sdk": "https://cdn.jsdelivr.net/npm/@wix/sdk@1.17.1/+esm",
-            "@wix/data": "https://cdn.jsdelivr.net/npm/@wix/data@1.0.306/+esm",
-            "@wix/media": "https://cdn.jsdelivr.net/npm/@wix/media@1.0.195/+esm"
-        }
-    }
-    </script>
-
-    <!-- ========== Google Fonts ========== -->
-    
-    
-    
+    <title>Sticker Tool - Chatooly</title>
     
     <!-- ========== DO NOT EDIT: Required CDN Styles ========== -->
-    
-    
-    <!-- Custom styles -->
-    
-    
-    
-    
-    
+    <link id="chatooly-unified-styles" rel="stylesheet" href="https://yaelren.github.io/chatooly-cdn/css/unified.min.css"><link rel="stylesheet" href="https://yaelren.github.io/chatooly-cdn/css/unified.min.css">
 <style id="chatooly-canvas-area-styles">
                 /* Canvas area container - works with both template and legacy */
                 #chatooly-container, #chatooly-canvas-area {
@@ -584,517 +561,190 @@
                         font-size: 7px;
                     }
                 }
-            </style><style data-font="Inter 18pt">
-            @font-face {
-                font-family: "Inter 18pt";
-                src: url(https://static.wixstatic.com/ufonts/2684f6_a3ccc7c9b10d40be848657dd2952187a/file.ttf) format('truetype');
-                font-display: swap;
-            }
-        </style><style data-font="Inter 24pt">
-            @font-face {
-                font-family: "Inter 24pt";
-                src: url(https://static.wixstatic.com/ufonts/3f4fbc_d6fb053cbc8f4ae39c149b18769097e0/file.ttf) format('truetype');
-                font-display: swap;
-            }
-        </style><style data-font="Bebasneue">
-            @font-face {
-                font-family: "Bebasneue";
-                src: url(https://static.wixstatic.com/ufonts/df5052_cf479575d8ce4adabea977919cdb4302/file.ttf) format('truetype');
-                font-display: swap;
-            }
-        </style><style data-font="Momotrustdisplay">
-            @font-face {
-                font-family: "Momotrustdisplay";
-                src: url(https://static.wixstatic.com/ufonts/af72b1_5d9acf832de54f2f9ca4f0d752b364e6/file.ttf) format('truetype');
-                font-display: swap;
-            }
-        </style><style data-font="Impact">
-            @font-face {
-                font-family: "Impact";
-                src: url(https://static.wixstatic.com/ufonts/03bf33_2b03c02dd31f4c768714657166494f9b/file.ttf) format('truetype');
-                font-display: swap;
-            }
-        </style><style data-font="Ppmondwest">
-            @font-face {
-                font-family: "Ppmondwest";
-                src: url(https://static.wixstatic.com/ufonts/cb9d7f_b604c1d1c94e48ec8497a55cec309399/file.otf) format('opentype');
-                font-display: swap;
-            }
-        </style><style data-font="Ppeiko">
-            @font-face {
-                font-family: "Ppeiko";
-                src: url(https://static.wixstatic.com/ufonts/dd8053_c38f6de5b15747d7a0560b80d78ad5e0/file.otf) format('opentype');
-                font-display: swap;
-            }
-        </style><style data-font="Ppneuebit">
-            @font-face {
-                font-family: "Ppneuebit";
-                src: url(https://static.wixstatic.com/ufonts/11ddcd_18b9cb2f1b30417fba4f5d9a6450e2f9/file.otf) format('opentype');
-                font-display: swap;
-            }
-        </style><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""><link id="chatooly-unified-styles" rel="stylesheet" href="https://yaelren.github.io/chatooly-cdn/css/unified.min.css?_cacheOverride=1762427539486"><link href="https://fonts.googleapis.com/css2?family=Wix+Madefor+Display:wght@400..800&amp;family=Wix+Madefor+Text:ital,wght@0,400..800;1,400..800&amp;display=swap&amp;_cacheOverride=1762427539486" rel="stylesheet"><link rel="stylesheet" href="https://yaelren.github.io/chatooly-cdn/css/unified.min.css?_cacheOverride=1762427539486"><link rel="stylesheet" href="http://127.0.0.1:5502/style.css?_cacheOverride=1762427539486"><link rel="stylesheet" href="http://127.0.0.1:5502/css/media-picker.css?_cacheOverride=1762427539487"><link rel="stylesheet" href="http://127.0.0.1:5502/css/save-page-panel.css?_cacheOverride=1762427539487"><link rel="stylesheet" href="http://127.0.0.1:5502/css/load-page-modal.css?_cacheOverride=1762427539487"><link rel="stylesheet" href="http://127.0.0.1:5502/css/content-slots.css?_cacheOverride=1762427539487"></head>
-<body class="chatooly-styles-loaded">
+            </style><style id="chatooly-export-animation">
+                    @keyframes chatoolySlideIn {
+                        from {
+                            opacity: 0;
+                            transform: translateX(100%);
+                        }
+                        to {
+                            opacity: 1;
+                            transform: translateX(0);
+                        }
+                    }
+                    @keyframes chatoolyRecordPulse {
+                        0%, 100% { opacity: 1; }
+                        50% { opacity: 0.4; }
+                    }
+                    .chatooly-record-dot {
+                        width: 8px;
+                        height: 8px;
+                        background: #dc3545;
+                        border-radius: 50%;
+                        animation: chatoolyRecordPulse 1.5s ease-in-out infinite;
+                    }
+                </style></head>
+<body class="chatooly-styles-loaded" style="overscroll-behavior-x: auto;">
+    <!-- ========== EDIT THIS: Update header title to match your tool ========== -->
+    <header class="chatooly-header">
+        <div class="chatooly-header-title">Sticker Tool</div>
+        <div class="chatooly-header-credit">MADE WITH CHATOOLY</div>
+    </header>
+
     <div class="chatooly-app-container">
         <!-- Left Panel: Tool Controls -->
         <div class="chatooly-controls-panel">
-            <!-- ========== EDIT THIS: Your Tool Title ========== -->
+            <!-- ========== EDIT THIS: Tool Description ========== -->
             <div class="chatooly-controls-header">
-                <h1>Employer Brand Tool</h1>
-                <p>Text-driven layout with automatic spot detection</p>
+                <p>Click anywhere on the canvas to add stickers! Create text stickers or upload your own images.</p>
             </div>
             
             <div class="chatooly-controls-content">
-                <!-- ========== EDIT BELOW: Add Your Tool Controls Here ========== -->
-                
-                <!-- Spot Detection Controls removed - auto-detection is now permanently enabled -->
-                
-                <!-- Tab Navigation -->
-                <div class="tab-navigation">
-                    <button class="tab-btn" data-tab="mainText">Grid Builder</button>
-                    <button class="tab-btn" data-tab="grid">Grid Editor</button>
-                    <button class="tab-btn active" data-tab="presets">Presets</button>
-                </div>
-                
-                <!-- Main Text Tab -->
-                <div id="mainTextTab" class="tab-content">
-                    <!-- Minimum Spot Size Control (Compact) -->
-                    <div class="chatooly-control-group compact-row">
-                        <div class="compact-control">
-                            <label for="minSpotSize">Min Spot Size</label>
-                            <input type="number" id="minSpotSize" value="50" min="20" max="200">
-                            <span class="unit">px</span>
-                        </div>
-                    </div>
-                    
-                    <!-- Canvas & Background Controls (Collapsible) -->
-                    <div class="chatooly-control-group compact-padding-section">
-                        <div class="padding-header" onclick="toggleBackgroundControls()">
-                            <label>Canvas &amp; Background</label>
-                            <span class="padding-toggle-icon">▼</span>
-                        </div>
-                        <div id="backgroundControls" class="padding-controls-collapsed">
-                            <!-- Canvas Padding Controls -->
-                            <div class="chatooly-control-group">
-                                <label>Canvas Padding</label>
-                                <div class="compact-padding-row">
-                                    <label for="paddingHorizontal">Width:</label>
-                                    <input type="range" id="paddingHorizontal" min="0" max="100" value="20">
-                                    <span id="paddingHorizontalValue">72px</span>
-                                </div>
-                                <div class="compact-padding-row">
-                                    <label for="paddingVertical">Height:</label>
-                                    <input type="range" id="paddingVertical" min="0" max="100" value="20">
-                                    <span id="paddingVerticalValue">125px</span>
-                                </div>
-                            </div>
-                            
-                            <!-- Background Color with inline color picker -->
-                            <div class="chatooly-control-group compact-row">
-                                <div class="compact-control">
-                                    <label for="backgroundColor">Background Color</label>
-                                    <input type="color" id="backgroundColor" value="#ffffff">
-                                </div>
-                            </div>
-                            
-                            <!-- Background Media (Image/Video) from Media Manager only -->
-                            <div class="chatooly-control-group">
-                                <label for="backgroundMedia">Background Media</label>
-                                <div class="background-media-controls">
-                                    <button type="button" id="browseBackgroundMedia" class="browse-media-btn">Browse</button>
-                                    <button type="button" id="clearBackgroundMedia" style="display: none;" class="delicate-x">×</button>
-                                </div>
+                <!-- ========== CANVAS CONTROLS AUTO-INJECTED BY CDN ========== -->
+                <!-- The Chatooly CDN automatically injects canvas controls here when it detects chatooly-canvas -->
 
-                                <!-- Video Controls (hidden by default) -->
-                                <div id="backgroundVideoControls" style="display: none;" class="video-controls">
-                                    <label>
-                                        <input type="checkbox" id="backgroundVideoAutoplay" checked="">
-                                        Autoplay
-                                    </label>
-                                    <label>
-                                        <input type="checkbox" id="backgroundVideoLoop" checked="">
-                                        Loop
-                                    </label>
-                                </div>
-                                
-                                <!-- Compact Image Space Controls -->
-                                <div class="compact-image-space">
-                                    <div class="space-toggles">
-                                        <label>
-                                            <input type="radio" name="backgroundSpace" value="canvas" checked="">
-                                            Canvas
-                                        </label>
-                                        <label>
-                                            <input type="radio" name="backgroundSpace" value="padding">
-                                            Padding
-                                        </label>
-                                    </div>
-                                    <div class="fill-mode-control">
-                                        <label for="backgroundFillMode">Fill Mode:</label>
-                                        <select id="backgroundFillMode">
-                                            <option value="stretch">Stretch</option>
-                                            <option value="fit">Fit</option>
-                                            <option value="fill" selected="">Fill (Crop)</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Main Text Section (Collapsible) -->
-                    <div class="chatooly-control-group compact-padding-section">
-                        <div class="padding-header" onclick="toggleMainTextControls()">
-                            <label>Main Text</label>
-                            <span class="padding-toggle-icon expanded">▲</span>
-                        </div>
-                        <div id="mainTextControls" class="padding-controls-collapsed expanded">
-                            <!-- Main Text Input -->
-                            <div class="chatooly-control-group">
-                                <label for="mainText">Text Content</label>
-                                <textarea id="mainText" placeholder="Enter your text here..." rows="3">EMPLOYEE
-SPOTLIGHT
-2024</textarea>
-                            </div>
-                            
-                            <!-- Font Family Row -->
-                            <div class="chatooly-control-group compact-row">
-                                <div class="compact-control">
-                                    <label for="fontFamily">Font</label>
-                                    <select id="fontFamily"><option value="&quot;Wix Madefor Display&quot;, Arial, sans-serif">Wix Madefor Display</option><option value="&quot;Wix Madefor Text&quot;, Arial, sans-serif">Wix Madefor Text</option><option value="Arial, sans-serif">Arial</option><option value="&quot;Courier New&quot;, Courier, monospace">Courier New</option><option value="Georgia, serif">Georgia</option><option value="Helvetica, Arial, sans-serif">Helvetica</option><option value="Impact, Charcoal, sans-serif">Impact</option><option value="&quot;Times New Roman&quot;, Times, serif">Times New Roman</option><option value="&quot;Trebuchet MS&quot;, Helvetica, sans-serif">Trebuchet MS</option><option value="Verdana, Geneva, sans-serif">Verdana</option><option value="&quot;Bebasneue&quot;, Arial, sans-serif" style="font-style: italic;">Bebasneue</option><option value="&quot;Impact&quot;, Arial, sans-serif" style="font-style: italic;">Impact</option><option value="&quot;Inter 18pt&quot;, Arial, sans-serif" style="font-style: italic;">Inter 18pt</option><option value="&quot;Inter 24pt&quot;, Arial, sans-serif" style="font-style: italic;">Inter 24pt</option><option value="&quot;Momotrustdisplay&quot;, Arial, sans-serif" style="font-style: italic;">Momotrustdisplay</option><option value="&quot;Ppeiko&quot;, Arial, sans-serif" style="font-style: italic;">Ppeiko</option><option value="&quot;Ppmondwest&quot;, Arial, sans-serif" style="font-style: italic;">Ppmondwest</option><option value="&quot;Ppneuebit&quot;, Arial, sans-serif" style="font-style: italic;">Ppneuebit</option><option disabled="">───────────────</option><option value="__upload_font__" style="font-style: italic; color: rgb(153, 153, 153);">📁 Upload custom font...</option></select>
-                                </div>
-                            </div>
-                            
-                            <!-- Size and Line Spacing Row -->
-                            <div class="chatooly-control-group compact-row">
-                                <div class="compact-control">
-                                    <label for="fontSize">Size</label>
-                                    <input type="number" id="fontSize" min="20" max="200" value="100" step="1">
-                                    <span class="unit">px</span>
-                                </div>
-                                <div class="compact-control">
-                                    <label for="lineSpacing">Space Between Lines</label>
-                                    <input type="number" id="lineSpacing" min="0" max="50" value="0" step="1">
-                                    <span class="unit">px</span>
-                                </div>
-                            </div>
-                            
-                            <!-- Color and Styling Row -->
-                            <div class="chatooly-control-group compact-row">
-                                <div class="compact-control">
-                                    <label for="textColor">Color</label>
-                                    <input type="color" id="textColor" value="#000000">
-                                </div>
-                                <div class="compact-control">
-                                    <label>Styling</label>
-                                    <div class="main-text-styling">
-                                        <button type="button" class="main-style-btn" id="mainTextBold" title="Bold">B</button>
-                                        <button type="button" class="main-style-btn" id="mainTextItalic" title="Italic">I</button>
-                                        <button type="button" class="main-style-btn" id="mainTextUnderline" title="Underline">U</button>
-                                        <button type="button" class="main-style-btn" id="mainTextHighlight" title="Highlight">H</button>
-                                        <input type="color" id="mainTextHighlightColor" value="#ffff00" title="Highlight Color" style="display: none;">
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Main Text Cell Padding -->
-                            <div class="chatooly-control-group">
-                                <label class="section-header">Main Text Cell Margin</label>
-                                <div class="padding-controls">
-                                    <div class="padding-row">
-                                        <div class="padding-control">
-                                            <label for="marginVertical">Top/Bottom Margin</label>
-                                            <input type="number" id="marginVertical" min="0" max="50" value="0" step="1">
-                                            <span class="unit">px</span>
-                                        </div>
-                                        <div class="padding-control">
-                                            <label for="marginHorizontal">Left/Right Margin</label>
-                                            <input type="number" id="marginHorizontal" min="0" max="50" value="0" step="1">
-                                            <span class="unit">px</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Text Positioning Controls -->
-                            <div class="chatooly-control-group text-positioning-section">
-                                <label>Entire Text Alignment</label>
-                                <div class="positioning-grid">
-                                    <button type="button" class="pos-btn active" data-vertical="top" data-horizontal="left">↖</button>
-                                    <button type="button" class="pos-btn" data-vertical="top" data-horizontal="center">↑</button>
-                                    <button type="button" class="pos-btn" data-vertical="top" data-horizontal="right">↗</button>
-                                    <button type="button" class="pos-btn" data-vertical="center" data-horizontal="left">←</button>
-                                    <button type="button" class="pos-btn" data-vertical="center" data-horizontal="center">●</button>
-                                    <button type="button" class="pos-btn" data-vertical="center" data-horizontal="right">→</button>
-                                    <button type="button" class="pos-btn" data-vertical="bottom" data-horizontal="left">↙</button>
-                                    <button type="button" class="pos-btn" data-vertical="bottom" data-horizontal="center">↓</button>
-                                    <button type="button" class="pos-btn" data-vertical="bottom" data-horizontal="right">↘</button>
-                                </div>
-                            </div>
-                            
-                            <!-- Main Text Background Controls -->
-                            <div class="chatooly-control-group">
-                                <label>Text Background:</label>
-                                <label>
-                                    <input type="checkbox" id="mainTextFillWithBackgroundColor">
-                                    Fill with global background color
-                                </label>
-                            </div>
-                            
-                            <!-- Per-Line Alignment Controls -->
-                            <div class="chatooly-control-group">
-                                <div id="lineAlignmentControls"><div class="line-alignment-control">
-                <label>Line 1: "."</label>
-                <div class="alignment-buttons">
-                    <button type="button" class="align-btn align-left-icon " data-line="0" data-align="left" title="Align Left"><span class="align-icon"></span></button>
-                    <button type="button" class="align-btn align-center-icon " data-line="0" data-align="center" title="Align Center"><span class="align-icon"></span></button>
-                    <button type="button" class="align-btn align-right-icon active" data-line="0" data-align="right" title="Align Right"><span class="align-icon"></span></button>
-                </div>
-            </div><div class="line-alignment-control">
-                <label>Line 11: "LET'S TALK ABOUT"</label>
-                <div class="alignment-buttons">
-                    <button type="button" class="align-btn align-left-icon active" data-line="10" data-align="left" title="Align Left"><span class="align-icon"></span></button>
-                    <button type="button" class="align-btn align-center-icon " data-line="10" data-align="center" title="Align Center"><span class="align-icon"></span></button>
-                    <button type="button" class="align-btn align-right-icon " data-line="10" data-align="right" title="Align Right"><span class="align-icon"></span></button>
-                </div>
-            </div><div class="line-alignment-control">
-                <label>Line 12: "-------------------------------"</label>
-                <div class="alignment-buttons">
-                    <button type="button" class="align-btn align-left-icon active" data-line="11" data-align="left" title="Align Left"><span class="align-icon"></span></button>
-                    <button type="button" class="align-btn align-center-icon " data-line="11" data-align="center" title="Align Center"><span class="align-icon"></span></button>
-                    <button type="button" class="align-btn align-right-icon " data-line="11" data-align="right" title="Align Right"><span class="align-icon"></span></button>
-                </div>
-            </div><div class="line-alignment-control">
-                <label>Line 13: "DAILY WORKFLOWS"</label>
-                <div class="alignment-buttons">
-                    <button type="button" class="align-btn align-left-icon active" data-line="12" data-align="left" title="Align Left"><span class="align-icon"></span></button>
-                    <button type="button" class="align-btn align-center-icon " data-line="12" data-align="center" title="Align Center"><span class="align-icon"></span></button>
-                    <button type="button" class="align-btn align-right-icon " data-line="12" data-align="right" title="Align Right"><span class="align-icon"></span></button>
-                </div>
-            </div><div class="line-alignment-control">
-                <label>Line 14: "-------------------------------"</label>
-                <div class="alignment-buttons">
-                    <button type="button" class="align-btn align-left-icon active" data-line="13" data-align="left" title="Align Left"><span class="align-icon"></span></button>
-                    <button type="button" class="align-btn align-center-icon " data-line="13" data-align="center" title="Align Center"><span class="align-icon"></span></button>
-                    <button type="button" class="align-btn align-right-icon " data-line="13" data-align="right" title="Align Right"><span class="align-icon"></span></button>
-                </div>
-            </div><div class="line-alignment-control">
-                <label>Line 15: "WITH CURSOR IDE"</label>
-                <div class="alignment-buttons">
-                    <button type="button" class="align-btn align-left-icon " data-line="14" data-align="left" title="Align Left"><span class="align-icon"></span></button>
-                    <button type="button" class="align-btn align-center-icon " data-line="14" data-align="center" title="Align Center"><span class="align-icon"></span></button>
-                    <button type="button" class="align-btn align-right-icon active" data-line="14" data-align="right" title="Align Right"><span class="align-icon"></span></button>
-                </div>
-            </div><div class="line-alignment-control">
-                <label>Line 16: "-------------------------------"</label>
-                <div class="alignment-buttons">
-                    <button type="button" class="align-btn align-left-icon active" data-line="15" data-align="left" title="Align Left"><span class="align-icon"></span></button>
-                    <button type="button" class="align-btn align-center-icon " data-line="15" data-align="center" title="Align Center"><span class="align-icon"></span></button>
-                    <button type="button" class="align-btn align-right-icon " data-line="15" data-align="right" title="Align Right"><span class="align-icon"></span></button>
-                </div>
-            </div></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Canvas & Background Tab - REMOVED (moved to Grid tab) -->
-                <div id="canvasTab" class="tab-content" style="display: none;">
-                    <!-- All content moved to Grid tab -->
-                </div>
-                
-                <!-- Grid Tab -->
-                <div id="gridTab" class="tab-content">
-                    
-                    <!-- Selected Cell Controls -->
-                    <div id="selectedCellControls" class="selected-cell-controls" style="display: none;">
-                        <div id="selectedCellInfo" class="selected-cell-info">
-                            <!-- Cell number will be populated here -->
-                        </div>
-                        
-                        <div class="cell-control-sections">
-                            <!-- Content, Animation, and Layer controls will be added here -->
-                        </div>
-                    </div>
-                </div>
+                <!-- ========== EDIT BELOW: Add Your Custom Tool Controls Here ========== -->
 
-                <!-- Presets Tab -->
-                <div id="presetsTab" class="tab-content active">
-                    <div id="presetsContainer">
-            <div class="preset-controls preset-cloud-controls">
-                <!-- Multi-Page Save Section -->
-                <div class="preset-section preset-multipage-save-section">
-                    <h3>Multi-Page Presets</h3>
-                    <p class="preset-description">Save and load pages in multi-page presets</p>
-                    <div class="preset-multipage-controls">
-                        <button type="button" class="preset-save-page-btn">
-                            Save Page
-                        </button>
-                        <button type="button" class="preset-load-page-btn">
-                            Load Page
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Save Page Panel (Inline) -->
-                <div class="preset-section save-page-panel-section" id="savePagePanelContainer">
-            <div class="save-page-panel-content" style="display: none;">
-                <!-- Instruction -->
-                <div class="save-page-instruction">
-                    <p>👆 Click on canvas cells to make editable</p>
-                </div>
-
-                <!-- Choose Preset Section (First) -->
-                <div class="save-page-preset-choice">
-                    <h4>Choose Preset</h4>
-                    <div class="preset-radio-group">
-                        <label>
-                            <input type="radio" name="save-preset-type" value="new" checked="">
-                            Create New Preset
-                        </label>
-                        <label>
-                            <input type="radio" name="save-preset-type" value="existing">
-                            Add to Existing
-                        </label>
-                    </div>
-
-                    <!-- New Preset Name -->
-                    <div id="save-new-preset-container">
-                        <input type="text" id="save-new-preset-name" class="preset-name-input" placeholder="Enter preset name...">
-                    </div>
-
-                    <!-- Existing Preset Dropdown -->
-                    <div id="save-existing-preset-container" style="display: none;">
-                        <select id="save-existing-preset-select" class="preset-dropdown"><option value="">-- Select Preset --</option><option value="1959922b-9887-4c17-ad59-bb8bea6d7d72">Test (2 pages)</option></select>
-                    </div>
-                </div>
-
-                <!-- Editable Slots List -->
-            <div class="save-page-editable-list">
-                <h4>Editable Slots</h4>
-                <div id="save-editable-fields-list" class="editable-fields-container"><p class="no-fields-message">No editable slots yet</p></div>
-
-        
-                </div>
-
-                <!-- Page Settings -->
-                <div class="save-page-settings-section">
-                    <h4>Page Settings</h4>
-                    <div class="page-settings-row">
-                        <div class="page-setting-field">
-                            <label>Page Position</label>
-                            <select id="save-page-position" class="preset-dropdown">
-                                <option value="1">Page 1</option>
-                                <option value="2">Page 2</option>
-                                <option value="3">Page 3</option>
-                                <option value="4">Page 4</option>
-                                <option value="5">Page 5</option>
+                <!-- Sticker Type Selection -->
+                <div class="chatooly-section-card" data-section="sticker-type">
+                    <h3 class="chatooly-section-header">🎨 Sticker Type</h3>
+                    <div class="chatooly-section-content">
+                        <div class="chatooly-input-group">
+                            <label class="chatooly-input-label" for="sticker-type">Type</label>
+                            <select class="chatooly-select" id="sticker-type">
+                                <option value="text">Text Sticker</option>
+                                <option value="image">Image Sticker</option>
                             </select>
                         </div>
-                        <div class="page-setting-field">
-                            <label>Page Name</label>
-                            <input type="text" id="save-page-name" class="preset-name-input" placeholder="e.g., Hero Banner" value="Page 1">
+                    </div>
+                </div>
+
+                <!-- Text Sticker Options -->
+                <div class="chatooly-section-card" data-section="text-sticker" id="text-sticker-section" style="display: none;">
+                    <h3 class="chatooly-section-header">📝 Text Sticker</h3>
+                    <div class="chatooly-section-content">
+                        <div class="chatooly-input-group">
+                            <label class="chatooly-input-label" for="sticker-text">Text</label>
+                            <input type="text" class="chatooly-input" id="sticker-text" value="✨" placeholder="Enter text...">
+                        </div>
+
+                        <div class="chatooly-slider-group">
+                            <div class="chatooly-slider-label">
+                                <span>Font Size</span>
+                                <span class="chatooly-slider-value" id="font-size-value">140</span>
+                            </div>
+                            <input type="range" class="chatooly-slider" id="font-size" min="12" max="200" value="48">
+                        </div>
+
+                        <div class="chatooly-color-group">
+                            <label class="chatooly-color-label" for="text-color">Text Color</label>
+                            <input type="color" class="chatooly-color-input" id="text-color" value="#ff5500">
+                        </div>
+
+                        <div class="chatooly-color-group">
+                            <label class="chatooly-color-label" for="bg-color-sticker">Background Color</label>
+                            <input type="color" class="chatooly-color-input" id="bg-color-sticker" value="#ffffff">
+                        </div>
+
+                        <div class="chatooly-toggle-group">
+                            <button type="button" class="chatooly-toggle" id="text-bg-toggle" role="switch" aria-pressed="true">
+                                <span class="chatooly-toggle-slider"></span>
+                            </button>
+                            <label class="chatooly-toggle-label" for="text-bg-toggle">Show Background</label>
                         </div>
                     </div>
                 </div>
 
-                <!-- Action Buttons -->
-                <div class="save-page-actions">
-                    <button type="button" class="preset-save-page-action-btn">Save Page</button>
-                    <button type="button" class="preset-cancel-page-action-btn">Cancel</button>
-                </div>
-            </div>
-        </div>
+                <!-- Image Sticker Options -->
+                <div class="chatooly-section-card" data-section="image-sticker" id="image-sticker-section" style="display: block;">
+                    <h3 class="chatooly-section-header">🖼️ Image Sticker</h3>
+                    <div class="chatooly-section-content">
+                        <div class="chatooly-upload-area" style="height: 100px;">
+                            <div class="chatooly-upload-icon">
+                                <svg viewBox="0 0 11 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M7.94444 0L11 3V11.4048C10.9998 11.5627 10.9358 11.7141 10.822 11.8257C10.7083 11.9373 10.554 12 10.3932 12H0.606833C0.446342 11.9989 0.292733 11.9359 0.179189 11.8245C0.0656443 11.7131 0.00128006 11.5624 0 11.4048V0.5952C0 0.2664 0.271944 0 0.606833 0H7.94444ZM6.11111 6H7.94444L5.5 3.6L3.05556 6H4.88889V8.4H6.11111V6Z" fill="var(--fill-0, #454545)"></path>
+                                </svg>
+                            </div>
+                            <div class="chatooly-upload-text">Upload Sticker Image</div>
+                            <input type="file" class="chatooly-upload-input" id="sticker-image" accept="image/*">
+                        </div>
 
-                <!-- Old Preset System (Collapsible for debugging) -->
-                <div class="preset-section old-preset-system-section">
-                    <h3 class="old-preset-toggle">Old Preset System <span class="toggle-indicator">▼</span></h3>
-                    <div class="old-preset-content" style="display: block;">
-
-                <!-- Save Section -->
-                <div class="preset-section preset-save-section">
-                    <h3>Save New Preset</h3>
-                    <p class="preset-description">Save your current design locally or to the cloud</p>
-                    <div class="preset-save-controls">
-                        <input type="text" id="presetNameInput" class="preset-name-input" placeholder="Enter preset name..." maxlength="50">
-                        <div class="preset-save-buttons">
-                            <button type="button" class="preset-save-local-btn">
-                                Save Locally
-                            </button>
-                            <button type="button" class="preset-save-cloud-btn">
-                                Save to Cloud
-                            </button>
+                        <div class="chatooly-slider-group">
+                            <div class="chatooly-slider-label">
+                                <span>Size</span>
+                                <span class="chatooly-slider-value" id="image-size-value">300</span>
+                            </div>
+                            <input type="range" class="chatooly-slider" id="image-size" min="20" max="300" value="100">
                         </div>
                     </div>
                 </div>
 
-                <!-- Load Local File Section -->
-                <div class="preset-section preset-load-local-section">
-                    <h3>Load Local Preset</h3>
-                    <p class="preset-description">Upload a preset file from your computer</p>
-                    <div class="preset-load-file-controls">
-                        <input type="file" id="presetFileInput" accept=".json" style="display: none;">
-                        <button type="button" class="preset-load-file-btn">
-                            Choose File
-                        </button>
-                        <span id="selectedFileName" class="selected-file-name"></span>
+                <!-- Sticker Actions -->
+                <div class="chatooly-section-card" data-section="actions">
+                    <h3 class="chatooly-section-header">⚙️ Actions</h3>
+                    <div class="chatooly-section-content">
+                        <button type="button" class="chatooly-btn" id="clear-all">Clear All Stickers</button>
                     </div>
                 </div>
 
-                <!-- Load Section -->
-                <div class="preset-section preset-load-section">
-                    <h3>Load Preset</h3>
-                    <p class="preset-description">Select a preset from your cloud library</p>
-                    <div class="preset-load-controls">
-                        <select id="presetDropdown" class="preset-dropdown"><option value="">-- Select Preset --</option><option value="540ab272-32a9-4754-b9d5-d69adc1b62e0">Luggage</option><option value="21a436fe-5d8e-4b69-b9b0-d5c376be898c">Easter</option><option value="becf8784-9ec6-43e2-aebe-aaf02ee92b05">Forecasting_02</option><option value="11d095e8-7f38-41cb-9df2-40aa603587cd">Forecasting_01</option><option value="886d3584-20ba-43b3-a62a-63f34032757e">Meetups_01</option><option value="2d306ed2-b66a-4348-9cee-84a640bfae2c">TS_02</option><option value="97153128-f878-4c76-b2e4-df2218b159a9">TS_01</option><option value="846e3f44-798b-43d8-8876-cdd9207a7fdc">ES_02</option><option value="4ae8b4f9-6ca8-4135-8ff5-5856f792553d">ES_01_Typo</option><option value="55bbc28e-9472-47d1-b64f-e361619554cb">h</option><option value="b8b7bbb0-7725-42dc-a7cf-e547065b38dc">h</option><option value="93e0d5f9-67c2-406e-b8d0-45f3e9b243b0">ES_01</option><option value="55530477-b136-43c6-bdc7-3ad46ec579af">Floating Elements</option><option value="e556c3d1-ebf7-42fd-ae3c-64521ff81896">Launch Event</option><option value="6dbe5341-faab-423e-8883-ecb7172f31c9">Split Layout</option><option value="affa6b2a-7fbb-41e9-8863-3335cbb8d533">Furniture Collection</option><option value="06b60058-dbb5-4da2-a0c9-35fedde99d7c">Magazine Cover</option><option value="a6603ddd-e693-4a5d-91c3-6c79b6b04cd6">Folders</option><option value="4efb339c-cbf0-4a85-8434-0f5810a3f2fe">Websites</option><option value="52d2ff36-7271-499b-8848-f1db14704505">Typo Overlap</option><option value="ead22306-376e-4651-ae62-53c18d6118ec">Landscape</option><option value="1f720210-c794-4d69-9f08-0b2b7d0b680d">Complex Poster</option><option value="a5927d54-42f2-4588-a8d4-1ae275503c3d">Core Elements</option><option value="8a2656f3-5722-4209-899f-4b75d18a5d56">Paragraph Based</option><option value="ace543af-2aa1-43f8-ab29-5fca7d7f61f0">Red Resonance</option><option value="f8719b57-6e7b-4b57-9ce2-903eac43e109">Sticker Helmet</option><option value="405c131b-1756-43c6-8bae-ff522816d99e">Spotlight Repeater</option><option value="e51a670d-7d3f-42f5-abdd-f7713473cd62">After Life Tour</option><option value="aca53b70-a860-4be4-b08a-5d07129c270a">Athlete</option><option value="d9c6e26c-56ed-4921-bc9f-ce1ffe314702">Error</option><option value="cdd228aa-2347-430a-ad30-68d94b91dc0b">Send Snacks</option><option value="5d330e86-afb7-4a9c-ace9-57ce8647ae8c">too tired- yael v1</option><option value="36f008e3-d9b6-4fbe-aacd-18b7c4d00bcb">Too Tired</option><option value="5c1a22d6-fee3-47de-a88c-5343ca738eb0">Chatooly</option><option value="ec140fdf-d607-4764-a9ba-2f00cc5a2a9b">The Code Machine</option><option value="5b96f001-de44-4695-92aa-08cfb7179224">Valentine Day</option></select>
-                        <div class="preset-action-buttons">
-                            <button type="button" class="preset-load-cloud-btn">
-                                Load
+                <!-- ========== BACKGROUND CONTROLS ========== -->
+                <div class="chatooly-section-card" data-section="background">
+                    <h3 class="chatooly-section-header">◼ Background</h3>
+                    <div class="chatooly-section-content">
+                        <!-- Transparent Background Toggle -->
+                        <div class="chatooly-toggle-group">
+                            <button type="button" class="chatooly-toggle" id="transparent-bg" role="switch" aria-pressed="false">
+                                <span class="chatooly-toggle-slider"></span>
                             </button>
-                            <button type="button" class="preset-delete-btn">
-                                Delete
-                            </button>
-                            <button type="button" class="preset-refresh-btn">
-                                Refresh
-                            </button>
+                            <label class="chatooly-toggle-label" for="transparent-bg">Transparent Background</label>
+                        </div>
+
+                        <!-- Background Color Picker -->
+                        <div class="chatooly-color-group" id="bg-color-group" style="display: block;">
+                            <label class="chatooly-color-label" for="bg-color">Background Color</label>
+                            <input type="color" class="chatooly-color-input" id="bg-color" value="#FFFFFF">
+                        </div>
+
+                        <!-- Background Image Upload -->
+                        <div style="position: relative;">
+                            <div class="chatooly-upload-area" style="height: 80px;">
+                                <div class="chatooly-upload-icon">
+                                    <svg viewBox="0 0 11 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M7.94444 0L11 3V11.4048C10.9998 11.5627 10.9358 11.7141 10.822 11.8257C10.7083 11.9373 10.554 12 10.3932 12H0.606833C0.446342 11.9989 0.292733 11.9359 0.179189 11.8245C0.0656443 11.7131 0.00128006 11.5624 0 11.4048V0.5952C0 0.2664 0.271944 0 0.606833 0H7.94444ZM6.11111 6H7.94444L5.5 3.6L3.05556 6H4.88889V8.4H6.11111V6Z" fill="var(--fill-0, #454545)"></path>
+                                    </svg>
+                                </div>
+                                <div class="chatooly-upload-text">Background Image</div>
+                                <input type="file" class="chatooly-upload-input" id="bg-image" accept="image/*">
+                            </div>
+                            <button id="clear-bg-image" type="button" class="chatooly-btn" style="display: block; position: absolute; top: 8px; right: 8px; padding: 4px 8px; min-width: auto; z-index: 10;" title="Remove image">×</button>
+                        </div>
+
+                        <!-- Image Fit Dropdown -->
+                        <div class="chatooly-input-group" id="bg-fit-group" style="display: block;">
+                            <label class="chatooly-input-label" for="bg-fit">Image Fit</label>
+                            <select class="chatooly-select" id="bg-fit">
+                                <option value="cover">Fill Frame</option>
+                                <option value="contain">Fit in Frame</option>
+                                <option value="fill">Stretch to Fill</option>
+                            </select>
                         </div>
                     </div>
                 </div>
+                <!-- ========== END BACKGROUND CONTROLS ========== -->
 
-                    </div><!-- end old-preset-content -->
-                </div><!-- end old-preset-system-section -->
-            </div>
-        </div>
-                </div>
-
-                <!-- Spots and Animation tabs removed - functionality moved to Grid tab -->
-                <!-- Parameters tab removed -->
-                
                 <!-- ========== END EDIT SECTION ========== -->
             </div>
         <div class="chatooly-controls-footer"><button class="chatooly-btn chatooly-btn-export">Export</button></div></div>
         
         <!-- Right Panel: Preview/Canvas Area -->
         <div class="chatooly-preview-panel" style="display: flex; align-items: center; justify-content: center;">
-            <!-- Debug Panel -->
-            <div id="debugPanel" class="debug-panel">
-                <button id="toggleGuides" class="guides-toggle-btn">
-                    <span class="guides-icon">📐</span>
-                    <span id="guidesLabel">Show Guides</span>
-                </button>
-                <button id="toggleContentSlots" class="guides-toggle-btn">
-                    <span class="guides-icon">📝</span>
-                    <span id="contentSlotsLabel">Show Content Slots</span>
-                </button>
-            </div>
-            
-            <!-- Spot Edit Popup removed - functionality moved to unified sidebar -->
-            
             <!-- ========== DO NOT EDIT: Required Export Container ========== -->
-            <div id="chatooly-container" style="position: relative; display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 100%; height: 100%; overflow: auto;">
+            <div id="chatooly-container" class="" style="position: relative; display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 100%; height: 100%; overflow: auto;">
                 <!-- ========== EDIT BELOW: Add Your Visual Output Here ========== -->
                 <!-- This content will be exported as PNG/Video -->
                 <!-- IMPORTANT: Your main canvas MUST have id="chatooly-canvas" -->
-                <canvas id="chatooly-canvas" style="position: static; margin: 0px; width: 885px; height: 1106.25px; transform-origin: center center; cursor: default;" width="1080" height="1350"></canvas><canvas id="contentSlotOverlay" width="1080" height="1350" style="position: absolute; top: 32.875px; left: 20px; pointer-events: none; z-index: 100; display: block; width: 885px; height: 1106.25px;"></canvas>
+                <!-- For animations: CDN automatically detects canvas animations and provides video export options -->
+                <canvas id="chatooly-canvas" width="1024" height="768" style="position: static; margin: 0px; width: 1024px; height: 768px; transform-origin: center center;" class=""></canvas>
                 <!-- ========== END EDIT SECTION ========== -->
             </div>
         <div id="chatooly-resize-bar" class="chatooly-resize-bar">
@@ -1103,13 +753,13 @@ SPOTLIGHT
                     <div class="chatooly-resize-inputs">
                         <label>W</label>
                         <div class="chatooly-input-box">
-                            <input type="number" id="chatooly-bar-width" value="300" min="100" max="4000">
+                            <input type="number" id="chatooly-bar-width" value="1920" min="100" max="4000">
                             <span>px</span>
                         </div>
 
                         <label>H</label>
                         <div class="chatooly-input-box">
-                            <input type="number" id="chatooly-bar-height" value="150" min="100" max="4000">
+                            <input type="number" id="chatooly-bar-height" value="1080" min="100" max="4000">
                             <span>px</span>
                         </div>
                     </div>
@@ -1128,7 +778,7 @@ SPOTLIGHT
                         <span class="chatooly-btn-abbr">SQ</span>
                     </button>
                 
-                    <button class="chatooly-btn" data-preset="4:3" data-abbr="4:3">
+                    <button class="chatooly-btn active" data-preset="4:3" data-abbr="4:3">
                         <span class="chatooly-btn-full">4:3</span>
                         <span class="chatooly-btn-abbr">4:3</span>
                     </button>
@@ -1142,58 +792,7 @@ SPOTLIGHT
                 </div>
             </div></div>
     </div>
-
-    <!-- Animation Configuration Popup -->
-    <div id="animationPopup" class="animation-popup" style="display: none;">
-        <div class="popup-overlay"></div>
-        <div class="popup-content">
-            <div class="popup-header">
-                <h4 id="popupTitle">Animate Text</h4>
-                <button id="closePopup" class="popup-close">×</button>
-            </div>
-            <div class="popup-body">
-                <div class="animation-options">
-                    <h5>Animation Type:</h5>
-                    <div class="option-grid">
-                        <button class="anim-option" data-type="sway-horizontal">
-                            <span class="option-icon">↔</span>
-                            <span class="option-label">Sway Left-Right</span>
-                        </button>
-                        <button class="anim-option" data-type="sway-vertical">
-                            <span class="option-icon">↕</span>
-                            <span class="option-label">Sway Up-Down</span>
-                        </button>
-                        <button class="anim-option" data-type="none">
-                            <span class="option-icon">✕</span>
-                            <span class="option-label">No Animation</span>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="intensity-control">
-                    <label for="animationIntensity">Animation Intensity:</label>
-                    <input type="range" id="animationIntensity" min="5" max="50" value="20">
-                    <span id="intensityValue">20px</span>
-                </div>
-
-                <div class="preview-section">
-                    <p class="preview-text">Preview: <span id="previewText">Sample Text</span></p>
-                    <small>Click "Apply" to see the animation on canvas</small>
-                </div>
-            </div>
-            <div class="popup-footer">
-                <button id="applyAnimation" class="btn-primary">Apply Animation</button>
-                <button id="cancelAnimation" class="btn-secondary">Cancel</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ========== Lottie Animation Library ========== -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
-
-    <!-- ========== GIF Animation Library for Canvas ========== -->
-    <script src="https://cdn.jsdelivr.net/npm/gifler@0.1.0/gifler.min.js"></script>
-
+    
     <!-- ========== DO NOT EDIT: Chatooly CDN v2.0 Integration ========== -->
     <!-- This script automatically provides: Dark theme styling + Static/Video export functionality -->
     <!-- Video support: Detects p5.js, Three.js, Canvas animations and provides MediaRecorder API export -->
@@ -1201,109 +800,12 @@ SPOTLIGHT
     
     <!-- ========== DO NOT EDIT: Chatooly Configuration ========== -->
     <script src="js/chatooly-config.js"></script>
-    
+
+    <!-- ========== DO NOT EDIT: UI Controls ========== -->
+    <script src="js/ui.js"></script>
+
     <!-- ========== DO NOT EDIT: Your Tool Logic ========== -->
-    <!-- JavaScript files in dependency order -->
-
-    <!-- Text System -->
-    <script src="js/text/FontMetrics.js"></script>
-    <script src="js/text/TextComponent.js"></script>
-    <script src="js/text/TextPositioning.js"></script>
-    <script src="js/text/MainTextController.js"></script>
-
-    <!-- Canvas & Rendering -->
-    <script src="js/background/BackgroundManager.js"></script>
-    <script src="js/canvas/CanvasManager.js"></script>
-    <script src="js/canvas/DebugController.js"></script>
-
-    <!-- Grid System (Phase 2: Unified Architecture) -->
-    <script src="js/grid/GridDetector.js?v=refactor3"></script>
-
-    <!-- Content Controllers (manage content in ContentCells) -->
-    <script src="js/content/ContentController.js"></script>
-    <script src="js/content/EmptyContentController.js"></script>
-    <script src="js/content/TextContentController.js"></script>
-    <script src="js/content/ImageContentController.js"></script>
-    <script src="js/content/FillContentController.js"></script>
-
-    <!-- Grid System -->
-    <script src="js/grid/Layer.js"></script>
-    <script src="js/grid/LayerManager.js"></script>
-    <script src="js/grid/GridCell.js"></script>
-    <script src="js/grid/MainTextCell.js"></script>
-    <script src="js/grid/ContentCell.js"></script>
-    <script src="js/grid/CellRenderer.js"></script>
-    <script src="js/grid/GridBuilder.js?v=refactor1"></script>
-    <script src="js/grid/GridSnapshot.js"></script>
-    <script src="js/grid/Grid.js"></script>
-
-    <!-- Animation System (Universal cell animations) -->
-    <script src="js/animations/CellAnimation.js"></script>
-
-    <!-- Font Management -->
-    <script src="js/text/FontManager.js"></script>
-    <script src="js/text/FontUploadComponent.js"></script>
-
-    <!-- UI Management -->
-    <script src="js/ui/MediaPickerModal.js"></script>
-    <script src="js/ui/UIManager.js"></script>
-    <script src="js/ui/PresetUIComponent.js"></script>
-
-    <!-- Main Application -->
-    <script src="js/parameters/PresetManager.js"></script>
-
-    <!-- Multi-Page Preset System -->
-    <script src="js/parameters/ContentSlotTypes.js"></script>
-    <script src="js/parameters/ContentSlotManager.js"></script>
-
-    <!-- Wix CMS Integration (Sprint 3) -->
-    <script type="module" src="js/api/WixPresetAPI.js"></script>
-    <script type="module" src="js/api/WixMultiPagePresetAdapter.js"></script>
-
-    <script src="js/parameters/PresetPageManager.js"></script>
-    <script src="js/ui/ContentSlotConfigPanel.js"></script>
-    <script src="js/ui/SavePageModal.js"></script>
-    <script src="js/ui/ExportFormatSelector.js"></script>
-    <script src="js/ui/ContentSlotOverlay.js"></script>
-    <script src="js/ui/SavePagePanel.js"></script>
-    <script src="js/ui/LoadPageModal.js"></script>
-
-    <script src="js/app.js"></script>
-    
-    <!-- Collapsible Controls Toggle Functions -->
-    <script>
-        function toggleBackgroundControls() {
-            const controls = document.getElementById('backgroundControls');
-            const header = controls.previousElementSibling;
-            const icon = header.querySelector('.padding-toggle-icon');
-            
-            if (controls.classList.contains('expanded')) {
-                controls.classList.remove('expanded');
-                icon.classList.remove('expanded');
-                icon.textContent = '▼';
-            } else {
-                controls.classList.add('expanded');
-                icon.classList.add('expanded');
-                icon.textContent = '▲';
-            }
-        }
-        
-        function toggleMainTextControls() {
-            const controls = document.getElementById('mainTextControls');
-            const header = controls.previousElementSibling;
-            const icon = header.querySelector('.padding-toggle-icon');
-            
-            if (controls.classList.contains('expanded')) {
-                controls.classList.remove('expanded');
-                icon.classList.remove('expanded');
-                icon.textContent = '▼';
-            } else {
-                controls.classList.add('expanded');
-                icon.classList.add('expanded');
-                icon.textContent = '▲';
-            }
-        }
-    </script>
+    <script src="js/main.js"></script>
 <!-- Code injected by live-server -->
 <script>
 	// <![CDATA[  <-- For SVG support
@@ -1361,12 +863,12 @@ SPOTLIGHT
                             <div class="chatooly-export-section">
                                 <!-- Format Toggle -->
                                 <div class="chatooly-export-toggle">
-                                    <button class="chatooly-toggle-btn active" data-format="image">Image</button>
-                                    <button class="chatooly-toggle-btn" data-format="video">Video</button>
+                                    <button class="chatooly-toggle-btn" data-format="image">Image</button>
+                                    <button class="chatooly-toggle-btn active" data-format="video">Video</button>
                                 </div>
 
                                 <!-- Image Options -->
-                                <div class="chatooly-export-options" data-type="image">
+                                <div class="chatooly-export-options" data-type="image" style="display: none;">
                                     <div class="chatooly-export-field">
                                         <label>Size</label>
                                         <div class="chatooly-multiplier-buttons">
@@ -1380,7 +882,7 @@ SPOTLIGHT
                                 </div>
 
                                 <!-- Video Options -->
-                                <div class="chatooly-export-options" data-type="video" style="display: none;">
+                                <div class="chatooly-export-options" data-type="video" style="display: block;">
                                     <div class="chatooly-export-row">
                                         <div class="chatooly-input-group">
                                             <label class="chatooly-input-label">Duration</label>
@@ -1406,180 +908,11 @@ SPOTLIGHT
 
                         <!-- Footer -->
                         <div class="chatooly-modal-footer">
-                            <button class="chatooly-modal-export-btn">
-                                Export Image
-                            </button>
+                            <button class="chatooly-modal-export-btn">Start Recording</button>
                         </div>
                     </div>
                 </div>
             </div><button id="chatooly-publish-button" class="chatooly-publish-button">
                 Publish to Hub
                 <span class="chatooly-publish-badge">DEV</span>
-            </button><div class="load-page-modal-overlay" style="display: none;">
-            <div class="load-page-modal">
-                <div class="load-page-modal-header">
-                    <h2>Load Page from Preset</h2>
-                    <button class="load-page-modal-close">×</button>
-                </div>
-
-                <div class="load-page-modal-body">
-                    <!-- Preset Selection -->
-                    <div class="load-page-preset-selection">
-                        <h3>Select Preset</h3>
-                        <select id="load-page-preset-select" class="load-page-preset-dropdown">
-                            <option value="">-- Select a Preset --</option>
-                        </select>
-                        <p class="preset-info" id="preset-info-text"></p>
-                    </div>
-
-                    <!-- Page Selection Grid -->
-                    <div class="load-page-pages-section" id="load-page-pages-section" style="display: none;">
-                        <h3>Available Pages</h3>
-                        <p class="pages-hint">Click a page to load it into the canvas</p>
-                        <div class="load-page-pages-grid" id="load-page-pages-grid">
-                            <!-- Page cards will be rendered here -->
-                        </div>
-                    </div>
-
-                    <!-- Empty State -->
-                    <div class="load-page-empty-state" id="load-page-empty-state">
-                        <p>No presets found. Create a preset by clicking "Save Page to Preset" first.</p>
-                    </div>
-                </div>
-
-                <div class="load-page-modal-footer">
-                    <button class="load-page-modal-cancel">Close</button>
-                </div>
-            </div>
-        </div><browser-mcp-container data-wxt-shadow-root=""></browser-mcp-container><div class="content-slot-config-panel" style="display: none;">
-            <div class="slot-config-header">
-                <h3>Configure Editable Field</h3>
-                <button class="slot-config-close" title="Cancel">×</button>
-            </div>
-
-            <div class="slot-config-body">
-                <!-- Cell Info -->
-                <div class="slot-config-section">
-                    <div class="slot-info">
-                        <strong>Cell:</strong> <span id="slotCellId"></span>
-                        <br>
-                        <strong>Type:</strong> <span id="slotCellType"></span>
-                    </div>
-                </div>
-
-                <!-- Field Metadata -->
-                <div class="slot-config-section">
-                    <h4>Field Information</h4>
-
-                    <label>
-                        Field Name <span class="required">*</span>
-                        <input type="text" id="slotFieldName" placeholder="e.g., headline, companyLogo" pattern="[a-zA-Z0-9_]+" title="Letters, numbers, and underscores only">
-                        <small>Used internally (letters, numbers, underscores)</small>
-                    </label>
-
-                    <label>
-                        Field Label <span class="required">*</span>
-                        <input type="text" id="slotFieldLabel" placeholder="e.g., Hero Headline, Company Logo">
-                        <small>Shown to end-users in form</small>
-                    </label>
-
-                    <label>
-                        Description (Optional)
-                        <textarea id="slotFieldDescription" rows="2" placeholder="Help text for end-users"></textarea>
-                    </label>
-
-                    <label class="slot-checkbox">
-                        <input type="checkbox" id="slotRequired">
-                        Required field
-                    </label>
-                </div>
-
-                <!-- Text Constraints (shown for text slots) -->
-                <div class="slot-config-section" id="textConstraintsSection" style="display: none;">
-                    <h4>Text Constraints</h4>
-
-                    <label>
-                        Maximum Characters
-                        <input type="number" id="slotMaxCharacters" min="1" max="1000" value="100">
-                        <small>Character limit for user input</small>
-                    </label>
-
-                    <div class="slot-font-range">
-                        <label>Font Size Range (Auto-Fit)</label>
-                        <div class="slot-font-inputs">
-                            <div>
-                                <label>Min</label>
-                                <input type="number" id="slotMinFontSize" min="8" max="200" value="24">
-                                <span>px</span>
-                            </div>
-                            <div>
-                                <label>Max</label>
-                                <input type="number" id="slotMaxFontSize" min="8" max="200" value="72">
-                                <span>px</span>
-                            </div>
-                        </div>
-                        <small>Font size will auto-fit within this range</small>
-                    </div>
-
-                    <label>
-                        Alignment
-                        <select id="slotTextAlign">
-                            <option value="center">Center</option>
-                            <option value="left">Left</option>
-                            <option value="right">Right</option>
-                        </select>
-                    </label>
-                </div>
-
-                <!-- Image Constraints (shown for image slots) -->
-                <div class="slot-config-section" id="imageConstraintsSection" style="display: none;">
-                    <h4>Image Constraints</h4>
-
-                    <label>
-                        Fit Mode
-                        <select id="slotFitMode">
-                            <option value="cover">Cover (crop to fill)</option>
-                            <option value="free">Free (scale proportionally)</option>
-                        </select>
-                        <small>How image fills the bounding box</small>
-                    </label>
-
-                    <label>
-                        Maximum File Size
-                        <select id="slotMaxFileSize">
-                            <option value="5242880">5 MB</option>
-                            <option value="10485760" selected="">10 MB</option>
-                            <option value="20971520">20 MB</option>
-                        </select>
-                    </label>
-
-                    <label>
-                        Allowed Formats
-                        <div class="slot-format-checkboxes">
-                            <label class="slot-checkbox">
-                                <input type="checkbox" value="jpg" checked=""> JPG
-                            </label>
-                            <label class="slot-checkbox">
-                                <input type="checkbox" value="png" checked=""> PNG
-                            </label>
-                            <label class="slot-checkbox">
-                                <input type="checkbox" value="webp" checked=""> WebP
-                            </label>
-                            <label class="slot-checkbox">
-                                <input type="checkbox" value="gif" checked=""> GIF
-                            </label>
-                        </div>
-                    </label>
-                </div>
-            </div>
-
-            <div class="slot-config-footer">
-                <button class="slot-config-cancel">Cancel</button>
-                <button class="slot-config-save">Save Slot</button>
-            </div>
-        </div><div id="presetLoading" class="preset-loading" style="display: none;">
-                <div class="preset-loading-content">
-                    <div class="preset-spinner"></div>
-                    <span class="preset-loading-text">Loading from cloud...</span>
-                </div>
-            </div></body></html>
+            </button><browser-mcp-container data-wxt-shadow-root=""></browser-mcp-container></body></html>

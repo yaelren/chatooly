@@ -19,7 +19,3 @@ window.ChatoolyConfig = {
     version: "1.0.0",
     author: ""        // Your name or handle
 };
-
-// Debug: Verify config is loaded correctly
-console.log('ChatoolyConfig loaded:', window.ChatoolyConfig);
-console.log('Tool name:', window.ChatoolyConfig.name);

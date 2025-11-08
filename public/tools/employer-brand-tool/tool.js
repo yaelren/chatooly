@@ -1,4 +1,46 @@
 
+    {
+        "imports": {
+            "@wix/sdk": "https://cdn.jsdelivr.net/npm/@wix/sdk@1.17.1/+esm",
+            "@wix/data": "https://cdn.jsdelivr.net/npm/@wix/data@1.0.306/+esm",
+            "@wix/media": "https://cdn.jsdelivr.net/npm/@wix/media@1.0.195/+esm"
+        }
+    }
+    
+
+        function toggleBackgroundControls() {
+            const controls = document.getElementById('backgroundControls');
+            const header = controls.previousElementSibling;
+            const icon = header.querySelector('.padding-toggle-icon');
+            
+            if (controls.classList.contains('expanded')) {
+                controls.classList.remove('expanded');
+                icon.classList.remove('expanded');
+                icon.textContent = '▼';
+            } else {
+                controls.classList.add('expanded');
+                icon.classList.add('expanded');
+                icon.textContent = '▲';
+            }
+        }
+        
+        function toggleMainTextControls() {
+            const controls = document.getElementById('mainTextControls');
+            const header = controls.previousElementSibling;
+            const icon = header.querySelector('.padding-toggle-icon');
+            
+            if (controls.classList.contains('expanded')) {
+                controls.classList.remove('expanded');
+                icon.classList.remove('expanded');
+                icon.textContent = '▼';
+            } else {
+                controls.classList.add('expanded');
+                icon.classList.add('expanded');
+                icon.textContent = '▲';
+            }
+        }
+    
+
 	// <![CDATA[  <-- For SVG support
 	if ('WebSocket' in window) {
 		(function () {

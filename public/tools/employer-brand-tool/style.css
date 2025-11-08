@@ -557,6 +557,62 @@
                 }
             
 
+            @font-face {
+                font-family: "Inter 18pt";
+                src: url(https://static.wixstatic.com/ufonts/2684f6_a3ccc7c9b10d40be848657dd2952187a/file.ttf) format('truetype');
+                font-display: swap;
+            }
+        
+
+            @font-face {
+                font-family: "Inter 24pt";
+                src: url(https://static.wixstatic.com/ufonts/3f4fbc_d6fb053cbc8f4ae39c149b18769097e0/file.ttf) format('truetype');
+                font-display: swap;
+            }
+        
+
+            @font-face {
+                font-family: "Bebasneue";
+                src: url(https://static.wixstatic.com/ufonts/df5052_cf479575d8ce4adabea977919cdb4302/file.ttf) format('truetype');
+                font-display: swap;
+            }
+        
+
+            @font-face {
+                font-family: "Momotrustdisplay";
+                src: url(https://static.wixstatic.com/ufonts/af72b1_5d9acf832de54f2f9ca4f0d752b364e6/file.ttf) format('truetype');
+                font-display: swap;
+            }
+        
+
+            @font-face {
+                font-family: "Impact";
+                src: url(https://static.wixstatic.com/ufonts/03bf33_2b03c02dd31f4c768714657166494f9b/file.ttf) format('truetype');
+                font-display: swap;
+            }
+        
+
+            @font-face {
+                font-family: "Ppmondwest";
+                src: url(https://static.wixstatic.com/ufonts/cb9d7f_b604c1d1c94e48ec8497a55cec309399/file.otf) format('opentype');
+                font-display: swap;
+            }
+        
+
+            @font-face {
+                font-family: "Ppeiko";
+                src: url(https://static.wixstatic.com/ufonts/dd8053_c38f6de5b15747d7a0560b80d78ad5e0/file.otf) format('opentype');
+                font-display: swap;
+            }
+        
+
+            @font-face {
+                font-family: "Ppneuebit";
+                src: url(https://static.wixstatic.com/ufonts/11ddcd_18b9cb2f1b30417fba4f5d9a6450e2f9/file.otf) format('opentype');
+                font-display: swap;
+            }
+        
+
                     @keyframes chatooly-spin {
                         0% { transform: rotate(0deg); }
                         100% { transform: rotate(360deg); }

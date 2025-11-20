@@ -17,5 +17,5 @@ window.ChatoolyConfig = {
     tags: ["typography", "particles", "interactive", "creative", "animation"],         // Relevant tags
     description: "Liquid typography tool with interactive particles",  // Description
     version: "1.0.0",
-    author: "Yael Renous"        // Author name
+    author: "Homer Zimmerman"        // Author name
 };

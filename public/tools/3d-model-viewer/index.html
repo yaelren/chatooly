@@ -312,69 +312,6 @@
 .chatooly-modal-footer .chatooly-modal-export-btn:hover {
   background: #FFF4C4;
 }
-            </style><style id="chatooly-publish-button-styles">
-/* ========== PUBLISH BUTTON (DEV MODE) ========== */
-.chatooly-publish-button {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 1050;
-
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 15px;
-
-    background: var(--chatooly-color-button-primary);
-    color: var(--chatooly-color-button-primary-text);
-    border: 1px solid var(--chatooly-color-border);
-    border-radius: var(--chatooly-button-radius);
-
-    font-family: var(--chatooly-font-family);
-    font-size: 10px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-
-    cursor: pointer;
-    transition: all var(--chatooly-transition-fast);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.chatooly-publish-button:hover {
-    background: var(--chatooly-color-button-hover);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    transform: translateY(-1px);
-}
-
-.chatooly-publish-button:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-/* Dev badge */
-.chatooly-publish-badge {
-    padding: 2px 6px;
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 3px;
-    font-size: 8px;
-    font-weight: 600;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .chatooly-publish-button {
-        top: 10px;
-        right: 10px;
-        padding: 6px 12px;
-        font-size: 9px;
-    }
-
-    .chatooly-publish-badge {
-        padding: 2px 4px;
-        font-size: 7px;
-    }
-}
             </style><style id="chatooly-resize-bar-styles">
                 .chatooly-resize-bar {
                     position: absolute;
@@ -561,29 +498,7 @@
                         font-size: 7px;
                     }
                 }
-            </style><style id="chatooly-export-animation">
-                    @keyframes chatoolySlideIn {
-                        from {
-                            opacity: 0;
-                            transform: translateX(100%);
-                        }
-                        to {
-                            opacity: 1;
-                            transform: translateX(0);
-                        }
-                    }
-                    @keyframes chatoolyRecordPulse {
-                        0%, 100% { opacity: 1; }
-                        50% { opacity: 0.4; }
-                    }
-                    .chatooly-record-dot {
-                        width: 8px;
-                        height: 8px;
-                        background: #dc3545;
-                        border-radius: 50%;
-                        animation: chatoolyRecordPulse 1.5s ease-in-out infinite;
-                    }
-                </style></head>
+            </style></head>
 <body class="chatooly-styles-loaded" style="overscroll-behavior-x: auto;">
     <!-- ========== EDIT THIS: Update header title to match your tool ========== -->
     <header class="chatooly-header">
@@ -683,7 +598,7 @@
                         <div class="chatooly-slider-group">
                             <div class="chatooly-slider-label">
                                 <span>HDRI Intensity</span>
-                                <span class="chatooly-slider-value" id="hdri-intensity-value">1.2</span>
+                                <span class="chatooly-slider-value" id="hdri-intensity-value">1.0</span>
                             </div>
                             <input type="range" class="chatooly-slider" id="hdri-intensity" min="0" max="3" value="1" step="0.1">
                         </div>
@@ -692,7 +607,7 @@
                         <div class="chatooly-slider-group">
                             <div class="chatooly-slider-label">
                                 <span>HDRI Rotation</span>
-                                <span class="chatooly-slider-value" id="hdri-rotation-value">251°</span>
+                                <span class="chatooly-slider-value" id="hdri-rotation-value">0°</span>
                             </div>
                             <input type="range" class="chatooly-slider" id="hdri-rotation" min="0" max="360" value="0" step="1">
                         </div>
@@ -723,7 +638,7 @@
                         <div class="chatooly-slider-group">
                             <div class="chatooly-slider-label">
                                 <span>Sun Intensity</span>
-                                <span class="chatooly-slider-value" id="sun-intensity-value">10</span>
+                                <span class="chatooly-slider-value" id="sun-intensity-value">2.0</span>
                             </div>
                             <input type="range" class="chatooly-slider" id="sun-intensity" min="0" max="10" value="2" step="0.1">
                         </div>
@@ -732,7 +647,7 @@
                         <div class="chatooly-slider-group">
                             <div class="chatooly-slider-label">
                                 <span>Sun Azimuth</span>
-                                <span class="chatooly-slider-value" id="sun-azimuth-value">113°</span>
+                                <span class="chatooly-slider-value" id="sun-azimuth-value">180°</span>
                             </div>
                             <input type="range" class="chatooly-slider" id="sun-azimuth" min="0" max="360" value="180" step="1">
                         </div>
@@ -741,7 +656,7 @@
                         <div class="chatooly-slider-group">
                             <div class="chatooly-slider-label">
                                 <span>Sun Elevation</span>
-                                <span class="chatooly-slider-value" id="sun-elevation-value">-29°</span>
+                                <span class="chatooly-slider-value" id="sun-elevation-value">45°</span>
                             </div>
                             <input type="range" class="chatooly-slider" id="sun-elevation" min="-90" max="90" value="45" step="1">
                         </div>
@@ -765,7 +680,7 @@
                         <div class="chatooly-slider-group">
                             <div class="chatooly-slider-label">
                                 <span>Shadow Softness</span>
-                                <span class="chatooly-slider-value" id="shadow-softness-value">9</span>
+                                <span class="chatooly-slider-value" id="shadow-softness-value">4</span>
                             </div>
                             <input type="range" class="chatooly-slider" id="shadow-softness" min="1" max="10" value="4" step="1">
                         </div>
@@ -773,7 +688,7 @@
                         <div class="chatooly-slider-group">
                             <div class="chatooly-slider-label">
                                 <span>Shadow Intensity</span>
-                                <span class="chatooly-slider-value" id="shadow-intensity-value">0.8</span>
+                                <span class="chatooly-slider-value" id="shadow-intensity-value">0.5</span>
                             </div>
                             <input type="range" class="chatooly-slider" id="shadow-intensity" min="0" max="1" value="0.5" step="0.1">
                         </div>
@@ -786,7 +701,7 @@
                     <div class="chatooly-section-content">
                         <!-- Master Animation Toggle -->
                         <div class="chatooly-toggle-group">
-                            <button type="button" class="chatooly-toggle" id="animation-enabled" role="switch" aria-pressed="true">
+                            <button type="button" class="chatooly-toggle" id="animation-enabled" role="switch" aria-pressed="false">
                                 <span class="chatooly-toggle-slider"></span>
                             </button>
                             <label class="chatooly-toggle-label" for="animation-enabled">Enable Animation</label>
@@ -803,7 +718,7 @@
                         </div>
 
                         <!-- Turntable Controls -->
-                        <div id="turntable-controls" style="display: none;">
+                        <div id="turntable-controls" style="display: block;">
                             <div class="chatooly-slider-group">
                                 <div class="chatooly-slider-label">
                                     <span>Speed X</span>
@@ -830,11 +745,11 @@
                         </div>
 
                         <!-- Sine Wave Controls -->
-                        <div id="sine-controls" style="display: block;">
+                        <div id="sine-controls" style="display: none;">
                             <div class="chatooly-slider-group">
                                 <div class="chatooly-slider-label">
                                     <span>X Amplitude</span>
-                                    <span class="chatooly-slider-value" id="sine-amplitude-x-value">12°</span>
+                                    <span class="chatooly-slider-value" id="sine-amplitude-x-value">0°</span>
                                 </div>
                                 <input type="range" class="chatooly-slider" id="sine-amplitude-x" min="0" max="360" value="0" step="1">
                             </div>
@@ -842,7 +757,7 @@
                             <div class="chatooly-slider-group">
                                 <div class="chatooly-slider-label">
                                     <span>X Frequency</span>
-                                    <span class="chatooly-slider-value" id="sine-frequency-x-value">0.3 Hz</span>
+                                    <span class="chatooly-slider-value" id="sine-frequency-x-value">0 Hz</span>
                                 </div>
                                 <input type="range" class="chatooly-slider" id="sine-frequency-x" min="0" max="2" value="0" step="0.1">
                             </div>
@@ -850,7 +765,7 @@
                             <div class="chatooly-slider-group">
                                 <div class="chatooly-slider-label">
                                     <span>Y Amplitude</span>
-                                    <span class="chatooly-slider-value" id="sine-amplitude-y-value">11°</span>
+                                    <span class="chatooly-slider-value" id="sine-amplitude-y-value">0°</span>
                                 </div>
                                 <input type="range" class="chatooly-slider" id="sine-amplitude-y" min="0" max="360" value="0" step="1">
                             </div>
@@ -858,7 +773,7 @@
                             <div class="chatooly-slider-group">
                                 <div class="chatooly-slider-label">
                                     <span>Y Frequency</span>
-                                    <span class="chatooly-slider-value" id="sine-frequency-y-value">0.2 Hz</span>
+                                    <span class="chatooly-slider-value" id="sine-frequency-y-value">0 Hz</span>
                                 </div>
                                 <input type="range" class="chatooly-slider" id="sine-frequency-y" min="0" max="2" value="0" step="0.1">
                             </div>
@@ -866,7 +781,7 @@
                             <div class="chatooly-slider-group">
                                 <div class="chatooly-slider-label">
                                     <span>Z Amplitude</span>
-                                    <span class="chatooly-slider-value" id="sine-amplitude-z-value">33°</span>
+                                    <span class="chatooly-slider-value" id="sine-amplitude-z-value">0°</span>
                                 </div>
                                 <input type="range" class="chatooly-slider" id="sine-amplitude-z" min="0" max="360" value="0" step="1">
                             </div>
@@ -874,7 +789,7 @@
                             <div class="chatooly-slider-group">
                                 <div class="chatooly-slider-label">
                                     <span>Z Frequency</span>
-                                    <span class="chatooly-slider-value" id="sine-frequency-z-value">0.3 Hz</span>
+                                    <span class="chatooly-slider-value" id="sine-frequency-z-value">0 Hz</span>
                                 </div>
                                 <input type="range" class="chatooly-slider" id="sine-frequency-z" min="0" max="2" value="0" step="0.1">
                             </div>
@@ -885,7 +800,7 @@
                             <div class="chatooly-slider-group">
                                 <div class="chatooly-slider-label">
                                     <span>Light Animation Speed</span>
-                                    <span class="chatooly-slider-value" id="light-animation-speed-value">-0.6</span>
+                                    <span class="chatooly-slider-value" id="light-animation-speed-value">1.0</span>
                                 </div>
                                 <input type="range" class="chatooly-slider" id="light-animation-speed" min="-5" max="5" value="1" step="0.1">
                             </div>
@@ -899,14 +814,14 @@
                     <div class="chatooly-section-content">
                         <!-- Transparent Background Toggle -->
                         <div class="chatooly-toggle-group">
-                            <button type="button" class="chatooly-toggle" id="transparent-bg" role="switch" aria-pressed="true">
+                            <button type="button" class="chatooly-toggle" id="transparent-bg" role="switch" aria-pressed="false">
                                 <span class="chatooly-toggle-slider"></span>
                             </button>
                             <label class="chatooly-toggle-label" for="transparent-bg">Transparent Background</label>
                         </div>
 
                         <!-- Background Color Picker -->
-                        <div class="chatooly-color-group" id="bg-color-group" style="display: none;">
+                        <div class="chatooly-color-group" id="bg-color-group">
                             <label class="chatooly-color-label" for="bg-color">Background Color</label>
                             <input type="color" class="chatooly-color-input" id="bg-color" value="#FFFFFF">
                         </div>
@@ -950,7 +865,7 @@
                 <!-- This content will be exported as PNG/Video -->
                 <!-- IMPORTANT: Your main canvas MUST have id="chatooly-canvas" -->
                 <!-- For animations: CDN automatically detects canvas animations and provides video export options -->
-                <canvas id="chatooly-canvas" width="1920" height="1080" data-engine="three.js r162" style="position: static; margin: 0px; width: 1920px; height: 1080px; transform-origin: center center; display: block; touch-action: none;" class="chatooly-canvas-transparent"></canvas>
+                <canvas id="chatooly-canvas" width="1080" height="1350" data-engine="three.js r162" style="position: static; margin: 0px; width: 100%; height: 100%; transform-origin: center center; display: block; touch-action: none;"></canvas>
                 <!-- ========== END EDIT SECTION ========== -->
             </div>
         <div id="chatooly-resize-bar" class="chatooly-resize-bar">
@@ -974,22 +889,22 @@
 
                     <div class="chatooly-preset-buttons">
                         
-                    <button class="chatooly-btn active" data-preset="HD (16:9)" data-abbr="HD">
+                    <button class="chatooly-btn " data-preset="HD (16:9)" data-abbr="HD">
                         <span class="chatooly-btn-full">HD (16:9)</span>
                         <span class="chatooly-btn-abbr">HD</span>
                     </button>
                 
-                    <button class="chatooly-btn" data-preset="SQUARE (1:1)" data-abbr="SQ">
+                    <button class="chatooly-btn active" data-preset="SQUARE (1:1)" data-abbr="SQ">
                         <span class="chatooly-btn-full">SQUARE (1:1)</span>
                         <span class="chatooly-btn-abbr">SQ</span>
                     </button>
                 
-                    <button class="chatooly-btn" data-preset="4:3" data-abbr="4:3">
+                    <button class="chatooly-btn " data-preset="4:3" data-abbr="4:3">
                         <span class="chatooly-btn-full">4:3</span>
                         <span class="chatooly-btn-abbr">4:3</span>
                     </button>
                 
-                    <button class="chatooly-btn" data-preset="PORTRAIT (9:16)" data-abbr="PT">
+                    <button class="chatooly-btn " data-preset="PORTRAIT (9:16)" data-abbr="PT">
                         <span class="chatooly-btn-full">PORTRAIT (9:16)</span>
                         <span class="chatooly-btn-abbr">PT</span>
                     </button>
@@ -1079,12 +994,12 @@
                             <div class="chatooly-export-section">
                                 <!-- Format Toggle -->
                                 <div class="chatooly-export-toggle">
-                                    <button class="chatooly-toggle-btn" data-format="image">Image</button>
-                                    <button class="chatooly-toggle-btn active" data-format="video">Video</button>
+                                    <button class="chatooly-toggle-btn active" data-format="image">Image</button>
+                                    <button class="chatooly-toggle-btn" data-format="video">Video</button>
                                 </div>
 
                                 <!-- Image Options -->
-                                <div class="chatooly-export-options" data-type="image" style="display: none;">
+                                <div class="chatooly-export-options" data-type="image">
                                     <div class="chatooly-export-field">
                                         <label>Size</label>
                                         <div class="chatooly-multiplier-buttons">
@@ -1098,7 +1013,7 @@
                                 </div>
 
                                 <!-- Video Options -->
-                                <div class="chatooly-export-options" data-type="video" style="display: block;">
+                                <div class="chatooly-export-options" data-type="video" style="display: none;">
                                     <div class="chatooly-export-row">
                                         <div class="chatooly-input-group">
                                             <label class="chatooly-input-label">Duration</label>
@@ -1124,11 +1039,10 @@
 
                         <!-- Footer -->
                         <div class="chatooly-modal-footer">
-                            <button class="chatooly-modal-export-btn">Start Recording</button>
+                            <button class="chatooly-modal-export-btn">
+                                Export Image
+                            </button>
                         </div>
                     </div>
                 </div>
-            </div><button id="chatooly-publish-button" class="chatooly-publish-button">
-                Publish to Hub
-                <span class="chatooly-publish-badge">DEV</span>
-            </button><div class="screenHairImage" style="width: 200px; height: 200px; left: 2543px; top: 1472px; background-image: url(&quot;chrome-extension://fdgfnideaokaenkdnlmibfffbhiefimb/assets/h12.png&quot;);"></div><browser-mcp-container data-wxt-shadow-root=""></browser-mcp-container></body></html>
+            </div><div class="screenHairImage" style="width: 200px; height: 200px; left: 2543px; top: 1472px; background-image: url(&quot;chrome-extension://fdgfnideaokaenkdnlmibfffbhiefimb/assets/h12.png&quot;);"></div><browser-mcp-container data-wxt-shadow-root=""></browser-mcp-container></body></html>

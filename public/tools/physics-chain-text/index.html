@@ -501,29 +501,7 @@
                         font-size: 7px;
                     }
                 }
-            </style><style id="chatooly-export-animation">
-                    @keyframes chatoolySlideIn {
-                        from {
-                            opacity: 0;
-                            transform: translateX(100%);
-                        }
-                        to {
-                            opacity: 1;
-                            transform: translateX(0);
-                        }
-                    }
-                    @keyframes chatoolyRecordPulse {
-                        0%, 100% { opacity: 1; }
-                        50% { opacity: 0.4; }
-                    }
-                    .chatooly-record-dot {
-                        width: 8px;
-                        height: 8px;
-                        background: #dc3545;
-                        border-radius: 50%;
-                        animation: chatoolyRecordPulse 1.5s ease-in-out infinite;
-                    }
-                </style></head>
+            </style></head>
 <body class="chatooly-styles-loaded">
     <!-- ========== EDIT THIS: Update header title to match your tool ========== -->
     <header class="chatooly-header">
@@ -549,7 +527,7 @@
                 <div class="chatooly-section-card" data-section="chains">
                     <h3 class="chatooly-section-header">🔗 Chains</h3>
                     <div class="chatooly-section-content">
-                        <div id="chains-list"><div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; margin-bottom: 8px; border: 2px solid var(--chatooly-color-border); background: var(--chatooly-color-background);"><span style="flex: 1 1 0%; cursor: pointer;">Chain 1: "HELLO"</span><button class="chatooly-btn" style="min-width: auto; padding: 4px 8px; margin-left: 8px;">×</button></div><div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; margin-bottom: 8px; border: 2px solid var(--chatooly-color-border); background: var(--chatooly-color-background);"><span style="flex: 1 1 0%; cursor: pointer;">Chain 3: "WIX@!"</span><button class="chatooly-btn" style="min-width: auto; padding: 4px 8px; margin-left: 8px;">×</button></div><div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; margin-bottom: 8px; border-color: var(--chatooly-color-primary); border-top-style: ; border-top-width: ; border-right-style: ; border-right-width: ; border-bottom-style: ; border-bottom-width: ; border-left-style: ; border-left-width: ; border-image-source: ; border-image-slice: ; border-image-width: ; border-image-outset: ; border-image-repeat: ; background: var(--chatooly-color-background);"><span style="flex: 1 1 0%; cursor: pointer;">Chain 4: "WIX@!"</span><button class="chatooly-btn" style="min-width: auto; padding: 4px 8px; margin-left: 8px;">×</button></div></div>
+                        <div id="chains-list"><div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; margin-bottom: 8px; border-color: var(--chatooly-color-primary); border-top-style: ; border-top-width: ; border-right-style: ; border-right-width: ; border-bottom-style: ; border-bottom-width: ; border-left-style: ; border-left-width: ; border-image-source: ; border-image-slice: ; border-image-width: ; border-image-outset: ; border-image-repeat: ; background: var(--chatooly-color-background);"><span style="flex: 1 1 0%; cursor: pointer;">Chain 1: "HELLO"</span><button class="chatooly-btn" style="min-width: auto; padding: 4px 8px; margin-left: 8px;">×</button></div></div>
                         <button type="button" class="chatooly-btn" id="add-chain-btn">+ Add Chain</button>
                     </div>
                 </div>
@@ -573,7 +551,7 @@
                         <div class="chatooly-slider-group">
                             <div class="chatooly-slider-label">
                                 <span>Chain Length</span>
-                                <span class="chatooly-slider-value" id="chain-length-value">137</span>
+                                <span class="chatooly-slider-value" id="chain-length-value">40</span>
                             </div>
                             <input type="range" class="chatooly-slider" id="chain-length" min="10" max="150" value="40">
                         </div>
@@ -582,7 +560,7 @@
                         <div class="chatooly-slider-group">
                             <div class="chatooly-slider-label">
                                 <span>Bead Size</span>
-                                <span class="chatooly-slider-value" id="bead-size-value">89</span>
+                                <span class="chatooly-slider-value" id="bead-size-value">50</span>
                             </div>
                             <input type="range" class="chatooly-slider" id="bead-size" min="20" max="150" value="50">
                         </div>
@@ -621,7 +599,7 @@
                         <div class="chatooly-slider-group">
                             <div class="chatooly-slider-label">
                                 <span>Stroke Width</span>
-                                <span class="chatooly-slider-value" id="stroke-width-value">27</span>
+                                <span class="chatooly-slider-value" id="stroke-width-value">2</span>
                             </div>
                             <input type="range" class="chatooly-slider" id="stroke-width" min="1" max="200" value="2">
                         </div>
@@ -655,7 +633,7 @@
                         <div class="chatooly-slider-group">
                             <div class="chatooly-slider-label">
                                 <span>Wind Strength</span>
-                                <span class="chatooly-slider-value" id="wind-strength-value">0.8</span>
+                                <span class="chatooly-slider-value" id="wind-strength-value">0</span>
                             </div>
                             <input type="range" class="chatooly-slider" id="wind-strength" min="0" max="5" step="0.1" value="0">
                         </div>
@@ -664,7 +642,7 @@
                         <div class="chatooly-slider-group">
                             <div class="chatooly-slider-label">
                                 <span>Wind Direction</span>
-                                <span class="chatooly-slider-value" id="wind-direction-value">322</span>
+                                <span class="chatooly-slider-value" id="wind-direction-value">0</span>
                             </div>
                             <input type="range" class="chatooly-slider" id="wind-direction" min="0" max="360" value="0">
                         </div>
@@ -673,7 +651,7 @@
                         <div class="chatooly-slider-group">
                             <div class="chatooly-slider-label">
                                 <span>Wind Variation</span>
-                                <span class="chatooly-slider-value" id="wind-variation-value">1.0</span>
+                                <span class="chatooly-slider-value" id="wind-variation-value">0.2</span>
                             </div>
                             <input type="range" class="chatooly-slider" id="wind-variation" min="0" max="1" step="0.1" value="0.2">
                         </div>
@@ -709,11 +687,11 @@
                                 <div class="chatooly-upload-text">Background Image</div>
                                 <input type="file" class="chatooly-upload-input" id="bg-image" accept="image/*">
                             </div>
-                            <button id="clear-bg-image" type="button" class="chatooly-btn" style="display: block; position: absolute; top: 8px; right: 8px; padding: 4px 8px; min-width: auto; z-index: 10;" title="Remove image">×</button>
+                            <button id="clear-bg-image" type="button" class="chatooly-btn" style="display: none; position: absolute; top: 8px; right: 8px; padding: 4px 8px; min-width: auto; z-index: 10;" title="Remove image">×</button>
                         </div>
 
                         <!-- Image Fit Dropdown -->
-                        <div class="chatooly-input-group" id="bg-fit-group" style="display: block;">
+                        <div class="chatooly-input-group" id="bg-fit-group" style="display: none;">
                             <label class="chatooly-input-label" for="bg-fit">Image Fit</label>
                             <select class="chatooly-select" id="bg-fit">
                                 <option value="cover">Fill Frame</option>
@@ -732,14 +710,14 @@
         <!-- Right Panel: Preview/Canvas Area -->
         <div class="chatooly-preview-panel" style="display: flex; align-items: center; justify-content: center;">
             <!-- ========== DO NOT EDIT: Required Export Container ========== -->
-            <div id="chatooly-container" class="" style="position: relative; display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 100%; height: 100%; overflow: auto;">
+            <div id="chatooly-container" style="position: relative; display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 100%; height: 100%; overflow: auto;">
                 <!-- ========== EDIT BELOW: Add Your Visual Output Here ========== -->
                 <!-- This content will be exported as PNG/Video -->
                 <!-- IMPORTANT: For p5.js, the canvas will be created with id="chatooly-canvas" -->
                 <!-- For animations: CDN automatically detects canvas animations and provides video export options -->
                 <div id="chatooly-canvas-container"></div>
                 <!-- ========== END EDIT SECTION ========== -->
-            <canvas id="chatooly-canvas" class="p5Canvas" width="1080" height="1920" style="width: 1080px; height: 1920px; position: static; margin: 0px; transform-origin: center center; cursor: default;"></canvas></div>
+            <canvas id="chatooly-canvas" class="p5Canvas" width="1920" height="1080" style="width: 1130px; height: 635.625px; position: static; margin: 0px; transform-origin: center center; cursor: default;"></canvas></div>
         <div id="chatooly-resize-bar" class="chatooly-resize-bar">
                 <span class="chatooly-resize-bar-label">Canvas Size</span>
                 <div class="chatooly-resize-format">
@@ -761,22 +739,22 @@
 
                     <div class="chatooly-preset-buttons">
                         
-                    <button class="chatooly-btn" data-preset="HD (16:9)" data-abbr="HD">
+                    <button class="chatooly-btn " data-preset="HD (16:9)" data-abbr="HD">
                         <span class="chatooly-btn-full">HD (16:9)</span>
                         <span class="chatooly-btn-abbr">HD</span>
                     </button>
                 
-                    <button class="chatooly-btn" data-preset="SQUARE (1:1)" data-abbr="SQ">
+                    <button class="chatooly-btn active" data-preset="SQUARE (1:1)" data-abbr="SQ">
                         <span class="chatooly-btn-full">SQUARE (1:1)</span>
                         <span class="chatooly-btn-abbr">SQ</span>
                     </button>
                 
-                    <button class="chatooly-btn" data-preset="4:3" data-abbr="4:3">
+                    <button class="chatooly-btn " data-preset="4:3" data-abbr="4:3">
                         <span class="chatooly-btn-full">4:3</span>
                         <span class="chatooly-btn-abbr">4:3</span>
                     </button>
                 
-                    <button class="chatooly-btn active" data-preset="PORTRAIT (9:16)" data-abbr="PT">
+                    <button class="chatooly-btn " data-preset="PORTRAIT (9:16)" data-abbr="PT">
                         <span class="chatooly-btn-full">PORTRAIT (9:16)</span>
                         <span class="chatooly-btn-abbr">PT</span>
                     </button>
@@ -856,12 +834,12 @@
                             <div class="chatooly-export-section">
                                 <!-- Format Toggle -->
                                 <div class="chatooly-export-toggle">
-                                    <button class="chatooly-toggle-btn" data-format="image">Image</button>
-                                    <button class="chatooly-toggle-btn active" data-format="video">Video</button>
+                                    <button class="chatooly-toggle-btn active" data-format="image">Image</button>
+                                    <button class="chatooly-toggle-btn" data-format="video">Video</button>
                                 </div>
 
                                 <!-- Image Options -->
-                                <div class="chatooly-export-options" data-type="image" style="display: none;">
+                                <div class="chatooly-export-options" data-type="image">
                                     <div class="chatooly-export-field">
                                         <label>Size</label>
                                         <div class="chatooly-multiplier-buttons">
@@ -875,7 +853,7 @@
                                 </div>
 
                                 <!-- Video Options -->
-                                <div class="chatooly-export-options" data-type="video" style="display: block;">
+                                <div class="chatooly-export-options" data-type="video" style="display: none;">
                                     <div class="chatooly-export-row">
                                         <div class="chatooly-input-group">
                                             <label class="chatooly-input-label">Duration</label>
@@ -901,7 +879,9 @@
 
                         <!-- Footer -->
                         <div class="chatooly-modal-footer">
-                            <button class="chatooly-modal-export-btn">Start Recording</button>
+                            <button class="chatooly-modal-export-btn">
+                                Export Image
+                            </button>
                         </div>
                     </div>
                 </div>

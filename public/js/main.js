@@ -106,6 +106,12 @@ class ChatoolyHub {
                 slug: 'type-shaper',
                 author: 'Studio Video',
                 category: 'text'
+            },
+            {
+                name: 'Physics Chain Text',
+                slug: 'physics-chain-text',
+                author: 'Studio Video',
+                category: 'text'
             }
         ];
 

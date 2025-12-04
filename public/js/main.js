@@ -112,6 +112,12 @@ class ChatoolyHub {
                 slug: 'physics-chain-text',
                 author: 'Studio Video',
                 category: 'text'
+            },
+            {
+                name: 'Sliced Typography',
+                slug: 'sliced-typography',
+                author: 'Omer',
+                category: 'art'
             }
         ];
 
@@ -124,9 +130,12 @@ class ChatoolyHub {
             return;
         }
 
+        // Use relative paths to work with both server root configurations
+        // If server root is 'public': tools/ resolves to /tools/
+        // If server root is project root and page is at /public/index.html: tools/ resolves to /public/tools/
         this.toolsList.innerHTML = tools.map(tool => `
             <div class="tool-item">
-                <a href="/tools/${tool.slug}/" class="tool-link">
+                <a href="tools/${tool.slug}/" class="tool-link">
                     <span class="tool-name">${tool.name}</span>
                     <span class="tool-creator">by ${tool.author}</span>
                 </a>

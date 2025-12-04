@@ -501,29 +501,7 @@
                         font-size: 7px;
                     }
                 }
-            </style><style id="chatooly-export-animation">
-                    @keyframes chatoolySlideIn {
-                        from {
-                            opacity: 0;
-                            transform: translateX(100%);
-                        }
-                        to {
-                            opacity: 1;
-                            transform: translateX(0);
-                        }
-                    }
-                    @keyframes chatoolyRecordPulse {
-                        0%, 100% { opacity: 1; }
-                        50% { opacity: 0.4; }
-                    }
-                    .chatooly-record-dot {
-                        width: 8px;
-                        height: 8px;
-                        background: #dc3545;
-                        border-radius: 50%;
-                        animation: chatoolyRecordPulse 1.5s ease-in-out infinite;
-                    }
-                </style></head>
+            </style></head>
 <body class="chatooly-styles-loaded">
     <!-- ========== EDIT THIS: Update header title to match your tool ========== -->
     <header class="chatooly-header">
@@ -953,12 +931,12 @@ In Hebrew</textarea>
                             <div class="chatooly-export-section">
                                 <!-- Format Toggle -->
                                 <div class="chatooly-export-toggle">
-                                    <button class="chatooly-toggle-btn" data-format="image">Image</button>
-                                    <button class="chatooly-toggle-btn active" data-format="video">Video</button>
+                                    <button class="chatooly-toggle-btn active" data-format="image">Image</button>
+                                    <button class="chatooly-toggle-btn" data-format="video">Video</button>
                                 </div>
 
                                 <!-- Image Options -->
-                                <div class="chatooly-export-options" data-type="image" style="display: none;">
+                                <div class="chatooly-export-options" data-type="image">
                                     <div class="chatooly-export-field">
                                         <label>Size</label>
                                         <div class="chatooly-multiplier-buttons">
@@ -972,7 +950,7 @@ In Hebrew</textarea>
                                 </div>
 
                                 <!-- Video Options -->
-                                <div class="chatooly-export-options" data-type="video" style="display: block;">
+                                <div class="chatooly-export-options" data-type="video" style="display: none;">
                                     <div class="chatooly-export-row">
                                         <div class="chatooly-input-group">
                                             <label class="chatooly-input-label">Duration</label>
@@ -998,7 +976,9 @@ In Hebrew</textarea>
 
                         <!-- Footer -->
                         <div class="chatooly-modal-footer">
-                            <button class="chatooly-modal-export-btn">Start Recording</button>
+                            <button class="chatooly-modal-export-btn">
+                                Export Image
+                            </button>
                         </div>
                     </div>
                 </div>

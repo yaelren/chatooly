@@ -1,0 +1,136 @@
+/* Media Previews */
+.media-preview-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+    margin-bottom: 15px;
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    min-height: 40px;
+}
+
+.media-preview-grid:empty {
+    display: none;
+}
+
+.media-preview-wrapper {
+    position: relative;
+    width: 70px;
+    height: 70px;
+}
+
+.media-preview-item {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    background: #1a1a1a;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.media-preview-item:hover {
+    border-color: var(--chatooly-color-primary);
+}
+
+.media-remove-btn {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 20px;
+    height: 20px;
+    background: #ff4444;
+    color: white;
+    border: 2px solid #2b2b2b;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 1;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.1s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.media-preview-wrapper:hover .media-remove-btn {
+    opacity: 1;
+}
+
+.media-remove-btn:hover {
+    background: #ff0000;
+    transform: scale(1.1);
+}
+
+/* Palette Styles */
+.palette-container {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 36px;
+    padding: 6px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 6px;
+    align-items: center;
+}
+
+.palette-item {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid rgba(255,255,255,0.2);
+    position: relative;
+    transition: transform 0.1s, border-color 0.1s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.palette-item:hover {
+    transform: scale(1.15);
+    border-color: #fff;
+    z-index: 10;
+}
+
+.palette-item::after {
+    content: '×';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 16px;
+    font-weight: bold;
+    color: white;
+    opacity: 0;
+    text-shadow: 0 1px 3px black;
+    pointer-events: none;
+}
+
+.palette-item:hover::after {
+    opacity: 1;
+}
+
+.palette-input-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.btn-add-color {
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    line-height: 1;
+    border-radius: 4px;
+}

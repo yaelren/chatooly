@@ -536,29 +536,7 @@
                         font-size: 7px;
                     }
                 }
-            </style><style id="chatooly-export-animation">
-                    @keyframes chatoolySlideIn {
-                        from {
-                            opacity: 0;
-                            transform: translateX(100%);
-                        }
-                        to {
-                            opacity: 1;
-                            transform: translateX(0);
-                        }
-                    }
-                    @keyframes chatoolyRecordPulse {
-                        0%, 100% { opacity: 1; }
-                        50% { opacity: 0.4; }
-                    }
-                    .chatooly-record-dot {
-                        width: 8px;
-                        height: 8px;
-                        background: #dc3545;
-                        border-radius: 50%;
-                        animation: chatoolyRecordPulse 1.5s ease-in-out infinite;
-                    }
-                </style></head>
+            </style></head>
 <body class="chatooly-styles-loaded">
     <header class="chatooly-header">
         <div class="chatooly-header-title">ASCII Shader Studio</div>
@@ -616,6 +594,32 @@
                             </div>
                             <input type="range" class="chatooly-slider" id="brightness" min="-50" max="50" value="0">
                         </div>
+
+                        <!-- Background Removal -->
+                        <div class="chatooly-toggle-group">
+                            <button type="button" class="chatooly-toggle" id="remove-background" role="switch" aria-pressed="false">
+                                <span class="chatooly-toggle-slider"></span>
+                            </button>
+                            <label class="chatooly-toggle-label">Remove Background</label>
+                        </div>
+
+                        <!-- Background Threshold -->
+                        <div class="chatooly-slider-group" id="background-threshold-group" style="display: none;">
+                            <div class="chatooly-slider-label">
+                                <span>Background Sensitivity</span>
+                                <span class="chatooly-slider-value" id="background-threshold-value">10</span>
+                            </div>
+                            <input type="range" class="chatooly-slider" id="background-threshold" min="1" max="50" value="10">
+                        </div>
+
+                        <!-- Edge Smoothing -->
+                        <div class="chatooly-slider-group" id="edge-smoothing-group" style="display: none;">
+                            <div class="chatooly-slider-label">
+                                <span>Edge Smoothing</span>
+                                <span class="chatooly-slider-value" id="edge-smoothing-value">2</span>px
+                            </div>
+                            <input type="range" class="chatooly-slider" id="edge-smoothing" min="0" max="5" value="2">
+                        </div>
                     </div>
                 </div>
 
@@ -638,7 +642,7 @@
                                 <option value="ansi">ANSI Art (░▒▓█▄▀▌▐▖)</option>
                                 <option value="custom">Custom Set</option>
                             </select>
-                        <div class="character-set-preview" style="font-family: monospace; font-size: 12px; color: var(--text-2); margin-top: 4px; padding: 4px; border: 1px solid var(--border-color); border-radius: 2px; white-space: nowrap; overflow: hidden;">Preview:  .·▪▫▬▭■□▣▤▦▧▨▩</div></div>
+                        <div class="character-set-preview" style="font-family: monospace; font-size: 12px; color: var(--text-2); margin-top: 4px; padding: 4px; border: 1px solid var(--border-color); border-radius: 2px; white-space: nowrap; overflow: hidden;">Preview:  .,:;i1tfLCG08@</div></div>
 
                         <!-- Custom Character Set Input -->
                         <div class="chatooly-input-group" id="custom-chars-group" style="display: none;">
@@ -650,16 +654,16 @@
                         <div class="chatooly-slider-group">
                             <div class="chatooly-slider-label">
                                 <span>Character Density</span>
-                                <span class="chatooly-slider-value" id="char-density-value">115</span>
+                                <span class="chatooly-slider-value" id="char-density-value">50</span>
                             </div>
                             <input type="range" class="chatooly-slider" id="char-density" min="20" max="200" value="50">
-                        <div style="font-size: 8px; color: var(--text-2); margin-top: 4px;">≈32×16 characters</div><div style="font-size: 8px; color: var(--text-2); margin-top: 4px;">≈39×19 characters</div><div style="font-size: 8px; color: var(--text-2); margin-top: 4px;">≈44×22 characters</div><div style="font-size: 8px; color: var(--text-2); margin-top: 4px;">≈52×26 characters</div><div style="font-size: 8px; color: var(--text-2); margin-top: 4px;">≈38×19 characters</div><div style="font-size: 8px; color: var(--text-2); margin-top: 4px;">≈28×14 characters</div><div style="font-size: 8px; color: var(--text-2); margin-top: 4px;">≈27×13 characters</div><div style="font-size: 8px; color: var(--text-2); margin-top: 4px;">≈54×27 characters</div><div style="font-size: 8px; color: var(--text-2); margin-top: 4px;">≈42×21 characters</div><div style="font-size: 8px; color: var(--text-2); margin-top: 4px;">≈72×36 characters</div><div style="font-size: 8px; color: var(--text-2); margin-top: 4px;">≈100×50 characters</div><div style="font-size: 8px; color: var(--text-2); margin-top: 4px;">≈48×24 characters</div><div style="font-size: 8px; color: var(--text-2); margin-top: 4px;">≈10×5 characters</div><div style="font-size: 8px; color: var(--text-2); margin-top: 4px;">≈40×20 characters</div><div style="font-size: 8px; color: var(--text-2); margin-top: 4px;">≈43×21 characters</div><div style="font-size: 8px; color: var(--text-2); margin-top: 4px;">≈55×27 characters</div><div class="density-preview" style="font-size: 8px; color: var(--text-2); margin-top: 4px;">≈57×28 characters</div></div>
+                        </div>
 
                         <!-- Character Size -->
                         <div class="chatooly-slider-group">
                             <div class="chatooly-slider-label">
                                 <span>Character Size</span>
-                                <span class="chatooly-slider-value" id="char-size-value">10</span>px
+                                <span class="chatooly-slider-value" id="char-size-value">8</span>px
                             </div>
                             <input type="range" class="chatooly-slider" id="char-size" min="4" max="20" value="8">
                         </div>
@@ -679,25 +683,25 @@
                 </div>
 
                 <!-- ========== BIG TYPE MODE SECTION ========== -->
-                <div class="chatooly-section-card active" data-section="big-type">
+                <div class="chatooly-section-card" data-section="big-type">
                     <h3 class="chatooly-section-header">🔤 Big Type Mode</h3>
                     <div class="chatooly-section-content">
                         <!-- Enable Big Type -->
                         <div class="chatooly-toggle-group">
-                            <button type="button" class="chatooly-toggle" id="big-type-enabled" role="switch" aria-pressed="true">
+                            <button type="button" class="chatooly-toggle" id="big-type-enabled" role="switch" aria-pressed="false">
                                 <span class="chatooly-toggle-slider"></span>
                             </button>
                             <label class="chatooly-toggle-label">Enable Big Type</label>
                         </div>
 
                         <!-- Text Input -->
-                        <div class="chatooly-input-group" id="big-type-text-group" style="display: block;">
+                        <div class="chatooly-input-group" id="big-type-text-group" style="display: none;">
                             <label class="chatooly-input-label" for="big-type-text">Text</label>
                             <input type="text" class="chatooly-input" id="big-type-text" placeholder="Enter your text" value="ASCII">
                         </div>
 
                         <!-- Text Position -->
-                        <div class="chatooly-input-group" id="text-position-group" style="display: block;">
+                        <div class="chatooly-input-group" id="text-position-group" style="display: none;">
                             <label class="chatooly-input-label" for="text-position">Position</label>
                             <select class="chatooly-select" id="text-position">
                                 <option value="center">Center</option>
@@ -710,16 +714,16 @@
                         </div>
 
                         <!-- Text Size -->
-                        <div class="chatooly-slider-group" id="text-size-group" style="display: block;">
+                        <div class="chatooly-slider-group" id="text-size-group" style="display: none;">
                             <div class="chatooly-slider-label">
                                 <span>Text Size</span>
-                                <span class="chatooly-slider-value" id="text-size-value">84</span>px
+                                <span class="chatooly-slider-value" id="text-size-value">64</span>px
                             </div>
                             <input type="range" class="chatooly-slider" id="text-size" min="24" max="120" value="64">
                         </div>
 
                         <!-- Flow Algorithm -->
-                        <div class="chatooly-input-group" id="flow-algorithm-group" style="display: block;">
+                        <div class="chatooly-input-group" id="flow-algorithm-group" style="display: none;">
                             <label class="chatooly-input-label" for="flow-algorithm">Flow Style</label>
                             <select class="chatooly-select" id="flow-algorithm">
                                 <option value="wrap">Wrap Around</option>
@@ -730,10 +734,10 @@
                         </div>
 
                         <!-- Flow Strength -->
-                        <div class="chatooly-slider-group" id="flow-strength-group" style="display: block;">
+                        <div class="chatooly-slider-group" id="flow-strength-group" style="display: none;">
                             <div class="chatooly-slider-label">
                                 <span>Flow Strength</span>
-                                <span class="chatooly-slider-value" id="flow-strength-value">53</span>%
+                                <span class="chatooly-slider-value" id="flow-strength-value">75</span>%
                             </div>
                             <input type="range" class="chatooly-slider" id="flow-strength" min="0" max="100" value="75">
                         </div>
@@ -777,24 +781,24 @@
                         <div class="chatooly-slider-group">
                             <div class="chatooly-slider-label">
                                 <span>Contrast</span>
-                                <span class="chatooly-slider-value" id="contrast-value">65</span>%
+                                <span class="chatooly-slider-value" id="contrast-value">50</span>%
                             </div>
                             <input type="range" class="chatooly-slider" id="contrast" min="0" max="100" value="50">
                         </div>
 
                         <!-- Animation -->
                         <div class="chatooly-toggle-group">
-                            <button type="button" class="chatooly-toggle" id="animate-characters" role="switch" aria-pressed="true">
+                            <button type="button" class="chatooly-toggle" id="animate-characters" role="switch" aria-pressed="false">
                                 <span class="chatooly-toggle-slider"></span>
                             </button>
                             <label class="chatooly-toggle-label">Animate Characters</label>
                         </div>
 
                         <!-- Animation Speed -->
-                        <div class="chatooly-slider-group" id="animation-speed-group" style="display: block;">
+                        <div class="chatooly-slider-group" id="animation-speed-group" style="display: none;">
                             <div class="chatooly-slider-label">
                                 <span>Animation Speed</span>
-                                <span class="chatooly-slider-value" id="animation-speed-value">1.4</span>x
+                                <span class="chatooly-slider-value" id="animation-speed-value">1.0</span>x
                             </div>
                             <input type="range" class="chatooly-slider" id="animation-speed" min="0.1" max="3.0" step="0.1" value="1.0">
                         </div>
@@ -822,7 +826,7 @@
                         </div>
 
                         <!-- Background Color Picker -->
-                        <div class="chatooly-color-group" id="bg-color-group" style="display: block;">
+                        <div class="chatooly-color-group" id="bg-color-group">
                             <label class="chatooly-color-label" for="bg-color">Background Color</label>
                             <input type="color" class="chatooly-color-input" id="bg-color" value="#000000">
                         </div>
@@ -909,8 +913,8 @@
 
         <!-- Right Panel: Preview/Canvas Area -->
         <div class="chatooly-preview-panel" style="display: flex; align-items: center; justify-content: center;">
-            <div id="chatooly-container" class="" style="position: relative; display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 100%; height: 100%; overflow: auto;">
-                <canvas id="chatooly-canvas" width="1080" height="1920" style="position: static; margin: 0px; width: 356.062px; height: 633px; transform-origin: 0px 0px; cursor: grab; transform: translate(1px, -5px) scale(1);" class=""></canvas>
+            <div id="chatooly-container" style="position: relative; display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 100%; height: 100%; overflow: auto;">
+                <canvas id="chatooly-canvas" width="1200" height="900" style="position: static; margin: 0px; width: 635px; height: 476.25px; transform-origin: center center; cursor: grab;"></canvas>
                 <!-- Zoom Instructions -->
                 <div class="zoom-instructions" style="
                     position: absolute;
@@ -950,22 +954,22 @@
 
                     <div class="chatooly-preset-buttons">
                         
-                    <button class="chatooly-btn" data-preset="HD (16:9)" data-abbr="HD">
+                    <button class="chatooly-btn " data-preset="HD (16:9)" data-abbr="HD">
                         <span class="chatooly-btn-full">HD (16:9)</span>
                         <span class="chatooly-btn-abbr">HD</span>
                     </button>
                 
-                    <button class="chatooly-btn" data-preset="SQUARE (1:1)" data-abbr="SQ">
+                    <button class="chatooly-btn active" data-preset="SQUARE (1:1)" data-abbr="SQ">
                         <span class="chatooly-btn-full">SQUARE (1:1)</span>
                         <span class="chatooly-btn-abbr">SQ</span>
                     </button>
                 
-                    <button class="chatooly-btn" data-preset="4:3" data-abbr="4:3">
+                    <button class="chatooly-btn " data-preset="4:3" data-abbr="4:3">
                         <span class="chatooly-btn-full">4:3</span>
                         <span class="chatooly-btn-abbr">4:3</span>
                     </button>
                 
-                    <button class="chatooly-btn active" data-preset="PORTRAIT (9:16)" data-abbr="PT">
+                    <button class="chatooly-btn " data-preset="PORTRAIT (9:16)" data-abbr="PT">
                         <span class="chatooly-btn-full">PORTRAIT (9:16)</span>
                         <span class="chatooly-btn-abbr">PT</span>
                     </button>
@@ -1014,7 +1018,7 @@
                                 </div>
 
                                 <!-- Image Options -->
-                                <div class="chatooly-export-options" data-type="image" style="display: block;">
+                                <div class="chatooly-export-options" data-type="image">
                                     <div class="chatooly-export-field">
                                         <label>Size</label>
                                         <div class="chatooly-multiplier-buttons">
@@ -1054,7 +1058,9 @@
 
                         <!-- Footer -->
                         <div class="chatooly-modal-footer">
-                            <button class="chatooly-modal-export-btn">Export Image</button>
+                            <button class="chatooly-modal-export-btn">
+                                Export Image
+                            </button>
                         </div>
                     </div>
                 </div>

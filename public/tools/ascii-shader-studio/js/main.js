@@ -45,6 +45,9 @@ class ASCIIShaderStudio {
             imageFit: 'cover',
             autoContrast: true,
             brightness: 0,
+            removeBackground: false,
+            backgroundThreshold: 10,
+            edgeSmoothing: 2,
 
             // ASCII aesthetics
             characterSet: 'classic',
@@ -83,6 +86,11 @@ class ASCIIShaderStudio {
         this.isDragging = false;
         this.lastMouseX = 0;
         this.lastMouseY = 0;
+
+        // Background removal state
+        this.removeBackground = false;
+        this.backgroundThreshold = 10;
+        this.edgeSmoothing = 2;
 
         this.init();
     }
@@ -346,6 +354,15 @@ class ASCIIShaderStudio {
         this.setupToggle('auto-contrast', 'autoContrast');
         this.setupControl('brightness', 'brightness', '%');
 
+        // Background removal settings
+        this.setupToggle('remove-background', 'removeBackground', () => {
+            this.updateBackgroundRemovalVisibility();
+            this.processSourceImage();
+            this.render();
+        });
+        this.setupControl('background-threshold', 'backgroundThreshold');
+        this.setupControl('edge-smoothing', 'edgeSmoothing');
+
         // ASCII aesthetics
         document.getElementById('character-set').addEventListener('change', (e) => {
             this.settings.characterSet = e.target.value;
@@ -458,6 +475,20 @@ class ASCIIShaderStudio {
         });
     }
 
+    updateBackgroundRemovalVisibility() {
+        const groups = [
+            'background-threshold-group',
+            'edge-smoothing-group'
+        ];
+
+        groups.forEach(groupId => {
+            const group = document.getElementById(groupId);
+            if (group) {
+                group.style.display = this.settings.removeBackground ? 'block' : 'none';
+            }
+        });
+    }
+
     updateCustomCharactersVisibility() {
         const customGroup = document.getElementById('custom-chars-group');
         customGroup.style.display = this.settings.characterSet === 'custom' ? 'block' : 'none';
@@ -531,6 +562,11 @@ class ASCIIShaderStudio {
 
         // Apply image processing effects
         this.applyImageEffects();
+
+        // Apply background removal if enabled
+        if (this.settings.removeBackground) {
+            this.applyBackgroundRemoval();
+        }
     }
 
     drawFittedImage() {
@@ -588,6 +624,161 @@ class ASCIIShaderStudio {
         }
 
         this.sourceCtx.putImageData(imageData, 0, 0);
+    }
+
+    // Background removal using edge detection and color similarity
+    applyBackgroundRemoval() {
+        const canvas = this.sourceCanvas;
+        const ctx = this.sourceCtx;
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+        const width = canvas.width;
+        const height = canvas.height;
+
+        // Sample corner pixels to determine background color
+        const backgroundColors = this.sampleBackgroundColors(data, width, height);
+        const avgBackgroundColor = this.averageColors(backgroundColors);
+
+        // Create alpha mask based on color similarity to background
+        for (let i = 0; i < data.length; i += 4) {
+            const r = data[i];
+            const g = data[i + 1];
+            const b = data[i + 2];
+
+            // Calculate color distance from background
+            const distance = this.colorDistance(
+                { r, g, b },
+                avgBackgroundColor
+            );
+
+            // If color is similar to background, make transparent
+            if (distance < this.settings.backgroundThreshold) {
+                data[i + 3] = 0; // Set alpha to 0 (transparent)
+            } else {
+                // Apply edge smoothing to avoid harsh edges
+                const smoothedAlpha = this.calculateSmoothAlpha(
+                    data, i, width, height, distance, avgBackgroundColor
+                );
+                data[i + 3] = Math.min(255, smoothedAlpha);
+            }
+        }
+
+        ctx.putImageData(imageData, 0, 0);
+    }
+
+    sampleBackgroundColors(data, width, height) {
+        const colors = [];
+        const sampleSize = 5; // Sample 5x5 pixels from each corner
+
+        // Sample top-left corner
+        for (let y = 0; y < sampleSize; y++) {
+            for (let x = 0; x < sampleSize; x++) {
+                const i = (y * width + x) * 4;
+                colors.push({
+                    r: data[i],
+                    g: data[i + 1],
+                    b: data[i + 2]
+                });
+            }
+        }
+
+        // Sample top-right corner
+        for (let y = 0; y < sampleSize; y++) {
+            for (let x = width - sampleSize; x < width; x++) {
+                const i = (y * width + x) * 4;
+                colors.push({
+                    r: data[i],
+                    g: data[i + 1],
+                    b: data[i + 2]
+                });
+            }
+        }
+
+        // Sample bottom-left corner
+        for (let y = height - sampleSize; y < height; y++) {
+            for (let x = 0; x < sampleSize; x++) {
+                const i = (y * width + x) * 4;
+                colors.push({
+                    r: data[i],
+                    g: data[i + 1],
+                    b: data[i + 2]
+                });
+            }
+        }
+
+        // Sample bottom-right corner
+        for (let y = height - sampleSize; y < height; y++) {
+            for (let x = width - sampleSize; x < width; x++) {
+                const i = (y * width + x) * 4;
+                colors.push({
+                    r: data[i],
+                    g: data[i + 1],
+                    b: data[i + 2]
+                });
+            }
+        }
+
+        return colors;
+    }
+
+    averageColors(colors) {
+        const sum = colors.reduce((acc, color) => ({
+            r: acc.r + color.r,
+            g: acc.g + color.g,
+            b: acc.b + color.b
+        }), { r: 0, g: 0, b: 0 });
+
+        return {
+            r: Math.round(sum.r / colors.length),
+            g: Math.round(sum.g / colors.length),
+            b: Math.round(sum.b / colors.length)
+        };
+    }
+
+    colorDistance(color1, color2) {
+        // Euclidean distance in RGB space
+        return Math.sqrt(
+            Math.pow(color1.r - color2.r, 2) +
+            Math.pow(color1.g - color2.g, 2) +
+            Math.pow(color1.b - color2.b, 2)
+        );
+    }
+
+    calculateSmoothAlpha(data, pixelIndex, width, height, distance, backgroundColor) {
+        const smoothingRadius = this.settings.edgeSmoothing;
+        const x = (pixelIndex / 4) % width;
+        const y = Math.floor(pixelIndex / 4 / width);
+
+        // Sample surrounding pixels for edge smoothing
+        let totalAlpha = 0;
+        let sampleCount = 0;
+
+        for (let dy = -smoothingRadius; dy <= smoothingRadius; dy++) {
+            for (let dx = -smoothingRadius; dx <= smoothingRadius; dx++) {
+                const sampleX = x + dx;
+                const sampleY = y + dy;
+
+                if (sampleX >= 0 && sampleX < width && sampleY >= 0 && sampleY < height) {
+                    const sampleIndex = (sampleY * width + sampleX) * 4;
+                    const sampleColor = {
+                        r: data[sampleIndex],
+                        g: data[sampleIndex + 1],
+                        b: data[sampleIndex + 2]
+                    };
+
+                    const sampleDistance = this.colorDistance(sampleColor, backgroundColor);
+                    const alpha = Math.max(0, Math.min(255,
+                        255 * (sampleDistance - this.settings.backgroundThreshold) /
+                        (100 - this.settings.backgroundThreshold)
+                    ));
+
+                    totalAlpha += alpha;
+                    sampleCount++;
+                }
+            }
+        }
+
+        return sampleCount > 0 ? totalAlpha / sampleCount : 255;
     }
 
     applyAutoContrast(data) {
@@ -1270,11 +1461,17 @@ class ASCIIShaderStudio {
             for (let col = 0; col < this.sourceCanvas.width; col++) {
                 const pixelIndex = (row * this.sourceCanvas.width + col) * 4;
 
-                // Get luminance
+                // Get luminance and alpha
                 const r = data[pixelIndex];
                 const g = data[pixelIndex + 1];
                 const b = data[pixelIndex + 2];
+                const alpha = data[pixelIndex + 3];
                 const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+
+                // Skip transparent pixels (background removal)
+                if (alpha < 10) {
+                    continue;
+                }
 
                 // Map luminance to character
                 const charIndex = Math.floor((luminance / 255) * (chars.length - 1));

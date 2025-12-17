@@ -294,21 +294,39 @@ function setupFileUpload() {
 
     if (parseButton) {
         parseButton.addEventListener('click', () => {
+            console.log('Parse Chart button clicked!');
             const file = chartUpload?.files[0];
+            console.log('Selected file:', file ? file.name : 'No file selected');
+
             if (file) {
+                console.log('Starting chart parsing process...');
                 parseButton.textContent = '⏳ Parsing...';
                 parseButton.disabled = true;
 
-                setTimeout(() => {
+                // Process immediately without delay for better UX
+                try {
                     processChartImage(file);
-                    parseButton.textContent = '✅ Parsed!';
+                    setTimeout(() => {
+                        parseButton.textContent = '✅ Parsed!';
+                        setTimeout(() => {
+                            parseButton.textContent = '🔍 Parse Chart';
+                            parseButton.disabled = false;
+                        }, 2000);
+                    }, 500);
+                } catch (error) {
+                    console.error('Error processing chart:', error);
+                    parseButton.textContent = '❌ Error';
                     setTimeout(() => {
                         parseButton.textContent = '🔍 Parse Chart';
                         parseButton.disabled = false;
                     }, 2000);
-                }, 1000);
+                }
+            } else {
+                console.log('No file selected for parsing');
             }
         });
+    } else {
+        console.error('Parse button not found!');
     }
 }
 
@@ -322,15 +340,37 @@ function previewChartImage(file) {
 }
 
 function processChartImage(file) {
+    console.log('Processing chart image file:', file.name);
     const reader = new FileReader();
     reader.onload = (e) => {
         const img = new Image();
         img.onload = () => {
+            console.log('Image loaded, dimensions:', img.naturalWidth, 'x', img.naturalHeight);
+            console.log('Checking for chart parsing functions...');
+            console.log('window.parseChartImage:', typeof window.parseChartImage);
+            console.log('window.create3DBars:', typeof window.create3DBars);
+
             if (window.parseChartImage && window.create3DBars) {
+                console.log('Parsing chart image...');
                 const parsedData = window.parseChartImage(img);
+                console.log('Parsed data:', parsedData);
+
+                // Update global chart data
                 window.chartData = parsedData;
+
+                // Create 3D bars from parsed data
                 window.create3DBars(parsedData);
+
+                console.log('Chart processing complete!');
+            } else {
+                console.error('Chart parsing functions not available!');
+                console.error('parseChartImage available:', !!window.parseChartImage);
+                console.error('create3DBars available:', !!window.create3DBars);
             }
+        };
+        img.onerror = () => {
+            console.error('Failed to load image');
+            alert('Failed to load image. Please try a different file.');
         };
         img.src = e.target.result;
     };

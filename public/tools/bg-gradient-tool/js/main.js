@@ -1,8 +1,8 @@
-/* 
+/*
  * Bg Gradient Tool - Main Logic
  * Author: Guy Garibian
- * 
- * Implements an animated, loopable multi-color radial-gradient-like background
+ *
+ * Implements an animated, loopable multi-color gradient background
  * drawn on HTML5 Canvas, compliant with Chatooly export & resize rules.
  */
 
@@ -14,32 +14,37 @@ const ctx = canvas.getContext('2d');
 const gradientState = {
     isInitialized: false,
     isPlaying: true,
-    startTimeMs: performance.now(),
     loopDurationSec: 5,
-    speedFactor: 0.5, // retained for compatibility (not used in wiggle)
-    movementStyle: 'wiggle',
     blendMode: 'source-over',
     blurPx: 20,
-    shapeType: 'circle',
-    ellipseRatio: 1.20,
-    randomPath: { points: [], maxRadiusNorm: 1, vertexCount: 6, bezier: false },
-    // Loop closure control: integer cycles per loop for each blob/mode
-    cyclesPerLoop: 1,
-    // Each blob: { color, baseRadius, orbitRadius, angle, angularSpeed, centerX, centerY, wigglePhaseX, wigglePhaseY }
-    blobs: [],
-    // Track previous canvas size for background manager and potential future scaling
+    movementSpeed: 0.6,
+    spacing: 160,
+    // Global shape settings
+    shapeType: 'circle',  // 'circle', 'polygon', 'random'
+    polygonSides: 6,
+    randomCurved: true,  // true = bezier curves, false = sharp edges
+    // Grain effect
+    grainEnabled: false,
+    grainAmount: 30,
+    grainTexture: null,  // Pre-generated static grain texture
+    // Shapes array - each shape has color, scale, and unique random path
+    shapes: [],
+    // Track previous canvas size
     previousCanvasSize: { width: canvas.width, height: canvas.height }
 };
+
+// Default colors
+const defaultColors = ['#BAB6FF', '#E1FF97', '#B6D3FE'];
 
 // Initialize background manager wiring and UI controls
 function init() {
     if (window.Chatooly && window.Chatooly.backgroundManager) {
         window.Chatooly.backgroundManager.init(canvas);
-        // Set default background to white on init
         const bgColorInput = document.getElementById('bg-color');
-        const transparentCb = document.getElementById('transparent-bg');
+        const transparentToggle = document.getElementById('transparent-bg-toggle');
+        const isTransparent = transparentToggle ? transparentToggle.getAttribute('aria-pressed') === 'true' : false;
         if (bgColorInput) {
-            window.Chatooly.backgroundManager.setTransparent(transparentCb ? !!transparentCb.checked : false);
+            window.Chatooly.backgroundManager.setTransparent(isTransparent);
             window.Chatooly.backgroundManager.setBackgroundColor(bgColorInput.value || '#ffffff');
         }
     }
@@ -50,34 +55,201 @@ function init() {
         blendModeSelect.value = 'source-over';
     }
 
-    // Default blobs/colors (synced with UI defaults)
-    const defaultColors = ['#BAB6FF', '#E1FF97', '#B6D3FE'];
-    createBlobs(defaultColors);
-
     setupEventListeners();
+
+    // Create initial shapes data
+    createInitialShapes();
+
+    // Generate static grain texture
+    generateGrainTexture();
+
     gradientState.isInitialized = true;
     requestAnimationFrame(tick);
 }
 
-function createBlobs(colors) {
+/**
+ * Generate a static grain texture that doesn't change per frame
+ */
+function generateGrainTexture() {
+    const w = canvas.width;
+    const h = canvas.height;
+    const grainCanvas = document.createElement('canvas');
+    grainCanvas.width = w;
+    grainCanvas.height = h;
+    const grainCtx = grainCanvas.getContext('2d');
+    const imageData = grainCtx.createImageData(w, h);
+    const data = imageData.data;
+
+    for (let i = 0; i < data.length; i += 4) {
+        const noise = (Math.random() - 0.5) * 255;
+        data[i] = 128 + noise;     // R
+        data[i + 1] = 128 + noise; // G
+        data[i + 2] = 128 + noise; // B
+        data[i + 3] = 255;         // A
+    }
+
+    grainCtx.putImageData(imageData, 0, 0);
+    gradientState.grainTexture = grainCanvas;
+}
+
+/**
+ * Create initial shapes with default colors
+ */
+function createInitialShapes() {
+    defaultColors.forEach((color, index) => {
+        const shapeId = `shape-init-${index}`;
+        const shape = createShapeData(shapeId, color, 1);
+        gradientState.shapes.push(shape);
+    });
+
+    // Tell UI to create the cards (after a small delay to ensure DOM is ready)
+    setTimeout(() => {
+        if (window.createInitialShapeCards) {
+            const uiShapeIds = window.createInitialShapeCards(defaultColors);
+            // Sync the UI-generated IDs with our shapes array
+            if (uiShapeIds && uiShapeIds.length === gradientState.shapes.length) {
+                uiShapeIds.forEach((uiId, index) => {
+                    if (gradientState.shapes[index]) {
+                        gradientState.shapes[index].id = uiId;
+                    }
+                });
+            }
+        }
+    }, 0);
+}
+
+/**
+ * Create a new shape object with all properties
+ */
+function createShapeData(id, color, scale) {
     const w = canvas.width;
     const h = canvas.height;
     const cx = w / 2;
     const cy = h / 2;
-    gradientState.blobs = colors.map((color, i) => {
-        const baseRadius = Math.min(w, h) * 0.45;
-        const orbitRadius = Math.min(w, h) * (0.15 + 0.1 * i);
-        const angle = (i / colors.length) * Math.PI * 2;
-        const angularSpeed = 0.4 + 0.1 * i; // radians/sec baseline
-        // Phase offsets to decorrelate wiggles per blob
-        const wigglePhaseX = i * 1.2345;
-        const wigglePhaseY = i * 2.3456;
-        return { color, baseRadius, orbitRadius, angle, angularSpeed, centerX: cx, centerY: cy, wigglePhaseX, wigglePhaseY };
-    });
+    const shapeIndex = gradientState.shapes.length;
+
+    return {
+        id: id,
+        color: color,
+        scale: scale,
+        baseRadius: Math.min(w, h) * 0.45,
+        centerX: cx,
+        centerY: cy,
+        // Animation phase offsets (unique per shape) - spread them out more
+        wigglePhaseX: shapeIndex * 2.094 + Math.random() * 0.3, // ~120 degrees apart
+        wigglePhaseY: shapeIndex * 2.094 + Math.PI / 2 + Math.random() * 0.3,
+        // Random path (unique per shape)
+        randomPath: generateRandomPath()
+    };
+}
+
+/**
+ * Generate a unique random path for a shape
+ */
+function generateRandomPath(vertexCount = 6) {
+    const count = Math.max(3, Math.min(12, vertexCount));
+    const pts = [];
+    for (let i = 0; i < count; i++) {
+        const baseAngle = (i / count) * Math.PI * 2;
+        const jitter = (Math.random() - 0.5) * (Math.PI / count);
+        const angle = baseAngle + jitter;
+        const r = 0.5 + Math.random() * 0.5;
+        pts.push({ x: Math.cos(angle) * r, y: Math.sin(angle) * r });
+    }
+    return { points: pts, vertexCount: count };
 }
 
 function setupEventListeners() {
     document.addEventListener('chatooly:canvas-resized', (e) => onCanvasResized(e));
+
+    // Listen for shape events from ui.js
+    document.addEventListener('shape-added', (e) => {
+        const { id, color, scale } = e.detail;
+        const shape = createShapeData(id, color, scale);
+        gradientState.shapes.push(shape);
+        render();
+    });
+
+    document.addEventListener('shape-removed', (e) => {
+        const { id } = e.detail;
+        gradientState.shapes = gradientState.shapes.filter(s => s.id !== id);
+        render();
+    });
+
+    document.addEventListener('shape-updated', (e) => {
+        const { id, property, value } = e.detail;
+        // Find shape by ID - check both init shapes and dynamically added ones
+        let shapeIndex = gradientState.shapes.findIndex(s => s.id === id);
+
+        // If not found by exact ID, try matching by index for init shapes
+        if (shapeIndex === -1) {
+            // Get the index from the UI
+            const shapeCards = document.querySelectorAll('#shapes-list .shape-card');
+            const cardIndex = Array.from(shapeCards).findIndex(card => card.getAttribute('data-shape-id') === id);
+            if (cardIndex !== -1 && cardIndex < gradientState.shapes.length) {
+                shapeIndex = cardIndex;
+            }
+        }
+
+        if (shapeIndex === -1) return;
+
+        const shape = gradientState.shapes[shapeIndex];
+        if (!shape) return;
+
+        if (property === 'color') {
+            shape.color = value;
+        } else if (property === 'scale') {
+            shape.scale = value;
+        }
+        render();
+    });
+
+    // Global shape type change
+    document.addEventListener('global-shape-type-change', (e) => {
+        gradientState.shapeType = e.detail.type;
+        // Regenerate random paths when switching to random
+        if (e.detail.type === 'random') {
+            gradientState.shapes.forEach(shape => {
+                shape.randomPath = generateRandomPath();
+            });
+        }
+        render();
+    });
+
+    // Global polygon sides change
+    document.addEventListener('global-polygon-sides-change', (e) => {
+        gradientState.polygonSides = e.detail.sides;
+        render();
+    });
+
+    // Randomize all shapes
+    document.addEventListener('randomize-all-shapes', () => {
+        gradientState.shapes.forEach(shape => {
+            shape.randomPath = generateRandomPath();
+        });
+        render();
+    });
+
+    // Random curved/sharp toggle
+    document.addEventListener('toggle-change', (e) => {
+        const { id, value } = e.detail;
+        if (id === 'transparent-bg') {
+            if (window.Chatooly && window.Chatooly.backgroundManager) {
+                window.Chatooly.backgroundManager.setTransparent(value);
+            }
+            render();
+        } else if (id === 'grain') {
+            gradientState.grainEnabled = value;
+            // Regenerate grain texture when toggled on
+            if (value) {
+                generateGrainTexture();
+            }
+            render();
+        } else if (id === 'random-curved') {
+            gradientState.randomCurved = value;
+            render();
+        }
+    });
 
     const durationInput = document.getElementById('loop-duration');
     if (durationInput) {
@@ -87,42 +259,35 @@ function setupEventListeners() {
         });
     }
 
-    // Speed control removed (wiggle uses frequency/amplitude)
+    const movementSpeedSlider = document.getElementById('movement-speed');
+    const spacingSlider = document.getElementById('spacing');
+    const grainAmountSlider = document.getElementById('grain-amount');
 
-    const movementSelect = document.getElementById('movement-style');
-    if (movementSelect) {
-        movementSelect.addEventListener('change', (e) => {
-            gradientState.movementStyle = e.target.value;
-            render();
-        });
-    }
-
-    const wiggleFreq = document.getElementById('wiggle-freq');
-    const wiggleAmp = document.getElementById('wiggle-amp');
-    const wiggleAmpNum = document.getElementById('wiggle-amp-num');
-    if (wiggleFreq) {
-        wiggleFreq.addEventListener('input', (e) => {
+    if (movementSpeedSlider) {
+        movementSpeedSlider.addEventListener('input', (e) => {
             const val = Math.max(0.1, Math.min(5, Number(e.target.value) || 0.6));
-            gradientState.wiggleHz = val;
+            gradientState.movementSpeed = val;
             render();
         });
-        gradientState.wiggleHz = Number(wiggleFreq.value) || 0.6;
-    } else {
-        gradientState.wiggleHz = 0.6;
+        gradientState.movementSpeed = Number(movementSpeedSlider.value) || 0.6;
     }
-    if (wiggleAmp || wiggleAmpNum) {
-        const setAmp = (val) => {
-            const clamped = Math.max(0, Math.min(1200, Number(val) || 160));
-            gradientState.wiggleAmp = clamped;
-            if (wiggleAmp && wiggleAmp.value !== String(clamped)) wiggleAmp.value = String(clamped);
-            if (wiggleAmpNum && wiggleAmpNum.value !== String(clamped)) wiggleAmpNum.value = String(clamped);
+
+    if (spacingSlider) {
+        spacingSlider.addEventListener('input', (e) => {
+            const val = Math.max(0, Math.min(1200, Number(e.target.value) || 160));
+            gradientState.spacing = val;
             render();
-        };
-        if (wiggleAmp) wiggleAmp.addEventListener('input', (e) => setAmp(e.target.value));
-        if (wiggleAmpNum) wiggleAmpNum.addEventListener('input', (e) => setAmp(e.target.value));
-        setAmp((wiggleAmpNum && wiggleAmpNum.value) || (wiggleAmp && wiggleAmp.value) || 160);
-    } else {
-        gradientState.wiggleAmp = 160;
+        });
+        gradientState.spacing = Number(spacingSlider.value) || 160;
+    }
+
+    if (grainAmountSlider) {
+        grainAmountSlider.addEventListener('input', (e) => {
+            const val = Math.max(5, Math.min(100, Number(e.target.value) || 30));
+            gradientState.grainAmount = val;
+            render();
+        });
+        gradientState.grainAmount = Number(grainAmountSlider.value) || 30;
     }
 
     const blendModeSelect = document.getElementById('blend-mode');
@@ -134,49 +299,6 @@ function setupEventListeners() {
     }
 
     const blurSlider = document.getElementById('blur-amount');
-    const shapeSelect = document.getElementById('shape-type');
-    const ellipseRatio = document.getElementById('ellipse-ratio');
-    const randomPoints = document.getElementById('random-points');
-    const randomBezier = document.getElementById('random-bezier');
-    const randomizeBtn = document.getElementById('randomize-path');
-    if (shapeSelect) {
-        shapeSelect.addEventListener('change', (e) => {
-            gradientState.shapeType = e.target.value;
-            if (gradientState.shapeType === 'random') {
-                regenerateRandomPath();
-            }
-            render();
-        });
-    }
-    if (ellipseRatio) {
-        ellipseRatio.addEventListener('input', (e) => {
-            const val = Math.max(0.5, Math.min(2, Number(e.target.value) || 1));
-            gradientState.ellipseRatio = val;
-            render();
-        });
-    }
-    if (randomPoints) {
-        randomPoints.addEventListener('input', (e) => {
-            const val = Math.max(3, Math.min(12, Number(e.target.value) || 6));
-            gradientState.randomPath.vertexCount = val;
-            regenerateRandomPath();
-            render();
-        });
-        gradientState.randomPath.vertexCount = Number(randomPoints.value) || 6;
-    }
-    if (randomBezier) {
-        randomBezier.addEventListener('change', (e) => {
-            gradientState.randomPath.bezier = !!e.target.checked;
-            render();
-        });
-        gradientState.randomPath.bezier = !!randomBezier.checked;
-    }
-    if (randomizeBtn) {
-        randomizeBtn.addEventListener('click', () => {
-            regenerateRandomPath();
-            render();
-        });
-    }
     if (blurSlider) {
         blurSlider.addEventListener('input', (e) => {
             const raw = Math.max(0, Math.min(100, Number(e.target.value) || 0));
@@ -185,63 +307,21 @@ function setupEventListeners() {
         });
     }
 
-    const colorsList = document.getElementById('colors-list');
-    const addBtn = document.getElementById('add-color');
-    const removeBtn = document.getElementById('remove-color');
-    if (addBtn && colorsList) {
-        addBtn.addEventListener('click', () => {
-            const row = document.createElement('div');
-            row.className = 'color-row';
-            const color = document.createElement('input');
-            color.type = 'color';
-            color.className = 'color-stop';
-            color.value = '#ffffff';
-            row.appendChild(color);
-            colorsList.appendChild(row);
-            syncColorsFromUI();
-        });
-    }
-    if (removeBtn && colorsList) {
-        removeBtn.addEventListener('click', () => {
-            const rows = colorsList.querySelectorAll('.color-row');
-            if (rows.length > 1) {
-                rows[rows.length - 1].remove();
-                syncColorsFromUI();
-            }
-        });
-    }
-    if (colorsList) {
-        colorsList.addEventListener('input', () => syncColorsFromUI());
-    }
-
     const playPause = document.getElementById('play-pause');
     if (playPause) {
         playPause.addEventListener('click', () => {
             gradientState.isPlaying = !gradientState.isPlaying;
             playPause.textContent = gradientState.isPlaying ? 'Pause' : 'Play';
-            // Reset start time for seamless loop resumption
-            gradientState.startTimeMs = performance.now();
         });
     }
 
-    // Background controls wiring (START_HERE Step 4.5)
-    const transparentCb = document.getElementById('transparent-bg');
-    const bgColorGroup = document.getElementById('bg-color-group');
+    // Background controls
     const bgColor = document.getElementById('bg-color');
     const bgImage = document.getElementById('bg-image');
     const clearBg = document.getElementById('clear-bg-image');
     const bgFitGroup = document.getElementById('bg-fit-group');
     const bgFit = document.getElementById('bg-fit');
 
-    if (transparentCb) {
-        transparentCb.addEventListener('change', (e) => {
-            if (window.Chatooly && window.Chatooly.backgroundManager) {
-                window.Chatooly.backgroundManager.setTransparent(e.target.checked);
-            }
-            if (bgColorGroup) bgColorGroup.style.display = e.target.checked ? 'none' : 'block';
-            render();
-        });
-    }
     if (bgColor) {
         bgColor.addEventListener('input', (e) => {
             if (window.Chatooly && window.Chatooly.backgroundManager) {
@@ -250,6 +330,7 @@ function setupEventListeners() {
             render();
         });
     }
+
     if (bgImage && clearBg && bgFitGroup) {
         bgImage.addEventListener('change', async (e) => {
             const file = e.target.files && e.target.files[0];
@@ -270,6 +351,7 @@ function setupEventListeners() {
             render();
         });
     }
+
     if (bgFit) {
         bgFit.addEventListener('change', (e) => {
             if (window.Chatooly && window.Chatooly.backgroundManager) {
@@ -280,32 +362,43 @@ function setupEventListeners() {
     }
 }
 
-// Generate a closed random path normalized to unit radius
-function regenerateRandomPath() {
-    const count = Math.max(3, Math.min(64, gradientState.randomPath.vertexCount || 6));
-    const pts = [];
-    for (let i = 0; i < count; i++) {
-        const baseAngle = (i / count) * Math.PI * 2;
-        const jitter = (Math.random() - 0.5) * (Math.PI / count); // small angular jitter
-        const angle = baseAngle + jitter;
-        const r = 0.6 + Math.random() * 0.4; // 0.6..1.0 normalized
-        pts.push({ x: Math.cos(angle) * r, y: Math.sin(angle) * r });
+/**
+ * Draw a polygon with n sides
+ */
+function drawPolygon(targetCtx, cx, cy, radius, sides) {
+    targetCtx.beginPath();
+    for (let i = 0; i < sides; i++) {
+        const angle = (i / sides) * Math.PI * 2 - Math.PI / 2;
+        const x = cx + Math.cos(angle) * radius;
+        const y = cy + Math.sin(angle) * radius;
+        if (i === 0) {
+            targetCtx.moveTo(x, y);
+        } else {
+            targetCtx.lineTo(x, y);
+        }
     }
-    gradientState.randomPath.points = pts;
+    targetCtx.closePath();
+    targetCtx.fill();
 }
 
-function drawRandomPath(targetCtx, cx, cy, radius, randomPath) {
-    const pts = randomPath.points && randomPath.points.length >= 3 ? randomPath.points : null;
+/**
+ * Draw a random path shape - curved (bezier) or sharp (linear)
+ */
+function drawRandomPath(targetCtx, cx, cy, radius, randomPath, curved = true) {
+    const pts = randomPath && randomPath.points && randomPath.points.length >= 3 ? randomPath.points : null;
     if (!pts) return;
+
     targetCtx.beginPath();
-    if (randomPath.bezier) {
-        // Midpoint smoothing: start at midpoint and curve through each vertex
-        const n = pts.length;
+    const n = pts.length;
+
+    if (curved) {
+        // Smooth bezier curves
         const p0 = pts[0];
         const p1 = pts[1 % n];
         const startMidX = (p0.x + p1.x) * 0.5;
         const startMidY = (p0.y + p1.y) * 0.5;
         targetCtx.moveTo(cx + startMidX * radius, cy + startMidY * radius);
+
         for (let i = 1; i <= n; i++) {
             const curr = pts[i % n];
             const next = pts[(i + 1) % n];
@@ -318,41 +411,19 @@ function drawRandomPath(targetCtx, cx, cy, radius, randomPath) {
                 cy + midY * radius
             );
         }
-        targetCtx.closePath();
-        targetCtx.fill();
     } else {
+        // Sharp edges - straight lines
         targetCtx.moveTo(cx + pts[0].x * radius, cy + pts[0].y * radius);
-        for (let i = 1; i < pts.length; i++) {
+        for (let i = 1; i < n; i++) {
             targetCtx.lineTo(cx + pts[i].x * radius, cy + pts[i].y * radius);
         }
-        targetCtx.closePath();
-        targetCtx.fill();
     }
-}
 
-function syncColorsFromUI() {
-    const rows = Array.from(document.querySelectorAll('#colors-list .color-row'));
-    const w = canvas.width;
-    const h = canvas.height;
-    const cx = w / 2;
-    const cy = h / 2;
-    const data = rows.map((row, i) => {
-        const color = row.querySelector('input.color-stop')?.value || '#ffffff';
-        return { color };
-    });
-    gradientState.blobs = data.map((d, i) => {
-        const baseRadius = Math.min(w, h) * 0.45;
-        const orbitRadius = Math.min(w, h) * (0.15 + 0.1 * i);
-        const angle = (i / Math.max(1, data.length)) * Math.PI * 2;
-        const angularSpeed = 0.4 + 0.1 * i;
-        const wigglePhaseX = i * 1.2345;
-        const wigglePhaseY = i * 2.3456;
-        return { color: d.color, baseRadius, orbitRadius, angle, angularSpeed, centerX: cx, centerY: cy, wigglePhaseX, wigglePhaseY };
-    });
+    targetCtx.closePath();
+    targetCtx.fill();
 }
 
 function onCanvasResized(e) {
-    // Update stored size and re-layout blobs proportionally
     const oldW = gradientState.previousCanvasSize.width;
     const oldH = gradientState.previousCanvasSize.height;
     const newW = e.detail.canvas.width;
@@ -360,6 +431,7 @@ function onCanvasResized(e) {
 
     if (!oldW || !oldH) {
         gradientState.previousCanvasSize = { width: newW, height: newH };
+        generateGrainTexture(); // Regenerate grain for new size
         render();
         return;
     }
@@ -367,14 +439,15 @@ function onCanvasResized(e) {
     const scaleX = newW / oldW;
     const scaleY = newH / oldH;
     const scaleMin = Math.min(scaleX, scaleY);
-    gradientState.blobs.forEach(b => {
-        b.centerX *= scaleX;
-        b.centerY *= scaleY;
-        b.baseRadius *= scaleMin;
-        b.orbitRadius *= scaleMin;
+
+    gradientState.shapes.forEach(s => {
+        s.centerX *= scaleX;
+        s.centerY *= scaleY;
+        s.baseRadius *= scaleMin;
     });
 
     gradientState.previousCanvasSize = { width: newW, height: newH };
+    generateGrainTexture(); // Regenerate grain for new size
     render();
 }
 
@@ -385,11 +458,12 @@ function tick(nowMs) {
     requestAnimationFrame(tick);
 }
 
-function getLoopT(nowMs) {
-    const durationMs = Math.max(1, gradientState.loopDurationSec) * 1000;
-    const elapsed = (nowMs ?? performance.now()) - gradientState.startTimeMs;
-    // Perfect loop parameter in [0,1)
-    return (elapsed % durationMs) / durationMs;
+/**
+ * Get continuous time value - no snapping/looping
+ */
+function getContinuousTime(nowMs) {
+    const elapsed = (nowMs ?? performance.now()) / 1000; // Time in seconds
+    return elapsed;
 }
 
 function render(nowMs) {
@@ -403,88 +477,77 @@ function render(nowMs) {
         ctx.clearRect(0, 0, w, h);
     }
 
-    const t = getLoopT(nowMs);
+    const time = getContinuousTime(nowMs);
     const twoPi = Math.PI * 2;
 
-    // Apply blur via filter and set blend mode
+    // Apply blur via filter
     const prevFilter = ctx.filter;
     ctx.filter = gradientState.blurPx > 0 ? `blur(${gradientState.blurPx}px)` : 'none';
     const prevComposite = ctx.globalCompositeOperation;
     ctx.globalCompositeOperation = gradientState.blendMode;
 
-    gradientState.blobs.forEach((b, i) => {
-        const speedScale = 0.25 + gradientState.speedFactor * 1.5; // widen practical range
-        // Force integer cycle closure by quantizing angularSpeed to cyclesPerLoop
-        const cycles = Math.max(1, gradientState.cyclesPerLoop);
-        const theta = b.angle + (cycles * twoPi) * t * speedScale; // exact closure each loop
+    gradientState.shapes.forEach((shape, i) => {
+        // Continuous sinusoidal movement - no snapping
+        const speed = gradientState.movementSpeed;
+        const amp = gradientState.spacing;
 
-        let x, y;
-        if (gradientState.movementStyle === 'float') {
-            // Lissajous-like float (global center)
-            const ax = 1 + 0.2 * i;
-            const ay = 1.2 + 0.15 * i;
-            x = b.centerX + Math.cos(theta * ax) * b.orbitRadius;
-            y = b.centerY + Math.sin(theta * ay) * b.orbitRadius;
-        } else if (gradientState.movementStyle === 'wiggle') {
-            // AE-style wiggle with loop closure: sin/cos with integer cycles
-            const cycles = Math.max(1, gradientState.cyclesPerLoop);
-            const phase = t * cycles * 2 * Math.PI;
-            const amp = gradientState.wiggleAmp;
-            const freq = gradientState.wiggleHz; // Hz across loop duration; phase already loop-locked
-            // Use per-blob phase offsets to decorrelate motion
-            x = b.centerX + Math.sin(phase + b.wigglePhaseX) * amp;
-            y = b.centerY + Math.cos(phase + b.wigglePhaseY) * amp;
-        } else {
-            // orbit
-            x = b.centerX + Math.cos(theta) * b.orbitRadius;
-            y = b.centerY + Math.sin(theta) * b.orbitRadius;
-        }
+        // Use continuous time with per-shape phase offsets
+        const phaseX = time * speed + shape.wigglePhaseX;
+        const phaseY = time * speed + shape.wigglePhaseY;
 
-        const radius = b.baseRadius;
-        if (gradientState.shapeType === 'ellipse') {
-            // Draw radial gradient and scale Y to make ellipse
-            const grd = ctx.createRadialGradient(x, y, 0, x, y, radius);
-            grd.addColorStop(0, hexToRgba(b.color, 0.85));
-            grd.addColorStop(1, hexToRgba(b.color, 0.0));
-            ctx.save();
-            ctx.translate(x, y);
-            ctx.scale(1, gradientState.ellipseRatio);
-            ctx.fillStyle = grd;
+        const x = shape.centerX + Math.sin(phaseX) * amp;
+        const y = shape.centerY + Math.cos(phaseY) * amp;
+
+        const radius = shape.baseRadius * remapScale(shape.scale);
+
+        // Create radial gradient - sharper with less falloff
+        const grd = ctx.createRadialGradient(x, y, 0, x, y, radius);
+        grd.addColorStop(0, hexToRgba(shape.color, 1.0));
+        grd.addColorStop(0.7, hexToRgba(shape.color, 0.9));
+        grd.addColorStop(0.9, hexToRgba(shape.color, 0.4));
+        grd.addColorStop(1, hexToRgba(shape.color, 0.0));
+        ctx.fillStyle = grd;
+
+        // Draw based on global shape type
+        if (gradientState.shapeType === 'circle') {
             ctx.beginPath();
-            ctx.arc(0, 0, radius, 0, twoPi);
+            ctx.arc(x, y, radius, 0, twoPi);
             ctx.fill();
-            ctx.restore();
-        } else if (gradientState.shapeType === 'square') {
-            const grd = ctx.createRadialGradient(x, y, 0, x, y, radius);
-            grd.addColorStop(0, hexToRgba(b.color, 0.85));
-            grd.addColorStop(1, hexToRgba(b.color, 0.0));
-            ctx.fillStyle = grd;
-            const side = radius * 2;
-            ctx.fillRect(x - radius, y - radius, side, side);
+        } else if (gradientState.shapeType === 'polygon') {
+            drawPolygon(ctx, x, y, radius, gradientState.polygonSides);
         } else if (gradientState.shapeType === 'random') {
-            const grd = ctx.createRadialGradient(x, y, 0, x, y, radius);
-            grd.addColorStop(0, hexToRgba(b.color, 0.85));
-            grd.addColorStop(1, hexToRgba(b.color, 0.0));
-            ctx.fillStyle = grd;
-            drawRandomPath(ctx, x, y, radius, gradientState.randomPath);
-        } else {
-            const grd = ctx.createRadialGradient(x, y, 0, x, y, radius);
-            grd.addColorStop(0, hexToRgba(b.color, 0.85));
-            grd.addColorStop(1, hexToRgba(b.color, 0.0));
-            ctx.fillStyle = grd;
-            ctx.beginPath();
-            if (gradientState.shapeType === 'square') {
-                ctx.rect(x - radius, y - radius, radius * 2, radius * 2);
+            if (shape.randomPath) {
+                drawRandomPath(ctx, x, y, radius, shape.randomPath, gradientState.randomCurved);
             } else {
-                ctx.arc(x, y, radius, 0, twoPi); // circle
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, twoPi);
+                ctx.fill();
             }
-            ctx.fill();
         }
     });
 
     // Restore filter and composite
     ctx.globalCompositeOperation = prevComposite || 'source-over';
     ctx.filter = prevFilter || 'none';
+
+    // Apply static grain overlay if enabled
+    if (gradientState.grainEnabled && gradientState.grainTexture) {
+        applyStaticGrainOverlay(ctx, w, h, gradientState.grainAmount);
+    }
+}
+
+/**
+ * Apply static grain overlay using pre-generated texture
+ */
+function applyStaticGrainOverlay(targetCtx, w, h, amount) {
+    if (!gradientState.grainTexture) return;
+
+    const intensity = amount / 100;
+    targetCtx.save();
+    targetCtx.globalAlpha = intensity * 0.5; // Scale opacity
+    targetCtx.globalCompositeOperation = 'overlay';
+    targetCtx.drawImage(gradientState.grainTexture, 0, 0, w, h);
+    targetCtx.restore();
 }
 
 function hexToRgba(hex, alpha) {
@@ -496,7 +559,15 @@ function hexToRgba(hex, alpha) {
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-// High-res export: re-render at target scale
+/**
+ * Remap scale value: UI value of 1 = actual scale of 0.4
+ * So actual = uiValue * 0.4
+ */
+function remapScale(uiValue) {
+    return uiValue * 0.4;
+}
+
+// High-res export
 window.renderHighResolution = function(targetCanvas, scale) {
     if (!gradientState.isInitialized) {
         console.warn('Tool not ready for high-res export');
@@ -508,7 +579,6 @@ window.renderHighResolution = function(targetCanvas, scale) {
 
     // Background first
     if (window.Chatooly && window.Chatooly.backgroundManager) {
-        // Draw at 1:1 logical size, then scale context for our content
         exportCtx.save();
         exportCtx.scale(scale, scale);
         window.Chatooly.backgroundManager.drawToCanvas(exportCtx, canvas.width, canvas.height);
@@ -517,80 +587,83 @@ window.renderHighResolution = function(targetCanvas, scale) {
         exportCtx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
     }
 
-    // Scale up and re-run the same rendering using logical coordinates
     exportCtx.save();
     exportCtx.scale(scale, scale);
 
-    // Emulate one frame render at the current loop-locked time
     const renderedNow = performance.now();
-    const cachedComposite = ctx.globalCompositeOperation;
-
-    // Apply requested blend and blur in export context
     const prevFilter = exportCtx.filter;
     exportCtx.filter = gradientState.blurPx > 0 ? `blur(${gradientState.blurPx * scale}px)` : 'none';
     const prevComposite = exportCtx.globalCompositeOperation;
     exportCtx.globalCompositeOperation = gradientState.blendMode;
+
     const twoPi = Math.PI * 2;
-    const t = getLoopT(renderedNow);
-    gradientState.blobs.forEach((b, i) => {
-        const speedScale = 0.25 + gradientState.speedFactor * 1.5;
-        const cycles = Math.max(1, gradientState.cyclesPerLoop);
-        const theta = b.angle + (cycles * twoPi) * t * speedScale;
-        let x, y;
-        if (gradientState.movementStyle === 'float') {
-            const ax = 1 + 0.2 * i;
-            const ay = 1.2 + 0.15 * i;
-            x = b.centerX + Math.cos(theta * ax) * b.orbitRadius;
-            y = b.centerY + Math.sin(theta * ay) * b.orbitRadius;
-        } else if (gradientState.movementStyle === 'wiggle') {
-            const cycles = Math.max(1, gradientState.cyclesPerLoop);
-            const phase = t * cycles * 2 * Math.PI;
-            const amp = gradientState.wiggleAmp;
-            x = b.centerX + Math.sin(phase + b.wigglePhaseX) * amp;
-            y = b.centerY + Math.cos(phase + b.wigglePhaseY) * amp;
-        } else {
-            x = b.centerX + Math.cos(theta) * b.orbitRadius;
-            y = b.centerY + Math.sin(theta) * b.orbitRadius;
-        }
-        const radius = b.baseRadius;
-        if (gradientState.shapeType === 'linear') {
-            const ang = (gradientState.linearAngleDeg % 360) * Math.PI / 180;
-            const dx = Math.cos(ang) * radius;
-            const dy = Math.sin(ang) * radius;
-            const grd = exportCtx.createLinearGradient(x - dx, y - dy, x + dx, y + dy);
-            grd.addColorStop(0, hexToRgba(b.color, 0.85));
-            grd.addColorStop(1, hexToRgba(b.color, 0.0));
-            exportCtx.fillStyle = grd;
-            exportCtx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
-        } else if (gradientState.shapeType === 'ellipse') {
-            const grd = exportCtx.createRadialGradient(x, y, 0, x, y, radius);
-            grd.addColorStop(0, hexToRgba(b.color, 0.85));
-            grd.addColorStop(1, hexToRgba(b.color, 0.0));
-            exportCtx.save();
-            exportCtx.translate(x, y);
-            exportCtx.scale(1, gradientState.ellipseRatio);
-            exportCtx.fillStyle = grd;
-            exportCtx.beginPath();
-            exportCtx.arc(0, 0, radius, 0, twoPi);
-            exportCtx.fill();
-            exportCtx.restore();
-        } else {
-            const grd = exportCtx.createRadialGradient(x, y, 0, x, y, radius);
-            grd.addColorStop(0, hexToRgba(b.color, 0.85));
-            grd.addColorStop(1, hexToRgba(b.color, 0.0));
-            exportCtx.fillStyle = grd;
+    const time = getContinuousTime(renderedNow);
+
+    gradientState.shapes.forEach((shape, i) => {
+        const speed = gradientState.movementSpeed;
+        const amp = gradientState.spacing;
+
+        const phaseX = time * speed + shape.wigglePhaseX;
+        const phaseY = time * speed + shape.wigglePhaseY;
+
+        const x = shape.centerX + Math.sin(phaseX) * amp;
+        const y = shape.centerY + Math.cos(phaseY) * amp;
+        const radius = shape.baseRadius * remapScale(shape.scale);
+
+        const grd = exportCtx.createRadialGradient(x, y, 0, x, y, radius);
+        grd.addColorStop(0, hexToRgba(shape.color, 1.0));
+        grd.addColorStop(0.7, hexToRgba(shape.color, 0.9));
+        grd.addColorStop(0.9, hexToRgba(shape.color, 0.4));
+        grd.addColorStop(1, hexToRgba(shape.color, 0.0));
+        exportCtx.fillStyle = grd;
+
+        if (gradientState.shapeType === 'circle') {
             exportCtx.beginPath();
             exportCtx.arc(x, y, radius, 0, twoPi);
             exportCtx.fill();
+        } else if (gradientState.shapeType === 'polygon') {
+            drawPolygon(exportCtx, x, y, radius, gradientState.polygonSides);
+        } else if (gradientState.shapeType === 'random') {
+            if (shape.randomPath) {
+                drawRandomPath(exportCtx, x, y, radius, shape.randomPath, gradientState.randomCurved);
+            } else {
+                exportCtx.beginPath();
+                exportCtx.arc(x, y, radius, 0, twoPi);
+                exportCtx.fill();
+            }
         }
     });
+
     exportCtx.globalCompositeOperation = prevComposite || 'source-over';
     exportCtx.filter = prevFilter || 'none';
-
     exportCtx.restore();
 
-    // Restore original canvas state composite (local only)
-    ctx.globalCompositeOperation = cachedComposite;
+    // Apply static grain overlay if enabled (generate at export resolution)
+    if (gradientState.grainEnabled) {
+        // Generate grain at export resolution
+        const exportGrainCanvas = document.createElement('canvas');
+        exportGrainCanvas.width = targetCanvas.width;
+        exportGrainCanvas.height = targetCanvas.height;
+        const grainCtx = exportGrainCanvas.getContext('2d');
+        const imageData = grainCtx.createImageData(targetCanvas.width, targetCanvas.height);
+        const data = imageData.data;
+
+        for (let i = 0; i < data.length; i += 4) {
+            const noise = (Math.random() - 0.5) * 255;
+            data[i] = 128 + noise;
+            data[i + 1] = 128 + noise;
+            data[i + 2] = 128 + noise;
+            data[i + 3] = 255;
+        }
+        grainCtx.putImageData(imageData, 0, 0);
+
+        const intensity = gradientState.grainAmount / 100;
+        exportCtx.save();
+        exportCtx.globalAlpha = intensity * 0.5;
+        exportCtx.globalCompositeOperation = 'overlay';
+        exportCtx.drawImage(exportGrainCanvas, 0, 0);
+        exportCtx.restore();
+    }
 };
 
 // Kick off after DOM ready

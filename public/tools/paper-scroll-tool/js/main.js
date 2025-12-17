@@ -77,22 +77,22 @@ void main() {
 
     // Primary wave deformation (flutter effect) - now desynchronized per-plane
     float waveFreq = 3.0;
-    float waveAmp = 0.12 * speedFactor;  // Increased from 0.08 for stronger flex
+    float waveAmp = 0.25 * speedFactor;  // Much stronger wave amplitude
     float wave = sin(uv.y * waveFreq * freqMultiplier + time * 5.0 + phaseOffset)
                * waveAmp * sizeMultiplier * trailFactor;
 
-    // Bend effect - trailing edge curves back
-    float bendOffset = trailFactor * trailFactor * speedFactor * 0.2 * sizeMultiplier;  // Increased from 0.15
+    // Bend effect - trailing edge curves back dramatically
+    float bendOffset = trailFactor * trailFactor * speedFactor * 0.5 * sizeMultiplier;
 
     // Secondary wave for organic movement - also desynchronized
     float wave2 = sin(uv.x * 2.0 * freqMultiplier + time * 3.0 + phaseOffset * 0.7)
-                * waveAmp * 0.4 * sizeMultiplier * trailFactor;  // Increased from 0.3
+                * waveAmp * 0.5 * sizeMultiplier * trailFactor;
 
     pos.z += wave + bendOffset + wave2;
 
-    // Side-to-side motion - different phase offset for variation
+    // Side-to-side motion - more dramatic sway
     pos.x += sin(time * 2.0 * freqMultiplier + uv.y * 2.0 + phaseOffset * 1.3)
-           * 0.03 * speedFactor * sizeMultiplier * trailFactor;  // Increased from 0.02
+           * 0.08 * speedFactor * sizeMultiplier * trailFactor;
 
     gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
 }

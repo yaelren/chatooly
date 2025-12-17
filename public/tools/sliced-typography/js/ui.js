@@ -6,6 +6,8 @@
 
 // Setup toggle button functionality
 document.addEventListener('DOMContentLoaded', () => {
+    // Setup collapsible section cards
+    setupSectionCards();
     // Transparent background toggle
     const transparentToggle = document.getElementById('transparent-bg');
     if (transparentToggle) {
@@ -29,10 +31,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const isPressed = dropShadowToggle.getAttribute('aria-pressed') === 'true';
             const newState = !isPressed;
             dropShadowToggle.setAttribute('aria-pressed', newState);
-            
+
             const controls = document.getElementById('drop-shadow-controls');
             if (controls) {
-                controls.style.display = newState ? 'none' : 'block';
+                controls.style.display = newState ? 'block' : 'none';
             }
         });
     }
@@ -46,31 +48,39 @@ document.addEventListener('DOMContentLoaded', () => {
             showImageToggle.setAttribute('aria-pressed', newState);
         });
     }
-    
-    // Circle stroke toggle
-    const circleStrokeToggle = document.getElementById('circle-stroke-toggle');
-    if (circleStrokeToggle) {
-        circleStrokeToggle.addEventListener('click', () => {
-            const isPressed = circleStrokeToggle.getAttribute('aria-pressed') === 'true';
-            const newState = !isPressed;
-            circleStrokeToggle.setAttribute('aria-pressed', newState);
-            
-            const controls = document.getElementById('circle-stroke-controls');
-            if (controls) {
-                controls.style.display = newState ? 'none' : 'block';
-            }
-        });
-    }
-    
-    // Slice mode change handler
-    const sliceModeSelect = document.getElementById('slice-mode');
-    if (sliceModeSelect) {
-        sliceModeSelect.addEventListener('change', () => {
-            const mode = sliceModeSelect.value;
-            const circleControlsSection = document.getElementById('circle-controls-section');
-            if (circleControlsSection) {
-                circleControlsSection.style.display = mode === 'circles' ? 'block' : 'none';
-            }
-        });
-    }
 });
+
+/**
+ * Setup collapsible section cards
+ */
+function setupSectionCards() {
+    const sectionHeaders = document.querySelectorAll('.chatooly-section-header[data-target]');
+
+    sectionHeaders.forEach(header => {
+        header.addEventListener('click', () => toggleSection(header));
+        header.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleSection(header);
+            }
+        });
+    });
+}
+
+/**
+ * Toggle a section's visibility
+ */
+function toggleSection(header) {
+    const targetId = header.getAttribute('data-target');
+    const content = document.getElementById(targetId);
+    if (!content) return;
+
+    const isExpanded = header.getAttribute('aria-expanded') === 'true';
+    header.setAttribute('aria-expanded', !isExpanded);
+    content.style.display = isExpanded ? 'none' : 'block';
+
+    const toggle = header.querySelector('.section-toggle');
+    if (toggle) {
+        toggle.textContent = isExpanded ? '▶' : '▼';
+    }
+}

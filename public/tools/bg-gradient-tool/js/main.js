@@ -124,23 +124,66 @@ function createInitialShapes() {
 function createShapeData(id, color, scale) {
     const w = canvas.width;
     const h = canvas.height;
-    const cx = w / 2;
-    const cy = h / 2;
     const shapeIndex = gradientState.shapes.length;
+
+    // Calculate position based on shape index and current spacing
+    const position = calculateShapePosition(shapeIndex, gradientState.shapes.length + 1, w, h);
 
     return {
         id: id,
         color: color,
         scale: scale,
         baseRadius: Math.min(w, h) * 0.45,
-        centerX: cx,
-        centerY: cy,
-        // Animation phase offsets (unique per shape) - spread them out more
-        wigglePhaseX: shapeIndex * 2.094 + Math.random() * 0.3, // ~120 degrees apart
-        wigglePhaseY: shapeIndex * 2.094 + Math.PI / 2 + Math.random() * 0.3,
+        // Position where shape is centered (spread across canvas)
+        posX: position.x,
+        posY: position.y,
+        // Animation phase offsets (unique per shape with more variation)
+        wigglePhaseX: Math.random() * Math.PI * 2,
+        wigglePhaseY: Math.random() * Math.PI * 2,
+        // Per-shape wiggle amplitude for variety (10-40px range)
+        wiggleAmplitude: 15 + Math.random() * 25,
         // Random path (unique per shape)
         randomPath: generateRandomPath()
     };
+}
+
+/**
+ * Calculate position for a shape based on its index and total count
+ * Distributes shapes in a circular pattern around center, with spacing controlling radius
+ */
+function calculateShapePosition(index, totalCount, canvasWidth, canvasHeight) {
+    const cx = canvasWidth / 2;
+    const cy = canvasHeight / 2;
+    const spacing = gradientState.spacing;
+
+    if (totalCount <= 1) {
+        return { x: cx, y: cy };
+    }
+
+    // Distribute shapes in a circle around center
+    // spacing controls how far from center (0 = all at center, 1200 = very spread)
+    const radius = spacing * 0.5; // Convert spacing to radius
+    const angle = (index / totalCount) * Math.PI * 2 - Math.PI / 2; // Start from top
+
+    return {
+        x: cx + Math.cos(angle) * radius,
+        y: cy + Math.sin(angle) * radius
+    };
+}
+
+/**
+ * Recalculate all shape positions based on current spacing
+ */
+function recalculateShapePositions() {
+    const w = canvas.width;
+    const h = canvas.height;
+    const count = gradientState.shapes.length;
+
+    gradientState.shapes.forEach((shape, index) => {
+        const position = calculateShapePosition(index, count, w, h);
+        shape.posX = position.x;
+        shape.posY = position.y;
+    });
 }
 
 /**
@@ -167,12 +210,16 @@ function setupEventListeners() {
         const { id, color, scale } = e.detail;
         const shape = createShapeData(id, color, scale);
         gradientState.shapes.push(shape);
+        // Recalculate all positions to redistribute shapes evenly
+        recalculateShapePositions();
         render();
     });
 
     document.addEventListener('shape-removed', (e) => {
         const { id } = e.detail;
         gradientState.shapes = gradientState.shapes.filter(s => s.id !== id);
+        // Recalculate all positions to redistribute remaining shapes evenly
+        recalculateShapePositions();
         render();
     });
 
@@ -276,6 +323,8 @@ function setupEventListeners() {
         spacingSlider.addEventListener('input', (e) => {
             const val = Math.max(0, Math.min(1200, Number(e.target.value) || 160));
             gradientState.spacing = val;
+            // Recalculate shape positions when spacing changes
+            recalculateShapePositions();
             render();
         });
         gradientState.spacing = Number(spacingSlider.value) || 160;
@@ -441,8 +490,8 @@ function onCanvasResized(e) {
     const scaleMin = Math.min(scaleX, scaleY);
 
     gradientState.shapes.forEach(s => {
-        s.centerX *= scaleX;
-        s.centerY *= scaleY;
+        s.posX *= scaleX;
+        s.posY *= scaleY;
         s.baseRadius *= scaleMin;
     });
 
@@ -487,16 +536,15 @@ function render(nowMs) {
     ctx.globalCompositeOperation = gradientState.blendMode;
 
     gradientState.shapes.forEach((shape, i) => {
-        // Continuous sinusoidal movement - no snapping
+        // Individual wiggle animation - each shape wiggles around its own position
         const speed = gradientState.movementSpeed;
-        const amp = gradientState.spacing;
 
-        // Use continuous time with per-shape phase offsets
-        const phaseX = time * speed + shape.wigglePhaseX;
-        const phaseY = time * speed + shape.wigglePhaseY;
+        // Use different frequencies for X and Y to create organic movement
+        const wiggleX = Math.sin(time * speed + shape.wigglePhaseX) * shape.wiggleAmplitude;
+        const wiggleY = Math.sin(time * speed * 1.1 + shape.wigglePhaseY) * shape.wiggleAmplitude;
 
-        const x = shape.centerX + Math.sin(phaseX) * amp;
-        const y = shape.centerY + Math.cos(phaseY) * amp;
+        const x = shape.posX + wiggleX;
+        const y = shape.posY + wiggleY;
 
         const radius = shape.baseRadius * remapScale(shape.scale);
 
@@ -600,14 +648,14 @@ window.renderHighResolution = function(targetCanvas, scale) {
     const time = getContinuousTime(renderedNow);
 
     gradientState.shapes.forEach((shape, i) => {
+        // Individual wiggle animation - same as render()
         const speed = gradientState.movementSpeed;
-        const amp = gradientState.spacing;
 
-        const phaseX = time * speed + shape.wigglePhaseX;
-        const phaseY = time * speed + shape.wigglePhaseY;
+        const wiggleX = Math.sin(time * speed + shape.wigglePhaseX) * shape.wiggleAmplitude;
+        const wiggleY = Math.sin(time * speed * 1.1 + shape.wigglePhaseY) * shape.wiggleAmplitude;
 
-        const x = shape.centerX + Math.sin(phaseX) * amp;
-        const y = shape.centerY + Math.cos(phaseY) * amp;
+        const x = shape.posX + wiggleX;
+        const y = shape.posY + wiggleY;
         const radius = shape.baseRadius * remapScale(shape.scale);
 
         const grd = exportCtx.createRadialGradient(x, y, 0, x, y, radius);

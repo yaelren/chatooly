@@ -16,18 +16,21 @@ let p5Canvas;
 
 // Control references
 let textInput, fontUploader;
-let fontSizeSlider, letterSpacingSlider, lineSpacingSlider, stripsSlider;
+let fontSizeSlider, letterSpacingSlider, lineSpacingSlider, stripsSlider, stripSizeSlider;
 let fontColorPicker, stripColorPicker;
-let fontSizeValueSpan, letterSpacingValueSpan, lineSpacingValueSpan, stripsValueSpan;
+let fontSizeValueSpan, letterSpacingValueSpan, lineSpacingValueSpan, stripsValueSpan, stripSizeValueSpan;
 let dropShadowToggle, shadowColorPicker, shadowBlurSlider, shadowOffsetXSlider, shadowOffsetYSlider;
 let shadowBlurValueSpan, shadowOffsetXValueSpan, shadowOffsetYValueSpan;
 let lerpSlider, noiseSpeedSlider, noiseDetailSlider;
 let lerpValueSpan, noiseSpeedValueSpan, noiseDetailValueSpan;
 let showImageToggle, imageOpacitySlider, imageScaleSlider;
 let imageOpacityValueSpan, imageScaleValueSpan;
-let sliceModeSelect;
-let circleControlsSection, circleScaleSlider, circleStrokeToggle, circleStrokeControls;
-let circleStrokeColorPicker, circleStrokeWeightSlider, circleScaleValue, circleStrokeWeightValue;
+
+// Motion mode variables
+let motionMode = 'mouse'; // 'mouse' or 'automatic'
+let motionPattern = 'sine'; // 'sine', 'infinity', 'random'
+let motionSpeed = 1.0;
+let motionIntensity = 1.0; // 0-1
 
 // p5.js setup function
 function setup() {
@@ -85,8 +88,9 @@ function setup() {
         }
     }, 200);
     
-    // Create graphics buffer for text rendering
-    page = createGraphics(floor(height * 0.9), floor(height * 0.9));
+    // Create graphics buffer for text rendering (size based on strip size slider, default 0.9)
+    const initialSize = floor(height * 0.9);
+    page = createGraphics(initialSize, initialSize);
     
     // Initialize Chatooly background manager (wait a bit for CDN to load)
     setTimeout(() => {
@@ -120,25 +124,14 @@ function setupControlReferences() {
     letterSpacingSlider = select('#letter-spacing-slider');
     lineSpacingSlider = select('#line-spacing-slider');
     stripsSlider = select('#strips-slider');
-    
+    stripSizeSlider = select('#strip-size-slider');
+
     // Value displays
     fontSizeValueSpan = select('#font-size-value');
     letterSpacingValueSpan = select('#letter-spacing-value');
     lineSpacingValueSpan = select('#line-spacing-value');
     stripsValueSpan = select('#strips-value');
-    
-    // Slice mode
-    sliceModeSelect = select('#slice-mode');
-    
-    // Circle controls
-    circleControlsSection = select('#circle-controls-section');
-    circleScaleSlider = select('#circle-scale-slider');
-    circleScaleValue = select('#circle-scale-value');
-    circleStrokeToggle = select('#circle-stroke-toggle');
-    circleStrokeControls = select('#circle-stroke-controls');
-    circleStrokeColorPicker = select('#circle-stroke-color-picker');
-    circleStrokeWeightSlider = select('#circle-stroke-weight-slider');
-    circleStrokeWeightValue = select('#circle-stroke-weight-value');
+    stripSizeValueSpan = select('#strip-size-value');
     
     // Image controls
     showImageToggle = select('#show-image-toggle');
@@ -192,38 +185,18 @@ function setupEventListeners() {
         stripsValueSpan.html(stripsSlider.value());
         makeStrips();
     });
-    
-    // Slice mode change
-    sliceModeSelect.changed(() => {
-        const mode = sliceModeSelect.value();
-        if (mode === 'circles') {
-            circleControlsSection.style('display', 'block');
-        } else {
-            circleControlsSection.style('display', 'none');
-        }
+    stripSizeSlider.input(() => {
+        stripSizeValueSpan.html(stripSizeSlider.value());
+        // Recreate page buffer with new size
+        const newSize = floor(height * parseFloat(stripSizeSlider.value()));
+        page = createGraphics(newSize, newSize);
         makeStrips();
     });
-    
-    // Circle controls
-    circleScaleSlider.input(() => {
-        circleScaleValue.html(circleScaleSlider.value());
-    });
-    circleStrokeToggle.changed(() => {
-        const isPressed = circleStrokeToggle.elt.getAttribute('aria-pressed') === 'true';
-        if (isPressed) {
-            circleStrokeControls.style('display', 'block');
-        } else {
-            circleStrokeControls.style('display', 'none');
-        }
-    });
-    circleStrokeWeightSlider.input(() => {
-        circleStrokeWeightValue.html(circleStrokeWeightSlider.value());
-    });
-    
+
     // Image controls
     showImageToggle.changed(makeStrips);
     imageOpacitySlider.input(() => {
-        imageOpacityValueSpan.html(imageOpacitySlider.value());
+        imageOpacityValueSpan.html(imageOpacitySlider.value() + '%');
         makeStrips();
     });
     imageScaleSlider.input(() => {
@@ -232,15 +205,7 @@ function setupEventListeners() {
     });
     
     // Shadow controls
-    dropShadowToggle.changed(() => {
-        const isPressed = dropShadowToggle.elt.getAttribute('aria-pressed') === 'true';
-        const controls = select('#drop-shadow-controls');
-        if (isPressed) {
-            controls.style('display', 'block');
-        } else {
-            controls.style('display', 'none');
-        }
-    });
+    // Note: Drop shadow toggle visibility is handled in ui.js
     shadowBlurSlider.input(() => {
         shadowBlurValueSpan.html(shadowBlurSlider.value());
     });
@@ -261,10 +226,67 @@ function setupEventListeners() {
     noiseDetailSlider.input(() => {
         noiseDetailValueSpan.html(noiseDetailSlider.value());
     });
-    
+
+    // Motion mode toggle
+    document.querySelectorAll('[data-mode]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('[data-mode]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            motionMode = btn.dataset.mode;
+
+            const settings = document.getElementById('auto-motion-settings');
+            if (settings) {
+                settings.style.display = motionMode === 'automatic' ? 'block' : 'none';
+            }
+        });
+    });
+
+    // Motion pattern dropdown
+    const motionPatternSelect = document.getElementById('motion-pattern');
+    if (motionPatternSelect) {
+        motionPatternSelect.addEventListener('change', (e) => {
+            motionPattern = e.target.value;
+        });
+    }
+
+    // Motion speed slider
+    const motionSpeedSlider = document.getElementById('motion-speed');
+    const motionSpeedValue = document.getElementById('motion-speed-value');
+    if (motionSpeedSlider) {
+        motionSpeedSlider.addEventListener('input', (e) => {
+            motionSpeed = parseFloat(e.target.value);
+            if (motionSpeedValue) {
+                motionSpeedValue.textContent = motionSpeed.toFixed(1);
+            }
+        });
+    }
+
+    // Motion intensity slider
+    const motionIntensitySlider = document.getElementById('motion-intensity');
+    const motionIntensityValue = document.getElementById('motion-intensity-value');
+    if (motionIntensitySlider) {
+        motionIntensitySlider.addEventListener('input', (e) => {
+            motionIntensity = parseInt(e.target.value) / 100;
+            if (motionIntensityValue) {
+                motionIntensityValue.textContent = e.target.value + '%';
+            }
+        });
+    }
+
     // File uploads
     document.getElementById('font-upload-input').addEventListener('change', handleFontFile);
     document.getElementById('image-upload-input').addEventListener('change', handleImageFile);
+
+    // Clear buttons
+    const clearOverlayImageBtn = document.getElementById('clear-overlay-image');
+    if (clearOverlayImageBtn) {
+        clearOverlayImageBtn.addEventListener('click', clearOverlayImage);
+    }
+
+    const clearCustomFontBtn = document.getElementById('clear-custom-font');
+    if (clearCustomFontBtn) {
+        clearCustomFontBtn.addEventListener('click', clearCustomFont);
+    }
     
     // Canvas resize event (Chatooly)
     document.addEventListener('chatooly:canvas-resized', (e) => {
@@ -275,7 +297,8 @@ function setupEventListeners() {
         if (p5Canvas && p5Canvas.elt) {
             p5Canvas.elt.id = 'chatooly-canvas';
         }
-        page = createGraphics(floor(height * 0.9), floor(height * 0.9));
+        const stripSize = stripSizeSlider ? parseFloat(stripSizeSlider.value()) : 0.9;
+        page = createGraphics(floor(height * stripSize), floor(height * stripSize));
         makeStrips();
     });
 }
@@ -335,7 +358,7 @@ function drawTextOnPage() {
     // Draw user image if available
     if (userImage && showImageToggle.elt.getAttribute('aria-pressed') === 'true') {
         page.push();
-        page.tint(255, parseInt(imageOpacitySlider.value()));
+        page.tint(255, Math.round(parseInt(imageOpacitySlider.value()) * 2.55));
         const scale = parseFloat(imageScaleSlider.value());
         let imgWidth = userImage.width, imgHeight = userImage.height;
         const pageRatio = page.width / page.height, imgRatio = imgWidth / imgHeight;
@@ -389,50 +412,15 @@ function makeStripsLinear() {
     }
 }
 
-// Create strips (circular mode)
-function makeStripsCircular() {
-    const num = int(stripsSlider.value());
-    const maxRadius = page.width / 2;
-    const ringWidth = maxRadius / num;
-    strips = [];
-    for (let i = num - 1; i >= 0; i--) {
-        const outerRadius = (i + 1) * ringWidth;
-        const innerRadius = i * ringWidth;
-        let mask = createGraphics(page.width, page.height);
-        mask.noStroke();
-        mask.fill(255);
-        mask.ellipse(page.width / 2, page.height / 2, outerRadius * 2);
-        mask.erase();
-        mask.ellipse(page.width / 2, page.height / 2, innerRadius * 2);
-        mask.noErase();
-        let ringImage = page.get();
-        ringImage.mask(mask);
-        mask.remove();
-        strips.push({
-            type: 'circle',
-            img: ringImage,
-            innerRadius: innerRadius,
-            outerRadius: outerRadius,
-            a: 0,
-            s: 1
-        });
-    }
-}
-
 // Main function to create strips
 function makeStrips() {
     if (page.width <= 0 || page.height <= 0) return;
     drawTextOnPage();
-    const sliceMode = sliceModeSelect.value();
-    if (sliceMode === 'strips') {
-        makeStripsLinear();
-    } else {
-        makeStripsCircular();
-    }
+    makeStripsLinear();
 }
 
-// Draw strips (linear mode)
-function drawStripsLinear(params) {
+// Draw strips
+function drawStrips(params) {
     const { lerpFactor, noiseSpeed, noiseDetail } = params;
     for (let s of strips) {
         s.a = tilt * (0.5 - noise(frameCount / noiseSpeed + s.y / noiseDetail));
@@ -446,35 +434,6 @@ function drawStripsLinear(params) {
     }
 }
 
-// Draw strips (circular mode)
-function drawStripsCircular(params) {
-    const { lerpFactor, noiseSpeed, noiseDetail } = params;
-    const overallScale = parseFloat(circleScaleSlider.value());
-    
-    strips.forEach((s, i) => {
-        s.a = tilt * (0.5 - noise(frameCount / noiseSpeed + s.outerRadius / noiseDetail)) * 2;
-        s.s = 1 + (offset / (width * 2)) * (0.5 - noise(frameCount / (noiseSpeed * 2) + s.outerRadius / (noiseDetail * 2)));
-    });
-    
-    for (let s of strips) {
-        push();
-        translate(width / 2, height / 2);
-        scale(s.s * overallScale);
-        rotate(s.a);
-        image(s.img, 0, 0);
-        
-        // Add stroke if enabled
-        if (circleStrokeToggle.elt.getAttribute('aria-pressed') === 'true') {
-            noFill();
-            stroke(circleStrokeColorPicker.value());
-            strokeWeight(int(circleStrokeWeightSlider.value()));
-            ellipse(0, 0, s.outerRadius * 2);
-        }
-        
-        pop();
-    }
-}
-
 // p5.js draw function
 function draw() {
     // Draw background using Chatooly background manager
@@ -484,7 +443,12 @@ function draw() {
     } else {
         background(255);
     }
-    
+
+    // Update motion based on mode
+    if (motionMode === 'automatic') {
+        updateAutoMotion();
+    }
+
     // Animation interpolation
     const lerpFactor = parseFloat(lerpSlider.value());
     offset = lerp(offset, toff, lerpFactor);
@@ -499,19 +463,14 @@ function draw() {
         drawingContext.shadowOffsetY = int(shadowOffsetYSlider.value());
     }
     
-    // Draw strips based on mode
+    // Draw strips
     const animationParams = {
         lerpFactor: lerpFactor,
         noiseSpeed: int(noiseSpeedSlider.value()),
         noiseDetail: int(noiseDetailSlider.value())
     };
-    
-    const sliceMode = sliceModeSelect.value();
-    if (sliceMode === 'strips') {
-        drawStripsLinear(animationParams);
-    } else {
-        drawStripsCircular(animationParams);
-    }
+
+    drawStrips(animationParams);
     
     // Reset shadow
     drawingContext.shadowBlur = 0;
@@ -520,8 +479,40 @@ function draw() {
     drawingContext.shadowColor = 'rgba(0,0,0,0)';
 }
 
+// Automatic motion patterns
+function updateAutoMotion() {
+    if (motionMode !== 'automatic') return;
+
+    const t = frameCount * 0.02 * motionSpeed;
+    const maxOffset = (height / 2) * motionIntensity;
+    const maxTilt = (PI / 4) * motionIntensity;
+
+    switch (motionPattern) {
+        case 'sine':
+            // Smooth sine wave oscillation
+            toff = sin(t) * maxOffset;
+            ttilt = cos(t * 0.7) * maxTilt;
+            break;
+
+        case 'infinity':
+            // Figure-8 / lemniscate pattern
+            const scale = 1 / (1 + sin(t) * sin(t) * 0.5);
+            toff = sin(t) * maxOffset * scale;
+            ttilt = sin(t * 2) * maxTilt * 0.5;
+            break;
+
+        case 'random':
+            // Smooth noise-based random drift
+            toff = map(noise(t * 0.5), 0, 1, -maxOffset, maxOffset);
+            ttilt = map(noise(t * 0.5 + 1000), 0, 1, 0, maxTilt);
+            break;
+    }
+}
+
 // Mouse movement for animation
 function mouseMoved() {
+    if (motionMode !== 'mouse') return; // Skip if in automatic mode
+
     toff = map(mouseX, width / 8, 7 * width / 8, -height / 2, height / 2, true);
     if (abs(toff) < height / 10) toff = 0;
     ttilt = map(mouseY, height / 8, 7 * height / 8, 0, PI / 4, true);
@@ -535,9 +526,40 @@ function handleImageFile(event) {
         loadImage(url, img => {
             userImage = img;
             URL.revokeObjectURL(url);
+
+            // Show clear button, filename, and image controls
+            const clearBtn = document.getElementById('clear-overlay-image');
+            const fileNameEl = document.getElementById('overlay-image-name');
+            const imageControls = document.getElementById('image-controls');
+            if (clearBtn) clearBtn.style.display = 'block';
+            if (fileNameEl) {
+                fileNameEl.textContent = file.name;
+                fileNameEl.style.display = 'block';
+            }
+            if (imageControls) imageControls.style.display = 'block';
+
             makeStrips();
         });
     }
+}
+
+// Clear overlay image
+function clearOverlayImage() {
+    userImage = null;
+    const input = document.getElementById('image-upload-input');
+    const clearBtn = document.getElementById('clear-overlay-image');
+    const fileNameEl = document.getElementById('overlay-image-name');
+    const imageControls = document.getElementById('image-controls');
+
+    if (input) input.value = '';
+    if (clearBtn) clearBtn.style.display = 'none';
+    if (fileNameEl) {
+        fileNameEl.textContent = '';
+        fileNameEl.style.display = 'none';
+    }
+    if (imageControls) imageControls.style.display = 'none';
+
+    makeStrips();
 }
 
 // Handle font file upload
@@ -545,7 +567,10 @@ async function handleFontFile(event) {
     const file = event.target.files[0];
     if (fontStyleElement) fontStyleElement.remove();
     if (fontObjectUrl) URL.revokeObjectURL(fontObjectUrl);
-    
+
+    const clearBtn = document.getElementById('clear-custom-font');
+    const fileNameEl = document.getElementById('custom-font-name');
+
     if (file && (file.name.toLowerCase().endsWith('.ttf') || file.name.toLowerCase().endsWith('.otf'))) {
         fontObjectUrl = URL.createObjectURL(file);
         const newFontName = 'custom-user-font';
@@ -555,6 +580,13 @@ async function handleFontFile(event) {
         try {
             await document.fonts.load(`10px "${newFontName}"`);
             currentFont = newFontName;
+
+            // Show clear button and filename
+            if (clearBtn) clearBtn.style.display = 'block';
+            if (fileNameEl) {
+                fileNameEl.textContent = file.name;
+                fileNameEl.style.display = 'block';
+            }
         } catch (error) {
             console.error("Error loading font:", error);
             alert("Error loading font.");
@@ -564,6 +596,28 @@ async function handleFontFile(event) {
         if (file) alert("Unsupported file type. Please select a .ttf or .otf file.");
         currentFont = 'Arial';
     }
+    makeStrips();
+}
+
+// Clear custom font
+function clearCustomFont() {
+    if (fontStyleElement) fontStyleElement.remove();
+    if (fontObjectUrl) URL.revokeObjectURL(fontObjectUrl);
+    fontStyleElement = null;
+    fontObjectUrl = null;
+    currentFont = 'Arial';
+
+    const input = document.getElementById('font-upload-input');
+    const clearBtn = document.getElementById('clear-custom-font');
+    const fileNameEl = document.getElementById('custom-font-name');
+
+    if (input) input.value = '';
+    if (clearBtn) clearBtn.style.display = 'none';
+    if (fileNameEl) {
+        fileNameEl.textContent = '';
+        fileNameEl.style.display = 'none';
+    }
+
     makeStrips();
 }
 
@@ -597,7 +651,8 @@ window.renderHighResolution = function(targetCanvas, scale) {
     
     // Re-create strips at high resolution
     const originalPage = page;
-    const scaledPage = createGraphics(floor(scaledHeight * 0.9 / scale), floor(scaledHeight * 0.9 / scale));
+    const stripSize = stripSizeSlider ? parseFloat(stripSizeSlider.value()) : 0.9;
+    const scaledPage = createGraphics(floor(scaledHeight * stripSize / scale), floor(scaledHeight * stripSize / scale));
     
     // Draw text on scaled page
     scaledPage.imageMode(CENTER);
@@ -605,7 +660,7 @@ window.renderHighResolution = function(targetCanvas, scale) {
     
     if (userImage && showImageToggle.elt.getAttribute('aria-pressed') === 'true') {
         scaledPage.push();
-        scaledPage.tint(255, parseInt(imageOpacitySlider.value()));
+        scaledPage.tint(255, Math.round(parseInt(imageOpacitySlider.value()) * 2.55));
         const imgScale = parseFloat(imageScaleSlider.value());
         let imgWidth = userImage.width, imgHeight = userImage.height;
         const pageRatio = scaledPage.width / scaledPage.height, imgRatio = imgWidth / imgHeight;
@@ -639,57 +694,18 @@ window.renderHighResolution = function(targetCanvas, scale) {
     
     // Create strips at high resolution
     const num = int(stripsSlider.value());
-    const sliceMode = sliceModeSelect.value();
-    
-    if (sliceMode === 'strips') {
-        // Linear strips
-        for (let i = 0; i < num; i++) {
-            let y = i * scaledPage.height / num;
-            const stripHeight = floor(scaledPage.height / num);
-            if (stripHeight < 1) break;
-            let strip = scaledPage.get(0, y, scaledPage.width, stripHeight);
-            
-            const stripY = y + scaledPage.height / (2 * num) + (height / 2 - scaledPage.height / 2);
-            ctx.save();
-            ctx.translate(width / 2, stripY);
-            ctx.drawImage(strip.canvas, -scaledPage.width / 2, -stripHeight / 2);
-            ctx.restore();
-        }
-    } else {
-        // Circular strips
-        const maxRadius = scaledPage.width / 2;
-        const ringWidth = maxRadius / num;
-        const overallScale = parseFloat(circleScaleSlider.value());
-        
-        for (let i = num - 1; i >= 0; i--) {
-            const outerRadius = (i + 1) * ringWidth;
-            const innerRadius = i * ringWidth;
-            let mask = createGraphics(scaledPage.width, scaledPage.height);
-            mask.noStroke();
-            mask.fill(255);
-            mask.ellipse(scaledPage.width / 2, scaledPage.height / 2, outerRadius * 2);
-            mask.erase();
-            mask.ellipse(scaledPage.width / 2, scaledPage.height / 2, innerRadius * 2);
-            mask.noErase();
-            let ringImage = scaledPage.get();
-            ringImage.mask(mask);
-            mask.remove();
-            
-            ctx.save();
-            ctx.translate(width / 2, height / 2);
-            ctx.scale(overallScale, overallScale);
-            ctx.drawImage(ringImage.canvas, -scaledPage.width / 2, -scaledPage.height / 2);
-            
-            if (circleStrokeToggle.elt.getAttribute('aria-pressed') === 'true') {
-                ctx.strokeStyle = circleStrokeColorPicker.value();
-                ctx.lineWidth = int(circleStrokeWeightSlider.value()) * scale;
-                ctx.beginPath();
-                ctx.arc(0, 0, outerRadius, 0, TWO_PI);
-                ctx.stroke();
-            }
-            
-            ctx.restore();
-        }
+
+    for (let i = 0; i < num; i++) {
+        let y = i * scaledPage.height / num;
+        const stripHeight = floor(scaledPage.height / num);
+        if (stripHeight < 1) break;
+        let strip = scaledPage.get(0, y, scaledPage.width, stripHeight);
+
+        const stripY = y + scaledPage.height / (2 * num) + (height / 2 - scaledPage.height / 2);
+        ctx.save();
+        ctx.translate(width / 2, stripY);
+        ctx.drawImage(strip.canvas, -scaledPage.width / 2, -stripHeight / 2);
+        ctx.restore();
     }
     
     ctx.restore();

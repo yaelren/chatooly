@@ -21,7 +21,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const fieldStrengthSlider = document.getElementById('fieldStrength');
     const noiseScaleSlider = document.getElementById('noiseScale');
     const mouseRepelSlider = document.getElementById('mouseRepel');
-    
+    const xOffsetSlider = document.getElementById('xOffset');
+    const yOffsetSlider = document.getElementById('yOffset');
+
     // Value displays
     const fontSizeValue = document.getElementById('fontSize-value');
     const letterSpacingValue = document.getElementById('letterSpacing-value');
@@ -32,6 +34,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const fieldStrengthValue = document.getElementById('fieldStrength-value');
     const noiseScaleValue = document.getElementById('noiseScale-value');
     const mouseRepelValue = document.getElementById('mouseRepel-value');
+    const xOffsetValue = document.getElementById('xOffset-value');
+    const yOffsetValue = document.getElementById('yOffset-value');
+
+    // Font color
+    const fontColorInput = document.getElementById('font-color');
     
     // Background controls
     const transparentToggle = document.getElementById('transparent-bg');
@@ -113,6 +120,31 @@ document.addEventListener('DOMContentLoaded', () => {
             valueDisplay.textContent = formatFn(parseFloat(slider.value));
         }
     }
+
+    // ========== PHYSICS VALUE MAPPING (1-10 to actual values) ==========
+    // Maps user-friendly 1-10 scale to actual physics values
+    function mapReturnForce(v) {
+        // 1 → 0.001, 5 → ~0.014, 10 → 0.2 (exponential)
+        return 0.001 * Math.pow(1.7, v - 1);
+    }
+    function mapFieldStrength(v) {
+        // 1 → 0, 5 → ~0.9, 10 → 2 (linear)
+        return (v - 1) * 0.22;
+    }
+    function mapNoise(v) {
+        // 1 → 0.0001, 5 → ~0.002, 10 → 0.01 (exponential)
+        return 0.0001 * Math.pow(2.15, v - 1);
+    }
+    function mapMouseRepel(v) {
+        // 1 → 0, 5 → ~8.9, 10 → 20 (linear)
+        return (v - 1) * 2.22;
+    }
+    function mapParticleDensity(v) {
+        // 1 → 12 (few particles), 4 → 6, 7 → 3 (many particles)
+        // Inverted: higher slider = more particles = lower spacing
+        // Minimum spacing of 3 to prevent browser freeze
+        return Math.max(3, Math.round(12 - (v - 1) * 1.5));
+    }
     
     // Font size slider
     if (fontSizeSlider) {
@@ -156,15 +188,17 @@ document.addEventListener('DOMContentLoaded', () => {
         updateSliderValue(lineHeightSlider, lineHeightValue, (v) => v.toFixed(1));
     }
     
-    // Particle spacing slider
+    // Particle density slider (1-7 scale, mapped to spacing)
     if (particleSpacingSlider) {
         particleSpacingSlider.addEventListener('input', (e) => {
-            const value = parseFloat(e.target.value);
-            settings.particleSpacing = value;
+            const sliderValue = parseFloat(e.target.value);
+            settings.particleSpacing = mapParticleDensity(sliderValue);
             updateSliderValue(particleSpacingSlider, particleSpacingValue);
             const event = new CustomEvent('liquidTypography:reinit');
             document.dispatchEvent(event);
         });
+        // Initialize with mapped value
+        settings.particleSpacing = mapParticleDensity(parseFloat(particleSpacingSlider.value));
         updateSliderValue(particleSpacingSlider, particleSpacingValue);
     }
     
@@ -184,44 +218,89 @@ document.addEventListener('DOMContentLoaded', () => {
         updateSliderValue(particleSizeSlider, particleSizeValue, (v) => v.toFixed(1));
     }
     
-    // Return force slider
+    // Return force slider (1-10 scale)
     if (returnForceSlider) {
         returnForceSlider.addEventListener('input', (e) => {
-            const value = parseFloat(e.target.value);
-            settings.returnForce = value;
-            updateSliderValue(returnForceSlider, returnForceValue, (v) => v.toFixed(3));
+            const sliderValue = parseFloat(e.target.value);
+            settings.returnForce = mapReturnForce(sliderValue);
+            updateSliderValue(returnForceSlider, returnForceValue);
         });
-        updateSliderValue(returnForceSlider, returnForceValue, (v) => v.toFixed(3));
+        // Initialize with mapped value
+        settings.returnForce = mapReturnForce(parseFloat(returnForceSlider.value));
+        updateSliderValue(returnForceSlider, returnForceValue);
     }
-    
-    // Field strength slider
+
+    // Field strength slider (1-10 scale)
     if (fieldStrengthSlider) {
         fieldStrengthSlider.addEventListener('input', (e) => {
-            const value = parseFloat(e.target.value);
-            settings.fieldStrength = value;
-            updateSliderValue(fieldStrengthSlider, fieldStrengthValue, (v) => v.toFixed(2));
+            const sliderValue = parseFloat(e.target.value);
+            settings.fieldStrength = mapFieldStrength(sliderValue);
+            updateSliderValue(fieldStrengthSlider, fieldStrengthValue);
         });
-        updateSliderValue(fieldStrengthSlider, fieldStrengthValue, (v) => v.toFixed(2));
+        // Initialize with mapped value
+        settings.fieldStrength = mapFieldStrength(parseFloat(fieldStrengthSlider.value));
+        updateSliderValue(fieldStrengthSlider, fieldStrengthValue);
     }
-    
-    // Noise scale slider
+
+    // Noise scale slider (1-10 scale)
     if (noiseScaleSlider) {
         noiseScaleSlider.addEventListener('input', (e) => {
-            const value = parseFloat(e.target.value);
-            settings.noiseScale = value;
-            updateSliderValue(noiseScaleSlider, noiseScaleValue, (v) => v.toFixed(4));
+            const sliderValue = parseFloat(e.target.value);
+            settings.noiseScale = mapNoise(sliderValue);
+            updateSliderValue(noiseScaleSlider, noiseScaleValue);
         });
-        updateSliderValue(noiseScaleSlider, noiseScaleValue, (v) => v.toFixed(4));
+        // Initialize with mapped value
+        settings.noiseScale = mapNoise(parseFloat(noiseScaleSlider.value));
+        updateSliderValue(noiseScaleSlider, noiseScaleValue);
     }
-    
-    // Mouse repel slider
+
+    // Mouse repel slider (1-10 scale)
     if (mouseRepelSlider) {
         mouseRepelSlider.addEventListener('input', (e) => {
-            const value = parseFloat(e.target.value);
-            settings.mouseRepel = value;
-            updateSliderValue(mouseRepelSlider, mouseRepelValue, (v) => v.toFixed(1));
+            const sliderValue = parseFloat(e.target.value);
+            settings.mouseRepel = mapMouseRepel(sliderValue);
+            updateSliderValue(mouseRepelSlider, mouseRepelValue);
         });
-        updateSliderValue(mouseRepelSlider, mouseRepelValue, (v) => v.toFixed(1));
+        // Initialize with mapped value
+        settings.mouseRepel = mapMouseRepel(parseFloat(mouseRepelSlider.value));
+        updateSliderValue(mouseRepelSlider, mouseRepelValue);
+    }
+
+    // X Offset slider
+    if (xOffsetSlider) {
+        xOffsetSlider.addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            settings.xOffset = value;
+            updateSliderValue(xOffsetSlider, xOffsetValue);
+            const event = new CustomEvent('liquidTypography:reinit');
+            document.dispatchEvent(event);
+        });
+        updateSliderValue(xOffsetSlider, xOffsetValue);
+    }
+
+    // Y Offset slider
+    if (yOffsetSlider) {
+        yOffsetSlider.addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            settings.yOffset = value;
+            updateSliderValue(yOffsetSlider, yOffsetValue);
+            const event = new CustomEvent('liquidTypography:reinit');
+            document.dispatchEvent(event);
+        });
+        updateSliderValue(yOffsetSlider, yOffsetValue);
+    }
+
+    // Font color picker
+    if (fontColorInput) {
+        fontColorInput.addEventListener('input', (e) => {
+            settings.fontColor = e.target.value;
+            // Update existing particles
+            if (window.particlesArray) {
+                window.particlesArray.forEach(p => {
+                    p.color = settings.fontColor;
+                });
+            }
+        });
     }
     
     // ========== TEXT INPUT ==========
@@ -251,17 +330,17 @@ document.addEventListener('DOMContentLoaded', () => {
         localFontInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            
+
             const reader = new FileReader();
-            reader.onload = (event) => {
+            reader.onload = async (event) => {
                 const fontDataUrl = event.target.result;
                 const fontName = "UploadedFont";
-                
+
                 // Create @font-face rule
                 const newStyle = document.createElement('style');
                 newStyle.textContent = `@font-face { font-family: '${fontName}'; src: url(${fontDataUrl}); }`;
                 document.head.appendChild(newStyle);
-                
+
                 // Add to font selector
                 if (fontSelector) {
                     const option = document.createElement('option');
@@ -270,9 +349,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     fontSelector.appendChild(option);
                     fontSelector.value = fontName;
                     settings.fontFamily = fontName;
-                    
-                    const event = new CustomEvent('liquidTypography:reinit');
-                    document.dispatchEvent(event);
+
+                    // Wait for font to actually load before reinitializing
+                    try {
+                        await document.fonts.load(`bold ${settings.fontSize}px ${fontName}`);
+                    } catch (err) {
+                        console.warn('Font load warning:', err);
+                    }
+
+                    // Trigger reinit after font is loaded
+                    const reinitEvent = new CustomEvent('liquidTypography:reinit');
+                    document.dispatchEvent(reinitEvent);
                 }
             };
             reader.readAsDataURL(file);
@@ -302,4 +389,137 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     });
+
+    // ========== COLLAPSIBLE SECTION CARDS ==========
+    const sectionHeaders = document.querySelectorAll('.chatooly-section-header[role="button"]');
+    sectionHeaders.forEach(header => {
+        header.addEventListener('click', () => {
+            const isExpanded = header.getAttribute('aria-expanded') === 'true';
+            const sectionCard = header.closest('.chatooly-section-card');
+
+            header.setAttribute('aria-expanded', !isExpanded);
+
+            if (isExpanded) {
+                sectionCard.classList.add('collapsed');
+            } else {
+                sectionCard.classList.remove('collapsed');
+            }
+        });
+
+        // Keyboard support
+        header.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                header.click();
+            }
+        });
+    });
+
+    // ========== RESET POSITION BUTTON (combined X & Y) ==========
+    const resetPositionBtn = document.getElementById('reset-position');
+
+    if (resetPositionBtn && xOffsetSlider && yOffsetSlider) {
+        resetPositionBtn.addEventListener('click', () => {
+            // Reset X
+            xOffsetSlider.value = 0;
+            settings.xOffset = 0;
+            updateSliderValue(xOffsetSlider, xOffsetValue);
+
+            // Reset Y
+            yOffsetSlider.value = 0;
+            settings.yOffset = 0;
+            updateSliderValue(yOffsetSlider, yOffsetValue);
+
+            const event = new CustomEvent('liquidTypography:reinit');
+            document.dispatchEvent(event);
+        });
+    }
+
+    // ========== TEXT ALIGNMENT BUTTONS ==========
+    const alignmentBtns = document.querySelectorAll('.alignment-btn[data-align]');
+    alignmentBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Remove active from all alignment buttons only
+            alignmentBtns.forEach(b => b.classList.remove('active'));
+            // Add active to clicked
+            btn.classList.add('active');
+            // Update setting
+            settings.textAlign = btn.dataset.align;
+            // Reinit
+            const event = new CustomEvent('liquidTypography:reinit');
+            document.dispatchEvent(event);
+        });
+    });
+
+    // ========== INTERACTION MODE TOGGLE ==========
+    const modeBtns = document.querySelectorAll('[data-mode]');
+    const autoModeControls = document.getElementById('auto-mode-controls');
+    const cursorDot = document.querySelector('.cursor-dot');
+
+    modeBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Remove active from all mode buttons
+            modeBtns.forEach(b => b.classList.remove('active'));
+            // Add active to clicked
+            btn.classList.add('active');
+            // Update setting
+            settings.interactionMode = btn.dataset.mode;
+
+            // Show/hide auto controls
+            if (autoModeControls) {
+                autoModeControls.style.display = settings.interactionMode === 'auto' ? 'block' : 'none';
+            }
+
+            // Show/hide cursor dot based on mode
+            if (cursorDot) {
+                cursorDot.style.display = settings.interactionMode === 'auto' ? 'none' : 'block';
+            }
+
+            // Reset mouse position when switching to mouse mode
+            if (settings.interactionMode === 'mouse' && window.mouse) {
+                // Mouse position will be updated on next mousemove
+            }
+        });
+    });
+
+    // ========== AUTO PATTERN SELECTOR ==========
+    const autoPatternSelect = document.getElementById('autoPattern');
+    if (autoPatternSelect) {
+        autoPatternSelect.addEventListener('change', (e) => {
+            settings.autoPattern = e.target.value;
+        });
+    }
+
+    // ========== AUTO SPEED SLIDER ==========
+    const autoSpeedSlider = document.getElementById('autoSpeed');
+    const autoSpeedValue = document.getElementById('autoSpeed-value');
+    if (autoSpeedSlider) {
+        autoSpeedSlider.addEventListener('input', (e) => {
+            settings.autoSpeed = parseFloat(e.target.value);
+            updateSliderValue(autoSpeedSlider, autoSpeedValue);
+        });
+        updateSliderValue(autoSpeedSlider, autoSpeedValue);
+    }
+
+    // ========== AUTO SIZE SLIDER ==========
+    const autoSizeSlider = document.getElementById('autoSize');
+    const autoSizeValue = document.getElementById('autoSize-value');
+    if (autoSizeSlider) {
+        autoSizeSlider.addEventListener('input', (e) => {
+            settings.autoSize = parseFloat(e.target.value);
+            updateSliderValue(autoSizeSlider, autoSizeValue);
+        });
+        updateSliderValue(autoSizeSlider, autoSizeValue);
+    }
+
+    // ========== AUTO DEBUG TOGGLE ==========
+    const autoDebugToggle = document.getElementById('autoDebug');
+    if (autoDebugToggle) {
+        autoDebugToggle.addEventListener('click', () => {
+            const isPressed = autoDebugToggle.getAttribute('aria-pressed') === 'true';
+            const newState = !isPressed;
+            autoDebugToggle.setAttribute('aria-pressed', newState);
+            settings.autoDebug = newState;
+        });
+    }
 });

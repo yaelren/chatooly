@@ -22,16 +22,26 @@ if (window.Chatooly && window.Chatooly.backgroundManager) {
 // ========== SETTINGS ==========
 let settings = {
     text: 'Liquid\nTypography',
-    particleSpacing: 3,
+    particleSpacing: 6, // Will be set by UI mapping (slider 5 → spacing 6)
     particleSize: 1.5,
-    fontFamily: 'Assistant',
+    fontFamily: 'Poppins',
     fontSize: 150,
     letterSpacing: 0,
     lineHeight: 1.2,
-    returnForce: 0.05,
+    textAlign: 'center', // 'left', 'center', 'right'
+    returnForce: 0.014,
     fieldStrength: 0.5,
     noiseScale: 0.003,
     mouseRepel: 8,
+    fontColor: '#ffffff',
+    xOffset: 0,
+    yOffset: 0,
+    // Auto motion settings
+    interactionMode: 'mouse', // 'mouse' | 'auto'
+    autoPattern: 'infinity',   // 'sine' | 'infinity' | 'circle' | 'random'
+    autoSpeed: 5,              // 1-10 scale
+    autoSize: 5,               // 1-10 scale for movement amplitude
+    autoDebug: false,          // Show debug circle for auto mode
 };
 
 // ========== MOUSE TRACKING ==========
@@ -54,7 +64,7 @@ class Particle {
         this.vx = 0;
         this.vy = 0;
         this.maxSpeed = 3;
-        this.color = 'white';
+        this.color = settings.fontColor;
     }
     
     draw() {
@@ -120,21 +130,33 @@ function init(callback) {
     ctx.fillStyle = 'white';
     ctx.font = `bold ${settings.fontSize}px ${settings.fontFamily}`;
     ctx.letterSpacing = `${settings.letterSpacing}px`;
-    ctx.textAlign = 'center';
+    ctx.textAlign = settings.textAlign;
     ctx.textBaseline = 'middle';
-    
+
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
+
     // Draw text to get pixel data
     const lines = settings.text.split('\n');
     const lineHeightPixels = settings.fontSize * settings.lineHeight;
-    const totalTextHeight = (lines.length - 1) * lineHeightPixels;
-    const startY = (canvas.height / 2) - (totalTextHeight / 2);
-    
+    // Fix: Calculate total height including first line's height for proper centering
+    const totalTextHeight = settings.fontSize + (lines.length - 1) * lineHeightPixels;
+    const startY = (canvas.height / 2) - (totalTextHeight / 2) + (settings.fontSize / 2) + settings.yOffset;
+
+    // Calculate X position based on alignment
+    let textX;
+    const padding = 50; // Padding from edge for left/right alignment
+    if (settings.textAlign === 'left') {
+        textX = padding + settings.xOffset;
+    } else if (settings.textAlign === 'right') {
+        textX = canvas.width - padding + settings.xOffset;
+    } else {
+        textX = (canvas.width / 2) + settings.xOffset;
+    }
+
     lines.forEach((line, index) => {
         const y = startY + (index * lineHeightPixels);
-        ctx.fillText(line, canvas.width / 2, y);
+        ctx.fillText(line, textX, y);
     });
     
     // Extract particles from text pixels
@@ -152,13 +174,92 @@ function init(callback) {
     if (callback) callback();
 }
 
+// ========== AUTO-MOTION PATTERN GENERATOR ==========
+// Random target points for random pattern
+let randomTarget = { x: 0, y: 0 };
+let randomCurrent = { x: 0, y: 0 };
+let randomLastTime = 0;
+let randomInitialized = false;
+
+function getAutoPosition(time, pattern, canvasEl) {
+    const centerX = canvasEl.width / 2;
+    const centerY = canvasEl.height / 2;
+    const speed = settings.autoSpeed * 0.0003; // Map 1-10 to time multiplier
+    const t = time * speed;
+
+    // Map size 1-10 to amplitude multiplier (0.1 to 1.0)
+    const sizeMultiplier = settings.autoSize * 0.1;
+
+    switch (pattern) {
+        case 'sine':
+            // Horizontal sine wave with slight vertical bob
+            return {
+                x: centerX + Math.sin(t) * (canvasEl.width * 0.35 * sizeMultiplier),
+                y: centerY + Math.sin(t * 2) * (50 * sizeMultiplier)
+            };
+        case 'infinity':
+            // Figure-8 / infinity loop (Lissajous curve)
+            return {
+                x: centerX + Math.sin(t) * (canvasEl.width * 0.3 * sizeMultiplier),
+                y: centerY + Math.sin(t * 2) * (canvasEl.height * 0.2 * sizeMultiplier)
+            };
+        case 'circle':
+            // Circular / elliptical motion
+            return {
+                x: centerX + Math.cos(t) * (canvasEl.width * 0.3 * sizeMultiplier),
+                y: centerY + Math.sin(t) * (canvasEl.height * 0.25 * sizeMultiplier)
+            };
+        case 'random':
+            // Random point-to-point movement
+            const rangeX = canvasEl.width * 0.4 * sizeMultiplier;
+            const rangeY = canvasEl.height * 0.35 * sizeMultiplier;
+
+            // Initialize if needed
+            if (!randomInitialized) {
+                randomCurrent.x = centerX;
+                randomCurrent.y = centerY;
+                randomTarget.x = centerX + (Math.random() * 2 - 1) * rangeX;
+                randomTarget.y = centerY + (Math.random() * 2 - 1) * rangeY;
+                randomLastTime = time;
+                randomInitialized = true;
+            }
+
+            // Pick new random target every 1-3 seconds based on speed
+            const interval = 3000 / settings.autoSpeed;
+            if (time - randomLastTime > interval) {
+                randomTarget.x = centerX + (Math.random() * 2 - 1) * rangeX;
+                randomTarget.y = centerY + (Math.random() * 2 - 1) * rangeY;
+                randomLastTime = time;
+            }
+
+            // Smoothly interpolate toward target (easing)
+            const easeSpeed = 0.02 + (settings.autoSpeed * 0.008);
+            randomCurrent.x += (randomTarget.x - randomCurrent.x) * easeSpeed;
+            randomCurrent.y += (randomTarget.y - randomCurrent.y) * easeSpeed;
+
+            return {
+                x: randomCurrent.x,
+                y: randomCurrent.y
+            };
+        default:
+            return { x: centerX, y: centerY };
+    }
+}
+
 // ========== ANIMATION LOOP ==========
 let animationFrameId;
 let animationTime = 0;
 
 function animate(timestamp) {
     animationTime = timestamp;
-    
+
+    // Update interaction point based on mode
+    if (settings.interactionMode === 'auto') {
+        const autoPos = getAutoPosition(timestamp, settings.autoPattern, canvas);
+        mouse.x = autoPos.x;
+        mouse.y = autoPos.y;
+    }
+
     // Draw background first
     if (window.Chatooly && window.Chatooly.backgroundManager) {
         window.Chatooly.backgroundManager.drawToCanvas(ctx, canvas.width, canvas.height);
@@ -167,13 +268,27 @@ function animate(timestamp) {
         ctx.fillStyle = '#000000';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
-    
+
     // Update and draw particles
     for (let i = 0; i < particlesArray.length; i++) {
         particlesArray[i].update(timestamp);
         particlesArray[i].draw();
     }
-    
+
+    // Draw debug circle in auto mode if enabled
+    if (settings.interactionMode === 'auto' && settings.autoDebug && mouse.x !== undefined) {
+        ctx.strokeStyle = 'rgba(255, 100, 100, 0.8)';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(mouse.x, mouse.y, mouse.radius, 0, Math.PI * 2);
+        ctx.stroke();
+        // Draw center dot
+        ctx.fillStyle = 'rgba(255, 100, 100, 0.9)';
+        ctx.beginPath();
+        ctx.arc(mouse.x, mouse.y, 8, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
     animationFrameId = requestAnimationFrame(animate);
 }
 
@@ -335,11 +450,21 @@ function updateMousePosition(e) {
     }
 }
 
-canvas.addEventListener('mousemove', updateMousePosition);
-canvas.addEventListener('mouseenter', updateMousePosition);
+canvas.addEventListener('mousemove', (e) => {
+    if (settings.interactionMode === 'mouse') {
+        updateMousePosition(e);
+    }
+});
+canvas.addEventListener('mouseenter', (e) => {
+    if (settings.interactionMode === 'mouse') {
+        updateMousePosition(e);
+    }
+});
 canvas.addEventListener('mouseleave', () => {
-    mouse.x = undefined;
-    mouse.y = undefined;
+    if (settings.interactionMode === 'mouse') {
+        mouse.x = undefined;
+        mouse.y = undefined;
+    }
 });
 
 // ========== HIGH-RESOLUTION EXPORT ==========

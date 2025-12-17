@@ -10,45 +10,34 @@
 #shapes-list {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 8px;
 }
 
-/* Shape card styling - clean, minimal */
+/* Shape card styling - compact single-line layout */
 .shape-card {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
     border-bottom: 1px solid var(--chatooly-color-border, #e0e0e0);
-    padding-bottom: 16px;
 }
 
 .shape-card:last-child {
     border-bottom: none;
-    padding-bottom: 0;
-}
-
-.shape-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-.shape-card-title {
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--chatooly-color-text-muted, #666);
 }
 
 .shape-remove-btn {
     background: none;
     border: none;
-    font-size: 18px;
+    font-size: 14px;
     line-height: 1;
     color: var(--chatooly-color-text-muted, #999);
     cursor: pointer;
-    padding: 2px 6px;
-    border-radius: 4px;
+    padding: 2px 4px;
+    border-radius: 3px;
     transition: background-color 0.15s, color 0.15s;
+    flex-shrink: 0;
 }
 
 .shape-remove-btn:hover {
@@ -56,30 +45,99 @@
     color: var(--chatooly-color-text, #333);
 }
 
-.shape-card-content {
+.shape-card-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: var(--chatooly-color-text-muted, #666);
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: 50px;
+}
+
+/* Compact color input - smaller square */
+.shape-card .shape-color {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    min-height: 18px;
+    padding: 0;
+    border: 1px solid var(--chatooly-color-border, #e0e0e0);
+    border-radius: 3px;
+    cursor: pointer;
+    flex-shrink: 0;
+    background: none;
+}
+
+.shape-card .shape-color::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+.shape-card .shape-color::-webkit-color-swatch {
+    border: none;
+    border-radius: 2px;
+}
+
+.shape-card .shape-color::-moz-color-swatch {
+    border: none;
+    border-radius: 2px;
+}
+
+/* Scale slider group */
+.shape-card .shape-scale-group {
+    flex: 1;
     display: flex;
-    flex-direction: column;
-    gap: 10px;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
 }
 
-/* Compact controls inside shape cards */
-.shape-card .chatooly-input-group,
-.shape-card .chatooly-slider-group,
-.shape-card .chatooly-color-group {
-    margin-bottom: 0;
+.shape-card .shape-scale-label {
+    font-size: 10px;
+    color: var(--chatooly-color-text-muted, #666);
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
-.shape-card .chatooly-input-label,
-.shape-card .chatooly-color-label {
-    font-size: 11px;
+.shape-card .shape-scale {
+    flex: 1;
+    min-width: 40px;
+    height: 4px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: var(--chatooly-color-border, #e0e0e0);
+    border-radius: 2px;
+    cursor: pointer;
 }
 
-.shape-card .chatooly-slider-label {
-    font-size: 11px;
+.shape-card .shape-scale::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    background: var(--chatooly-color-primary, #333);
+    border-radius: 50%;
+    cursor: pointer;
 }
 
-.shape-card .chatooly-slider-label span:first-child {
-    font-size: 11px;
+.shape-card .shape-scale::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    background: var(--chatooly-color-primary, #333);
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+}
+
+.shape-card .shape-scale-value {
+    font-size: 10px;
+    color: var(--chatooly-color-text-muted, #666);
+    min-width: 20px;
+    text-align: right;
+    flex-shrink: 0;
 }
 
 /* Random controls button */

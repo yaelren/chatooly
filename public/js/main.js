@@ -118,6 +118,12 @@ class ChatoolyHub {
                 slug: 'sliced-typography',
                 author: 'Omer',
                 category: 'art'
+            },
+            {
+                name: 'Liquid Typography',
+                slug: 'liquid-typography',
+                author: 'Studio Video',
+                category: 'text'
             }
         ];
 

@@ -35,6 +35,107 @@
         #chatooly-canvas {
             cursor: none;
         }
+
+        /* Collapsible section cards */
+        .chatooly-section-header {
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chatooly-section-header::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-right: 2px solid currentColor;
+            border-bottom: 2px solid currentColor;
+            transform: rotate(-135deg);
+            transition: transform 0.2s ease;
+            opacity: 0.6;
+        }
+
+        .chatooly-section-header[aria-expanded="false"]::after {
+            transform: rotate(45deg);
+        }
+
+        .chatooly-section-content {
+            transition: max-height 0.3s ease, opacity 0.2s ease, padding 0.2s ease;
+            overflow: hidden;
+        }
+
+        .chatooly-section-card.collapsed .chatooly-section-content {
+            max-height: 0 !important;
+            opacity: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+
+        /* Reset position button */
+        .reset-position-btn {
+            padding: 4px 8px;
+            font-size: 10px;
+            min-width: auto;
+            opacity: 0.7;
+            transition: opacity 0.15s ease;
+        }
+
+        .reset-position-btn:hover {
+            opacity: 1;
+        }
+
+        .position-slider-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Text alignment toggle buttons */
+        .alignment-toggle-group {
+            display: flex;
+            gap: 4px;
+        }
+
+        .alignment-btn {
+            flex: 1;
+            padding: 8px 12px;
+            font-size: 11px;
+            min-width: auto;
+            background: var(--chatooly-color-surface-alt, #3a3a3a);
+            border: 1px solid var(--chatooly-color-border, #4a4a4a);
+            color: var(--chatooly-color-text-muted, #999);
+            transition: all 0.15s ease;
+        }
+
+        .alignment-btn.active {
+            background: var(--chatooly-color-accent, #666);
+            color: var(--chatooly-color-text, #fff);
+            border-color: var(--chatooly-color-accent, #666);
+        }
+
+        .alignment-btn:hover:not(.active) {
+            background: var(--chatooly-color-surface-hover, #444);
+        }
+
+        /* Position group with single reset button */
+        .position-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .position-group-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .position-group-title {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--chatooly-color-text-muted, #999);
+        }
     </style>
 <style id="chatooly-canvas-area-styles">
                 /* Canvas area container - works with both template and legacy */
@@ -607,7 +708,7 @@
             <div class="chatooly-controls-content">
                 <!-- Text Input Section -->
                 <div class="chatooly-section-card" data-section="text">
-                    <h3 class="chatooly-section-header">📝 Text</h3>
+                    <h3 class="chatooly-section-header" role="button" tabindex="0" aria-expanded="true">📝 Text</h3>
                     <div class="chatooly-section-content">
                         <div class="chatooly-input-group">
                             <label class="chatooly-input-label" for="textInput">Text</label>
@@ -617,8 +718,8 @@
                         <div class="chatooly-input-group">
                             <label class="chatooly-input-label" for="fontSelector">Font</label>
                             <select class="chatooly-select" id="fontSelector">
+                                <option value="Poppins" selected>Poppins (English)</option>
                                 <option value="Assistant">Assistant (Hebrew)</option>
-                                <option value="Poppins">Poppins (English)</option>
                             </select>
                         </div>
 
@@ -636,8 +737,13 @@
 
                 <!-- Typography Settings -->
                 <div class="chatooly-section-card" data-section="typography">
-                    <h3 class="chatooly-section-header">✍️ Typography</h3>
+                    <h3 class="chatooly-section-header" role="button" tabindex="0" aria-expanded="true">✍️ Typography</h3>
                     <div class="chatooly-section-content">
+                        <div class="chatooly-color-group">
+                            <label class="chatooly-color-label" for="font-color">Font Color</label>
+                            <input type="color" class="chatooly-color-input" id="font-color" value="#ffffff">
+                        </div>
+
                         <div class="chatooly-slider-group">
                             <div class="chatooly-slider-label">
                                 <span>Font Size</span>
@@ -645,7 +751,7 @@
                             </div>
                             <input type="range" class="chatooly-slider" id="fontSize" min="50" max="400" step="1" value="150">
                         </div>
-                        
+
                         <div class="chatooly-slider-group">
                             <div class="chatooly-slider-label">
                                 <span>Letter Spacing</span>
@@ -653,7 +759,7 @@
                             </div>
                             <input type="range" class="chatooly-slider" id="letterSpacing" min="-20" max="50" step="1" value="0">
                         </div>
-                        
+
                         <div class="chatooly-slider-group">
                             <div class="chatooly-slider-label">
                                 <span>Line Height</span>
@@ -661,19 +767,49 @@
                             </div>
                             <input type="range" class="chatooly-slider" id="lineHeight" min="0.5" max="3" step="0.1" value="1.2">
                         </div>
+
+                        <div class="chatooly-input-group">
+                            <label class="chatooly-input-label">Text Alignment</label>
+                            <div class="alignment-toggle-group">
+                                <button type="button" class="chatooly-btn alignment-btn" id="align-left" data-align="left">Left</button>
+                                <button type="button" class="chatooly-btn alignment-btn active" id="align-center" data-align="center">Center</button>
+                                <button type="button" class="chatooly-btn alignment-btn" id="align-right" data-align="right">Right</button>
+                            </div>
+                        </div>
+
+                        <div class="position-group">
+                            <div class="position-group-header">
+                                <span class="position-group-title">Position</span>
+                                <button type="button" class="chatooly-btn reset-position-btn" id="reset-position" title="Reset to center">Reset</button>
+                            </div>
+                            <div class="chatooly-slider-group">
+                                <div class="chatooly-slider-label">
+                                    <span>X Position</span>
+                                    <span class="chatooly-slider-value" id="xOffset-value">0</span>
+                                </div>
+                                <input type="range" class="chatooly-slider" id="xOffset" min="-500" max="500" step="1" value="0">
+                            </div>
+                            <div class="chatooly-slider-group">
+                                <div class="chatooly-slider-label">
+                                    <span>Y Position</span>
+                                    <span class="chatooly-slider-value" id="yOffset-value">0</span>
+                                </div>
+                                <input type="range" class="chatooly-slider" id="yOffset" min="-500" max="500" step="1" value="0">
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Particle Settings -->
                 <div class="chatooly-section-card" data-section="particles">
-                    <h3 class="chatooly-section-header">⚡ Particles</h3>
+                    <h3 class="chatooly-section-header" role="button" tabindex="0" aria-expanded="true">⚡ Particles</h3>
                     <div class="chatooly-section-content">
                         <div class="chatooly-slider-group">
                             <div class="chatooly-slider-label">
-                                <span>Density</span>
-                                <span class="chatooly-slider-value" id="particleSpacing-value">3</span>
+                                <span>Particle Density</span>
+                                <span class="chatooly-slider-value" id="particleSpacing-value">5</span>
                             </div>
-                            <input type="range" class="chatooly-slider" id="particleSpacing" min="1" max="10" step="1" value="3">
+                            <input type="range" class="chatooly-slider" id="particleSpacing" min="1" max="7" step="1" value="5">
                         </div>
                         
                         <div class="chatooly-slider-group">
@@ -681,52 +817,97 @@
                                 <span>Particle Size</span>
                                 <span class="chatooly-slider-value" id="particleSize-value">1.5</span>
                             </div>
-                            <input type="range" class="chatooly-slider" id="particleSize" min="0.5" max="5" step="0.1" value="1.5">
+                            <input type="range" class="chatooly-slider" id="particleSize" min="0.5" max="30" step="0.5" value="1.5">
                         </div>
                     </div>
                 </div>
 
                 <!-- Physics Settings -->
                 <div class="chatooly-section-card" data-section="physics">
-                    <h3 class="chatooly-section-header">🌊 Physics</h3>
+                    <h3 class="chatooly-section-header" role="button" tabindex="0" aria-expanded="true">🌊 Motion</h3>
                     <div class="chatooly-section-content">
-                        <div class="chatooly-slider-group">
-                            <div class="chatooly-slider-label">
-                                <span>Return Force</span>
-                                <span class="chatooly-slider-value" id="returnForce-value">0.050</span>
+                        <!-- Interaction Mode -->
+                        <div class="chatooly-input-group">
+                            <label class="chatooly-input-label">Interaction Mode</label>
+                            <div class="alignment-toggle-group">
+                                <button type="button" class="chatooly-btn alignment-btn active" id="mode-mouse" data-mode="mouse">Mouse</button>
+                                <button type="button" class="chatooly-btn alignment-btn" id="mode-auto" data-mode="auto">Auto</button>
                             </div>
-                            <input type="range" class="chatooly-slider" id="returnForce" min="0.001" max="0.2" step="0.001" value="0.05">
                         </div>
-                        
-                        <div class="chatooly-slider-group">
-                            <div class="chatooly-slider-label">
-                                <span>Field Strength</span>
-                                <span class="chatooly-slider-value" id="fieldStrength-value">0.50</span>
+
+                        <!-- Auto Mode Controls (hidden by default) -->
+                        <div id="auto-mode-controls" style="display: none;">
+                            <div class="chatooly-toggle-group">
+                                <button type="button" class="chatooly-toggle" id="autoDebug" role="switch" aria-pressed="false">
+                                    <span class="chatooly-toggle-slider"></span>
+                                </button>
+                                <label class="chatooly-toggle-label" for="autoDebug">Show Debug Circle</label>
                             </div>
-                            <input type="range" class="chatooly-slider" id="fieldStrength" min="0" max="2" step="0.01" value="0.5">
+
+                            <div class="chatooly-input-group">
+                                <label class="chatooly-input-label">Pattern</label>
+                                <select class="chatooly-select" id="autoPattern">
+                                    <option value="infinity" selected>Infinity Loop</option>
+                                    <option value="sine">Sine Wave</option>
+                                    <option value="circle">Circle</option>
+                                    <option value="random">Random</option>
+                                </select>
+                            </div>
+
+                            <div class="chatooly-slider-group">
+                                <div class="chatooly-slider-label">
+                                    <span>Speed</span>
+                                    <span class="chatooly-slider-value" id="autoSpeed-value">5</span>
+                                </div>
+                                <input type="range" class="chatooly-slider" id="autoSpeed" min="1" max="10" step="1" value="5">
+                            </div>
+
+                            <div class="chatooly-slider-group">
+                                <div class="chatooly-slider-label">
+                                    <span>Movement Size</span>
+                                    <span class="chatooly-slider-value" id="autoSize-value">5</span>
+                                </div>
+                                <input type="range" class="chatooly-slider" id="autoSize" min="1" max="10" step="1" value="5">
+                            </div>
                         </div>
-                        
+
                         <div class="chatooly-slider-group">
                             <div class="chatooly-slider-label">
-                                <span>Noise</span>
-                                <span class="chatooly-slider-value" id="noiseScale-value">0.0030</span>
+                                <span>Snap Back</span>
+                                <span class="chatooly-slider-value" id="returnForce-value">5</span>
                             </div>
-                            <input type="range" class="chatooly-slider" id="noiseScale" min="0.0001" max="0.01" step="0.0001" value="0.003">
+                            <input type="range" class="chatooly-slider" id="returnForce" min="1" max="10" step="1" value="5">
+                        </div>
+
+                        <div class="chatooly-slider-group">
+                            <div class="chatooly-slider-label">
+                                <span>Fluid Movement</span>
+                                <span class="chatooly-slider-value" id="fieldStrength-value">3</span>
+                            </div>
+                            <input type="range" class="chatooly-slider" id="fieldStrength" min="1" max="10" step="1" value="3">
+                        </div>
+
+                        <div class="chatooly-slider-group">
+                            <div class="chatooly-slider-label">
+                                <span>Wave Size</span>
+                                <span class="chatooly-slider-value" id="noiseScale-value">5</span>
+                            </div>
+                            <input type="range" class="chatooly-slider" id="noiseScale" min="1" max="10" step="1" value="5">
                         </div>
 
                         <div class="chatooly-slider-group">
                             <div class="chatooly-slider-label">
                                 <span>Mouse Repel</span>
-                                <span class="chatooly-slider-value" id="mouseRepel-value">8.0</span>
+                                <span class="chatooly-slider-value" id="mouseRepel-value">4</span>
                             </div>
-                            <input type="range" class="chatooly-slider" id="mouseRepel" min="0" max="20" step="0.1" value="8">
+                            <input type="range" class="chatooly-slider" id="mouseRepel" min="1" max="10" step="1" value="4">
                         </div>
                     </div>
                 </div>
 
                 <!-- Background Controls -->
                 <div class="chatooly-section-card" data-section="background">
-                    <h3 class="chatooly-section-header">◼ Background</h3>
+                    <h3 class="chatooly-section-header" role="button" tabindex="0" aria-expanded="true">◼ Background</h3>
                     <div class="chatooly-section-content">
                         <!-- Transparent Background Toggle -->
                         <div class="chatooly-toggle-group">

@@ -525,43 +525,44 @@
 
                 <!-- Text Input Section -->
                 <div class="chatooly-section-card" data-section="text">
-                    <h3 class="chatooly-section-header">📝 Text Input</h3>
-                    <div class="chatooly-section-content">
+                    <h3 class="chatooly-section-header" data-target="text-content" aria-expanded="true" tabindex="0" style="cursor: pointer;">📝 Text Input <span class="section-toggle">▼</span></h3>
+                    <div class="chatooly-section-content" id="text-content">
                         <div class="chatooly-input-group">
                             <label class="chatooly-input-label" for="text-input">Your Text:</label>
-                            <textarea class="chatooly-textarea" id="text-input" rows="4" placeholder="Enter your text here...">Typography
-Interactive
-Typography
-In Hebrew</textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Colors Section -->
-                <div class="chatooly-section-card" data-section="colors">
-                    <h3 class="chatooly-section-header">🎨 Colors</h3>
-                    <div class="chatooly-section-content">
-                        <div class="chatooly-color-group">
-                            <label class="chatooly-color-label" for="font-color-picker">Font Color</label>
-                            <input type="color" class="chatooly-color-input" id="font-color-picker" value="#000000">
-                        </div>
-                        <div class="chatooly-color-group">
-                            <label class="chatooly-color-label" for="strip-color-picker">Text Strip Background</label>
-                            <input type="color" class="chatooly-color-input" id="strip-color-picker" value="#FFFFF0">
+                            <textarea class="chatooly-textarea" id="text-input" rows="4" placeholder="Enter your text here...">type here</textarea>
                         </div>
                     </div>
                 </div>
 
                 <!-- Typography Settings -->
                 <div class="chatooly-section-card" data-section="typography">
-                    <h3 class="chatooly-section-header">✍️ Typography</h3>
-                    <div class="chatooly-section-content">
+                    <h3 class="chatooly-section-header" data-target="typography-content" aria-expanded="true" tabindex="0" style="cursor: pointer;">✍️ Typography <span class="section-toggle">▼</span></h3>
+                    <div class="chatooly-section-content" id="typography-content">
+                        <!-- Custom Font Upload -->
+                        <div style="position: relative; margin-bottom: 12px;">
+                            <div class="chatooly-upload-area" style="height: 80px;">
+                                <div class="chatooly-upload-icon">
+                                    <svg viewBox="0 0 11 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M7.94444 0L11 3V11.4048C10.9998 11.5627 10.9358 11.7141 10.822 11.8257C10.7083 11.9373 10.554 12 10.3932 12H0.606833C0.446342 11.9989 0.292733 11.9359 0.179189 11.8245C0.0656443 11.7131 0.00128006 11.5624 0 11.4048V0.5952C0 0.2664 0.271944 0 0.606833 0H7.94444ZM6.11111 6H7.94444L5.5 3.6L3.05556 6H4.88889V8.4H6.11111V6Z" fill="var(--fill-0, #454545)"></path>
+                                    </svg>
+                                </div>
+                                <div class="chatooly-upload-text">Upload Font</div>
+                                <input type="file" class="chatooly-upload-input" id="font-upload-input" accept=".ttf,.otf">
+                            </div>
+                            <button id="clear-custom-font" type="button" class="chatooly-btn" style="display: none; position: absolute; top: 8px; right: 8px; padding: 4px 8px; min-width: auto; z-index: 10;" title="Remove font">×</button>
+                        </div>
+                        <div id="custom-font-name" class="chatooly-text-small" style="display: none; margin-bottom: 12px;"></div>
+
                         <div class="chatooly-slider-group">
                             <div class="chatooly-slider-label">
                                 <span>Font Size</span>
                                 <span class="chatooly-slider-value" id="font-size-value">150</span>
                             </div>
                             <input type="range" class="chatooly-slider" id="font-size-slider" min="10" max="500" value="150">
+                        </div>
+                        <div class="chatooly-color-group">
+                            <label class="chatooly-color-label" for="font-color-picker">Font Color</label>
+                            <input type="color" class="chatooly-color-input" id="font-color-picker" value="#000000">
                         </div>
                         <div class="chatooly-slider-group">
                             <div class="chatooly-slider-label">
@@ -577,6 +578,13 @@ In Hebrew</textarea>
                             </div>
                             <input type="range" class="chatooly-slider" id="line-spacing-slider" min="0.5" max="3" step="0.1" value="1.2">
                         </div>
+                    </div>
+                </div>
+
+                <!-- Strips Section -->
+                <div class="chatooly-section-card" data-section="strips">
+                    <h3 class="chatooly-section-header" data-target="strips-content" aria-expanded="true" tabindex="0" style="cursor: pointer;">📐 Strips <span class="section-toggle">▼</span></h3>
+                    <div class="chatooly-section-content" id="strips-content">
                         <div class="chatooly-slider-group">
                             <div class="chatooly-slider-label">
                                 <span>Number of Strips</span>
@@ -584,120 +592,67 @@ In Hebrew</textarea>
                             </div>
                             <input type="range" class="chatooly-slider" id="strips-slider" min="2" max="200" value="40">
                         </div>
-                    </div>
-                </div>
-
-                <!-- Slice Mode Section -->
-                <div class="chatooly-section-card" data-section="slice-mode">
-                    <h3 class="chatooly-section-header">🔀 Slice Mode</h3>
-                    <div class="chatooly-section-content">
-                        <div class="chatooly-input-group">
-                            <label class="chatooly-input-label" for="slice-mode">Mode</label>
-                            <select class="chatooly-select" id="slice-mode">
-                                <option value="strips">Strips</option>
-                                <option value="circles">Circles</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Circle Controls (hidden by default) -->
-                <div class="chatooly-section-card" data-section="circle-controls" id="circle-controls-section" style="display: none;">
-                    <h3 class="chatooly-section-header">⭕ Circle Controls</h3>
-                    <div class="chatooly-section-content">
                         <div class="chatooly-slider-group">
                             <div class="chatooly-slider-label">
-                                <span>Circle Scale</span>
-                                <span class="chatooly-slider-value" id="circle-scale-value">1.0</span>
+                                <span>Strip Size</span>
+                                <span class="chatooly-slider-value" id="strip-size-value">0.9</span>
                             </div>
-                            <input type="range" class="chatooly-slider" id="circle-scale-slider" min="0.1" max="2.5" step="0.1" value="1.0">
+                            <input type="range" class="chatooly-slider" id="strip-size-slider" min="0.1" max="1.5" step="0.05" value="0.9">
                         </div>
-                        <div class="chatooly-toggle-group">
-                            <button type="button" class="chatooly-toggle" id="circle-stroke-toggle" role="switch" aria-pressed="true">
-                                <span class="chatooly-toggle-slider"></span>
-                            </button>
-                            <label class="chatooly-toggle-label" for="circle-stroke-toggle">Show Stroke</label>
+                        <div class="chatooly-color-group">
+                            <label class="chatooly-color-label" for="strip-color-picker">Strip Background</label>
+                            <input type="color" class="chatooly-color-input" id="strip-color-picker" value="#FFFFF0">
                         </div>
-                        <div id="circle-stroke-controls">
-                            <div class="chatooly-color-group">
-                                <label class="chatooly-color-label" for="circle-stroke-color-picker">Stroke Color</label>
-                                <input type="color" class="chatooly-color-input" id="circle-stroke-color-picker" value="#000000">
+
+                        <!-- Background Image Upload -->
+                        <div style="position: relative; margin-top: 12px;">
+                            <div class="chatooly-upload-area" style="height: 80px;">
+                                <div class="chatooly-upload-icon">
+                                    <svg viewBox="0 0 11 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M7.94444 0L11 3V11.4048C10.9998 11.5627 10.9358 11.7141 10.822 11.8257C10.7083 11.9373 10.554 12 10.3932 12H0.606833C0.446342 11.9989 0.292733 11.9359 0.179189 11.8245C0.0656443 11.7131 0.00128006 11.5624 0 11.4048V0.5952C0 0.2664 0.271944 0 0.606833 0H7.94444ZM6.11111 6H7.94444L5.5 3.6L3.05556 6H4.88889V8.4H6.11111V6Z" fill="var(--fill-0, #454545)"></path>
+                                    </svg>
+                                </div>
+                                <div class="chatooly-upload-text">Background Image</div>
+                                <input type="file" class="chatooly-upload-input" id="image-upload-input" accept="image/*">
+                            </div>
+                            <button id="clear-overlay-image" type="button" class="chatooly-btn" style="display: none; position: absolute; top: 8px; right: 8px; padding: 4px 8px; min-width: auto; z-index: 10;" title="Remove image">×</button>
+                        </div>
+                        <div id="overlay-image-name" class="chatooly-text-small" style="display: none; margin-top: 8px;"></div>
+
+                        <!-- Image Controls (hidden by default, shown when image uploaded) -->
+                        <div id="image-controls" style="display: none;">
+                            <div class="chatooly-toggle-group" style="margin-top: 12px;">
+                                <button type="button" class="chatooly-toggle" id="show-image-toggle" role="switch" aria-pressed="true">
+                                    <span class="chatooly-toggle-slider"></span>
+                                </button>
+                                <label class="chatooly-toggle-label" for="show-image-toggle">Show Image</label>
                             </div>
                             <div class="chatooly-slider-group">
                                 <div class="chatooly-slider-label">
-                                    <span>Stroke Weight</span>
-                                    <span class="chatooly-slider-value" id="circle-stroke-weight-value">2</span>
+                                    <span>Image Opacity</span>
+                                    <span class="chatooly-slider-value" id="image-opacity-value">100%</span>
                                 </div>
-                                <input type="range" class="chatooly-slider" id="circle-stroke-weight-slider" min="0" max="20" value="2">
+                                <input type="range" class="chatooly-slider" id="image-opacity-slider" min="0" max="100" value="100">
+                            </div>
+                            <div class="chatooly-slider-group">
+                                <div class="chatooly-slider-label">
+                                    <span>Image Scale</span>
+                                    <span class="chatooly-slider-value" id="image-scale-value">1.0</span>
+                                </div>
+                                <input type="range" class="chatooly-slider" id="image-scale-slider" min="0.1" max="3" step="0.1" value="1.0">
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Font Upload Section -->
-                <div class="chatooly-section-card" data-section="font">
-                    <h3 class="chatooly-section-header">🔤 Custom Font</h3>
-                    <div class="chatooly-section-content">
-                        <div class="chatooly-upload-area" style="height: 80px;">
-                            <div class="chatooly-upload-icon">
-                                <svg viewBox="0 0 11 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M7.94444 0L11 3V11.4048C10.9998 11.5627 10.9358 11.7141 10.822 11.8257C10.7083 11.9373 10.554 12 10.3932 12H0.606833C0.446342 11.9989 0.292733 11.9359 0.179189 11.8245C0.0656443 11.7131 0.00128006 11.5624 0 11.4048V0.5952C0 0.2664 0.271944 0 0.606833 0H7.94444ZM6.11111 6H7.94444L5.5 3.6L3.05556 6H4.88889V8.4H6.11111V6Z" fill="var(--fill-0, #454545)"></path>
-                                </svg>
-                            </div>
-                            <div class="chatooly-upload-text">Upload Font</div>
-                            <input type="file" class="chatooly-upload-input" id="font-upload-input" accept=".ttf,.otf">
-                        </div>
-                        <p class="chatooly-text-small" style="margin-top: 8px;">Supported formats: .ttf, .otf</p>
-                    </div>
-                </div>
-
-                <!-- Image Overlay Section -->
-                <div class="chatooly-section-card" data-section="image">
-                    <h3 class="chatooly-section-header">🖼️ Image Overlay</h3>
-                    <div class="chatooly-section-content">
-                        <div class="chatooly-upload-area" style="height: 80px;">
-                            <div class="chatooly-upload-icon">
-                                <svg viewBox="0 0 11 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M7.94444 0L11 3V11.4048C10.9998 11.5627 10.9358 11.7141 10.822 11.8257C10.7083 11.9373 10.554 12 10.3932 12H0.606833C0.446342 11.9989 0.292733 11.9359 0.179189 11.8245C0.0656443 11.7131 0.00128006 11.5624 0 11.4048V0.5952C0 0.2664 0.271944 0 0.606833 0H7.94444ZM6.11111 6H7.94444L5.5 3.6L3.05556 6H4.88889V8.4H6.11111V6Z" fill="var(--fill-0, #454545)"></path>
-                                </svg>
-                            </div>
-                            <div class="chatooly-upload-text">Upload Image</div>
-                            <input type="file" class="chatooly-upload-input" id="image-upload-input" accept="image/*">
-                        </div>
-                        <div class="chatooly-toggle-group" style="margin-top: 12px;">
-                            <button type="button" class="chatooly-toggle" id="show-image-toggle" role="switch" aria-pressed="true">
+                        <!-- Drop Shadow Toggle -->
+                        <div class="chatooly-toggle-group" style="margin-top: 16px;">
+                            <button type="button" class="chatooly-toggle" id="drop-shadow-toggle" role="switch" aria-pressed="false">
                                 <span class="chatooly-toggle-slider"></span>
                             </button>
-                            <label class="chatooly-toggle-label" for="show-image-toggle">Show Image</label>
+                            <label class="chatooly-toggle-label" for="drop-shadow-toggle">Drop Shadow</label>
                         </div>
-                        <div class="chatooly-slider-group">
-                            <div class="chatooly-slider-label">
-                                <span>Image Opacity</span>
-                                <span class="chatooly-slider-value" id="image-opacity-value">128</span>
-                            </div>
-                            <input type="range" class="chatooly-slider" id="image-opacity-slider" min="0" max="255" value="128">
-                        </div>
-                        <div class="chatooly-slider-group">
-                            <div class="chatooly-slider-label">
-                                <span>Image Scale</span>
-                                <span class="chatooly-slider-value" id="image-scale-value">1.0</span>
-                            </div>
-                            <input type="range" class="chatooly-slider" id="image-scale-slider" min="0.1" max="3" step="0.1" value="1.0">
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Drop Shadow Section -->
-                <div class="chatooly-section-card" data-section="shadow">
-                    <h3 class="chatooly-section-header">🌑 Drop Shadow</h3>
-                    <div class="chatooly-section-content">
-                        <div class="chatooly-toggle-group">
-                            <button type="button" class="chatooly-toggle" id="drop-shadow-toggle" role="switch" aria-pressed="true">
-                                <span class="chatooly-toggle-slider"></span>
-                            </button>
-                            <label class="chatooly-toggle-label" for="drop-shadow-toggle">Enable Drop Shadow</label>
-                        </div>
-                        <div id="drop-shadow-controls">
+                        <!-- Shadow Controls (hidden by default) -->
+                        <div id="drop-shadow-controls" style="display: none;">
                             <div class="chatooly-color-group">
                                 <label class="chatooly-color-label" for="shadow-color-picker">Shadow Color</label>
                                 <input type="color" class="chatooly-color-input" id="shadow-color-picker" value="#000000">
@@ -729,8 +684,45 @@ In Hebrew</textarea>
 
                 <!-- Animation Controls -->
                 <div class="chatooly-section-card" data-section="animation">
-                    <h3 class="chatooly-section-header">🎬 Animation</h3>
-                    <div class="chatooly-section-content">
+                    <h3 class="chatooly-section-header" data-target="animation-content" aria-expanded="true" tabindex="0" style="cursor: pointer;">🎬 Animation <span class="section-toggle">▼</span></h3>
+                    <div class="chatooly-section-content" id="animation-content">
+                        <!-- Motion Mode Controls -->
+                        <div class="chatooly-input-group" style="margin-bottom: 12px;">
+                            <label class="chatooly-input-label">Motion Mode</label>
+                            <div class="chatooly-export-toggle">
+                                <button class="chatooly-toggle-btn active" data-mode="mouse">Mouse</button>
+                                <button class="chatooly-toggle-btn" data-mode="automatic">Automatic</button>
+                            </div>
+                        </div>
+
+                        <!-- Automatic Settings (hidden by default) -->
+                        <div id="auto-motion-settings" style="display: none;">
+                            <div class="chatooly-input-group">
+                                <label class="chatooly-input-label">Pattern</label>
+                                <select class="chatooly-select" id="motion-pattern">
+                                    <option value="sine">Sine Wave</option>
+                                    <option value="infinity">Infinity Loop</option>
+                                    <option value="random">Random Drift</option>
+                                </select>
+                            </div>
+
+                            <div class="chatooly-slider-group">
+                                <div class="chatooly-slider-label">
+                                    <span>Speed</span>
+                                    <span class="chatooly-slider-value" id="motion-speed-value">1.0</span>
+                                </div>
+                                <input type="range" class="chatooly-slider" id="motion-speed" min="0.1" max="3" step="0.1" value="1.0">
+                            </div>
+
+                            <div class="chatooly-slider-group">
+                                <div class="chatooly-slider-label">
+                                    <span>Intensity</span>
+                                    <span class="chatooly-slider-value" id="motion-intensity-value">100%</span>
+                                </div>
+                                <input type="range" class="chatooly-slider" id="motion-intensity" min="0" max="100" value="100">
+                            </div>
+                        </div>
+
                         <div class="chatooly-slider-group">
                             <div class="chatooly-slider-label">
                                 <span>Animation Smoothness</span>
@@ -757,8 +749,8 @@ In Hebrew</textarea>
 
                 <!-- ========== BACKGROUND CONTROLS ========== -->
                 <div class="chatooly-section-card" data-section="background">
-                    <h3 class="chatooly-section-header">◼ Background</h3>
-                    <div class="chatooly-section-content">
+                    <h3 class="chatooly-section-header" data-target="background-content" aria-expanded="true" tabindex="0" style="cursor: pointer;">◼ Background <span class="section-toggle">▼</span></h3>
+                    <div class="chatooly-section-content" id="background-content">
                         <!-- Transparent Background Toggle -->
                         <div class="chatooly-toggle-group">
                             <button type="button" class="chatooly-toggle" id="transparent-bg" role="switch" aria-pressed="false">

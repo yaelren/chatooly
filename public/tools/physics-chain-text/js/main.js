@@ -13,6 +13,7 @@ let dragOffset = { x: 0, y: 0 };
 let isDragging = false;
 let isDraggingAnchor = false; // Track if we're dragging the anchor
 let hoveredAnchorChain = null; // Track which chain's anchor is being hovered
+let pinTooltip = null; // Tooltip element for pin bead hint
 
 // Chain properties (will be controlled by UI - applied to selected chain)
 let chainLength = 40;
@@ -228,6 +229,7 @@ class Bead {
         this.chain = chain;
         this.radius = chain ? chain.beadSize / 2 : beadSize / 2;
         this.isAnchored = index === 0;
+        this.isPinned = false; // User can pin beads in place
     }
     
     update(p, chain) {
@@ -235,6 +237,13 @@ class Bead {
             // First bead stays at anchor position
             this.x = chain.anchorX;
             this.y = chain.anchorY;
+            this.prevX = this.x;
+            this.prevY = this.y;
+            return;
+        }
+
+        if (this.isPinned) {
+            // Pinned beads stay in place
             this.prevX = this.x;
             this.prevY = this.y;
             return;
@@ -250,18 +259,20 @@ class Bead {
         // Calculate wind force with variation
         let windForceX = 0;
         let windForceY = 0;
-        
+
         if (windStrength > 0) {
-            // Base wind direction in radians
-            const baseAngle = (windDirection * Math.PI) / 180;
-            
-            // Add variation based on time and position
-            const variation = (Math.sin(windTime * 0.1 + this.index * 0.5) * windVariation);
-            const windAngle = baseAngle + variation;
-            
-            // Calculate wind force
-            windForceX = Math.cos(windAngle) * windStrength;
-            windForceY = Math.sin(windAngle) * windStrength;
+            // Wind direction: 0 = down, positive = left, negative = right
+            // Base horizontal force from direction setting
+            const baseForceX = -windDirection * windStrength * 0.01;
+
+            // Variation creates left-right oscillation
+            // Stronger variation = wider swing from left to right
+            const oscillation = Math.sin(windTime * 0.05 + this.index * 0.3);
+            const variationForceX = oscillation * windVariation * windStrength * 2;
+
+            // Combine base direction with variation swing
+            windForceX = baseForceX + variationForceX;
+            windForceY = windStrength * 0.5; // Downward push from wind
         }
         
         // Apply forces: gravity + wind
@@ -302,12 +313,12 @@ class Bead {
             const diff = (targetDistance - distance) / distance;
             const offsetX = dx * diff * 0.5;
             const offsetY = dy * diff * 0.5;
-            
-            if (!this.isAnchored) {
+
+            if (!this.isAnchored && !this.isPinned) {
                 this.x += offsetX;
                 this.y += offsetY;
             }
-            if (!prevBead.isAnchored) {
+            if (!prevBead.isAnchored && !prevBead.isPinned) {
                 prevBead.x -= offsetX;
                 prevBead.y -= offsetY;
             }
@@ -363,6 +374,27 @@ function initP5() {
                 window.Chatooly.backgroundManager.init(canvas.elt);
                 setupBackgroundControls();
             }
+
+            // Create pin tooltip element
+            const tooltip = document.createElement('div');
+            tooltip.id = 'pin-tooltip';
+            tooltip.textContent = 'Press P to pin bead';
+            tooltip.style.cssText = `
+                position: fixed;
+                background: #F4E4A3;
+                color: #000;
+                padding: 8px 12px;
+                border-radius: 5px;
+                font-family: 'TASA Orbiter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                font-size: 12px;
+                font-weight: 500;
+                pointer-events: none;
+                display: none;
+                z-index: 1000;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            `;
+            document.body.appendChild(tooltip);
+            pinTooltip = tooltip;
         };
 
         // ========== P5.JS DRAW LOOP ==========
@@ -409,6 +441,21 @@ function initP5() {
             for (let chain of chains) {
                 chain.draw(p);
             }
+
+            // Show/hide pin tooltip when dragging a non-anchor bead
+            if (isDragging && draggedBead && !draggedBead.isAnchored && pinTooltip) {
+                const canvas = document.getElementById('chatooly-canvas');
+                if (canvas) {
+                    const rect = canvas.getBoundingClientRect();
+                    pinTooltip.style.left = (rect.left + p.mouseX + 20) + 'px';
+                    pinTooltip.style.top = (rect.top + p.mouseY - 10) + 'px';
+                    pinTooltip.style.display = 'block';
+                    // Update text based on pin state
+                    pinTooltip.textContent = draggedBead.isPinned ? 'Press P to unpin bead' : 'Press P to pin bead';
+                }
+            } else if (pinTooltip) {
+                pinTooltip.style.display = 'none';
+            }
         };
 
         // ========== MOUSE INTERACTION ==========
@@ -433,6 +480,7 @@ function initP5() {
                         dragOffset.y = my - chain.anchorY;
                         selectedChainId = chain.id;
                         updateChainUI(chain);
+                        updateChainsList(); // Refresh to show selection
                         // Change cursor to grabbing
                         if (p5Instance && p5Instance.canvas) {
                             p5Instance.canvas.style.cursor = 'grabbing';
@@ -471,6 +519,7 @@ function initP5() {
                 dragOffset.y = my - closestBead.y;
                 selectedChainId = closestChain.id;
                 updateChainUI(closestChain);
+                updateChainsList(); // Refresh to show selection
             }
         };
 
@@ -483,10 +532,21 @@ function initP5() {
             if (p5Instance && p5Instance.canvas) {
                 p5Instance.canvas.style.cursor = 'default';
             }
+            // Hide pin tooltip
+            if (pinTooltip) {
+                pinTooltip.style.display = 'none';
+            }
         };
 
         p.mouseDragged = function() {
             // Handled in updatePhysics
+        };
+
+        // Keyboard handler for pinning beads
+        p.keyPressed = function() {
+            if ((p.key === 'p' || p.key === 'P') && isDragging && draggedBead && !draggedBead.isAnchored) {
+                draggedBead.isPinned = !draggedBead.isPinned;
+            }
         };
     };
 
@@ -551,21 +611,37 @@ function getSelectedChain() {
 function updateChainsList() {
     const list = document.getElementById('chains-list');
     if (!list) return;
-    
+
     list.innerHTML = '';
-    
+
     chains.forEach(chain => {
         const item = document.createElement('div');
-        item.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 8px; margin-bottom: 8px; border: 2px solid var(--chatooly-color-border); background: var(--chatooly-color-background);';
-        
-        const text = document.createElement('span');
-        text.textContent = `Chain ${chain.id}: "${chain.text}"`;
-        text.style.cssText = 'flex: 1; cursor: pointer;';
-        text.addEventListener('click', () => {
+        const isSelected = selectedChainId === chain.id;
+
+        // Base styles - yellow background for selected
+        item.style.cssText = `
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            border: 2px solid ${isSelected ? '#F4E4A3' : 'var(--chatooly-color-border)'};
+            border-radius: 5px;
+            background: ${isSelected ? '#F4E4A3' : 'var(--chatooly-color-background)'};
+            cursor: pointer;
+        `;
+
+        // Click on entire item to select
+        item.addEventListener('click', () => {
             selectedChainId = chain.id;
             updateChainUI(chain);
+            updateChainsList(); // Refresh to show selection
         });
-        
+
+        const text = document.createElement('span');
+        text.textContent = `Chain ${chain.id}: "${chain.text}"`;
+        text.style.cssText = `flex: 1; color: ${isSelected ? '#000' : 'inherit'};`;
+
         const deleteBtn = document.createElement('button');
         deleteBtn.textContent = '×';
         deleteBtn.className = 'chatooly-btn';
@@ -574,11 +650,7 @@ function updateChainsList() {
             e.stopPropagation();
             deleteChain(chain.id);
         });
-        
-        if (selectedChainId === chain.id) {
-            item.style.borderColor = 'var(--chatooly-color-primary)';
-        }
-        
+
         item.appendChild(text);
         item.appendChild(deleteBtn);
         list.appendChild(item);
@@ -666,23 +738,23 @@ function getMouseCoords(p) {
 // ========== CANVAS RESIZE HANDLING ==========
 function onCanvasResized(e) {
     if (!e.detail || !e.detail.canvas || !p5Instance) return;
-    
+
     const newWidth = e.detail.canvas.width;
     const newHeight = e.detail.canvas.height;
-    
+
     if (newWidth && newHeight) {
         const oldWidth = p5Instance.width || canvasWidth;
         const oldHeight = p5Instance.height || canvasHeight;
-        
+
         p5Instance.resizeCanvas(newWidth, newHeight);
         canvasWidth = newWidth;
         canvasHeight = newHeight;
-        
+
         // Scale all chains
         if (chains.length > 0 && oldWidth > 0 && oldHeight > 0) {
             const scaleX = newWidth / oldWidth;
             const scaleY = newHeight / oldHeight;
-            
+
             chains.forEach(chain => {
                 chain.anchorX *= scaleX;
                 chain.anchorY *= scaleY;
@@ -929,15 +1001,18 @@ window.renderHighResolution = function(targetCanvas, scale) {
         console.warn('No chains to export');
         return;
     }
-    
+
     if (!p5Instance) {
         console.warn('p5 instance not available');
         return;
     }
-    
+
     const ctx = targetCanvas.getContext('2d');
-    const scaledWidth = canvasWidth * scale;
-    const scaledHeight = canvasHeight * scale;
+    // Use actual p5 instance dimensions to fix transparent background size mismatch
+    const actualWidth = p5Instance ? p5Instance.width : canvasWidth;
+    const actualHeight = p5Instance ? p5Instance.height : canvasHeight;
+    const scaledWidth = actualWidth * scale;
+    const scaledHeight = actualHeight * scale;
     
     targetCanvas.width = scaledWidth;
     targetCanvas.height = scaledHeight;

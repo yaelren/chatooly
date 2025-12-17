@@ -18,6 +18,8 @@ let textData = {
     shapeSize: 5,
     spacing: 1.0,
     fontSize: 72,
+    fontFamily: 'Arial',
+    lineHeight: 1.2,
     shapeColor: '#000000',
     previousCanvasSize: { width: 0, height: 0 },
     isAnimating: false,
@@ -27,7 +29,14 @@ let textData = {
     hoverRadius: 150,
     hoverIntensity: 2.0,
     mouseX: null,
-    mouseY: null
+    mouseY: null,
+    // Auto mode settings
+    interactionMode: 'mouse',  // 'mouse' or 'auto'
+    autoPattern: 'infinity',   // 'sine', 'infinity', 'circle', 'random', 'trace'
+    autoSpeed: 1,
+    autoSize: 5,
+    autoDebug: false,
+    autoTime: 0
 };
 
 // Cache for text points (recalculated when text/size changes)
@@ -36,16 +45,25 @@ let animationFrameId = null;
 let tileImage = null;  // Loaded image for tiling
 let hoverAnimationFrameId = null;  // For hover effect continuous rendering
 
+// Random pattern state
+let randomTarget = { x: 0, y: 0 };
+let randomCurrent = { x: 0, y: 0 };
+let randomLastTime = 0;
+let randomInitialized = false;
+
+// Trace pattern state
+let traceIndex = 0;
+
 // ========== BACKGROUND SYSTEM ==========
 // Initialize background manager
 window.addEventListener('DOMContentLoaded', () => {
     if (window.Chatooly && window.Chatooly.backgroundManager) {
         Chatooly.backgroundManager.init(canvas);
-        
-        // Connect background controls
-        document.getElementById('transparent-bg').addEventListener('change', (e) => {
-            Chatooly.backgroundManager.setTransparent(e.target.checked);
-            document.getElementById('bg-color-group').style.display = e.target.checked ? 'none' : 'block';
+
+        // Connect background controls - using toggle-change event for the new toggle button
+        document.getElementById('transparent-bg').addEventListener('toggle-change', (e) => {
+            Chatooly.backgroundManager.setTransparent(e.detail.checked);
+            document.getElementById('bg-color-group').style.display = e.detail.checked ? 'none' : 'block';
             render();
         });
 
@@ -81,50 +99,54 @@ window.addEventListener('DOMContentLoaded', () => {
 
 // ========== TEXT TO SHAPES RENDERING ==========
 
-// Get all points along the text outline
+// Get all points along the text outline (supports multiline)
 function getTextPoints(text, fontSize, spacing) {
     const points = [];
-    
+
     // Create a temporary canvas to measure and draw text
     const tempCanvas = document.createElement('canvas');
     const tempCtx = tempCanvas.getContext('2d');
     tempCanvas.width = canvas.width;
     tempCanvas.height = canvas.height;
-    
-    // Set font
-    tempCtx.font = `bold ${fontSize}px Arial, sans-serif`;
+
+    // Set font with custom font family
+    tempCtx.font = `bold ${fontSize}px ${textData.fontFamily}, sans-serif`;
     tempCtx.textAlign = 'center';
     tempCtx.textBaseline = 'middle';
     tempCtx.fillStyle = '#FFFFFF';
-    
-    // Measure text
-    const metrics = tempCtx.measureText(text);
-    const textWidth = metrics.width;
-    const textHeight = fontSize;
-    
-    // Center the text
+
+    // Split text into lines
+    const lines = text.split('\n');
+    const lineHeightPixels = fontSize * textData.lineHeight;
+
+    // Calculate total text height for proper vertical centering
+    const totalTextHeight = fontSize + (lines.length - 1) * lineHeightPixels;
+    const startY = (canvas.height / 2) - (totalTextHeight / 2) + (fontSize / 2);
     const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    
-    // Fill text to get shape
-    tempCtx.fillText(text, centerX, centerY);
-    
+
+    // Draw each line
+    lines.forEach((line, index) => {
+        const y = startY + (index * lineHeightPixels);
+        tempCtx.fillText(line, centerX, y);
+    });
+
     // Sample pixels from the filled text
     const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
     const data = imageData.data;
-    
+
     // Sample points based on spacing
     const step = spacing;
-    
-    for (let y = centerY - textHeight / 2; y < centerY + textHeight / 2; y += step) {
-        for (let x = centerX - textWidth / 2; x < centerX + textWidth / 2; x += step) {
+
+    // Scan the entire canvas for text pixels
+    for (let y = 0; y < tempCanvas.height; y += step) {
+        for (let x = 0; x < tempCanvas.width; x += step) {
             const px = Math.floor(x);
             const py = Math.floor(y);
-            
+
             if (px >= 0 && px < tempCanvas.width && py >= 0 && py < tempCanvas.height) {
                 const index = (py * tempCanvas.width + px) * 4;
                 const alpha = data[index + 3];
-                
+
                 // If pixel is part of the text (alpha > 0)
                 if (alpha > 128) {
                     points.push({ x: px, y: py });
@@ -132,40 +154,121 @@ function getTextPoints(text, fontSize, spacing) {
             }
         }
     }
-    
+
     return points;
 }
 
-// Calculate scale factor based on distance to mouse
+// ========== AUTO POSITION PATTERNS ==========
+function getAutoPosition(time, pattern) {
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const speed = textData.autoSpeed * 0.0003;
+    const t = time * speed;
+    const sizeMultiplier = textData.autoSize * 0.1;
+
+    let position = { x: centerX, y: centerY };
+
+    switch (pattern) {
+        case 'sine':
+            // Horizontal wave with vertical bob
+            position = {
+                x: centerX + Math.sin(t) * (canvas.width * 0.35 * sizeMultiplier),
+                y: centerY + Math.sin(t * 2) * (50 * sizeMultiplier)
+            };
+            break;
+
+        case 'infinity':
+            // Figure-8 / Lissajous curve
+            position = {
+                x: centerX + Math.sin(t) * (canvas.width * 0.3 * sizeMultiplier),
+                y: centerY + Math.sin(t * 2) * (canvas.height * 0.2 * sizeMultiplier)
+            };
+            break;
+
+        case 'circle':
+            // Circular/elliptical motion
+            position = {
+                x: centerX + Math.cos(t) * (canvas.width * 0.3 * sizeMultiplier),
+                y: centerY + Math.sin(t) * (canvas.height * 0.25 * sizeMultiplier)
+            };
+            break;
+
+        case 'random':
+            // Random point-to-point with easing
+            const rangeX = canvas.width * 0.4 * sizeMultiplier;
+            const rangeY = canvas.height * 0.35 * sizeMultiplier;
+
+            if (!randomInitialized) {
+                randomCurrent.x = centerX;
+                randomCurrent.y = centerY;
+                randomTarget.x = centerX + (Math.random() * 2 - 1) * rangeX;
+                randomTarget.y = centerY + (Math.random() * 2 - 1) * rangeY;
+                randomInitialized = true;
+            }
+
+            // Change target periodically
+            const interval = 3000 / textData.autoSpeed;
+            if (time - randomLastTime > interval) {
+                randomTarget.x = centerX + (Math.random() * 2 - 1) * rangeX;
+                randomTarget.y = centerY + (Math.random() * 2 - 1) * rangeY;
+                randomLastTime = time;
+            }
+
+            // Smooth easing toward target
+            const easeSpeed = 0.02 + (textData.autoSpeed * 0.008);
+            randomCurrent.x += (randomTarget.x - randomCurrent.x) * easeSpeed;
+            randomCurrent.y += (randomTarget.y - randomCurrent.y) * easeSpeed;
+
+            position = {
+                x: randomCurrent.x,
+                y: randomCurrent.y
+            };
+            break;
+
+        case 'trace':
+            // Follow the letter outlines using cached points
+            if (cachedPoints && cachedPoints.length > 0) {
+                // Calculate how many points to move through based on speed
+                const pointsPerFrame = Math.max(1, Math.floor(textData.autoSpeed * 2));
+                traceIndex = (traceIndex + pointsPerFrame) % cachedPoints.length;
+
+                const point = cachedPoints[traceIndex];
+                position = { x: point.x, y: point.y };
+            }
+            break;
+    }
+
+    return position;
+}
+
+// Calculate scale factor based on distance to mouse/auto position
 function getHoverScale(pointX, pointY, mouseX, mouseY, radius, intensity) {
     if (mouseX === null || mouseY === null || !textData.hoverEffectEnabled) {
         return 1.0;
     }
-    
+
     const dx = pointX - mouseX;
     const dy = pointY - mouseY;
     const distance = Math.sqrt(dx * dx + dy * dy);
-    
+
     if (distance >= radius) {
         return 1.0; // No scaling outside radius
     }
-    
+
     // Calculate scale factor (1.0 at edge, intensity at center)
-    // Using smooth easing function for gradual effect
     const normalizedDistance = distance / radius;
     let scale;
-    
+
     if (intensity >= 1.0) {
         // Positive magnification: scale from 1.0 up to intensity
         scale = 1.0 + (intensity - 1.0) * (1 - normalizedDistance);
     } else {
         // Negative magnification: scale from 1.0 down (shrinks)
-        // intensity = -5 means shrink to ~0.15, intensity = 0 means shrink to 0.5
         const shrinkAmount = Math.abs(intensity);
         const minScale = Math.max(0.1, 1.0 / (shrinkAmount + 1));
         scale = 1.0 - (1.0 - minScale) * (1 - normalizedDistance);
     }
-    
+
     // Ensure scale never goes below 0.1 to prevent invisible shapes
     return Math.max(0.1, scale);
 }
@@ -175,24 +278,24 @@ function drawShapes(ctx, points, fillMode, shapeType, shapeSize, color, rotation
     if (fillMode === 'image' && tileImage) {
         // Draw image tiles
         const baseTileSize = shapeSize * 2;
-        
+
         points.forEach((point, index) => {
             // Calculate hover scale
             const hoverScale = getHoverScale(
-                point.x, point.y, 
+                point.x, point.y,
                 textData.mouseX, textData.mouseY,
                 textData.hoverRadius, textData.hoverIntensity
             );
             const tileSize = baseTileSize * hoverScale;
-            
+
             // Each tile rotates at slightly different phase for variety
             const phase = (index * 0.1) % (Math.PI * 2);
             const angle = rotationAngle + phase;
-            
+
             ctx.save();
             ctx.translate(point.x, point.y);
             ctx.rotate(angle);
-            
+
             // Draw image centered
             ctx.drawImage(
                 tileImage,
@@ -201,36 +304,36 @@ function drawShapes(ctx, points, fillMode, shapeType, shapeSize, color, rotation
                 tileSize,
                 tileSize
             );
-            
+
             ctx.restore();
         });
     } else {
         // Draw shapes
         ctx.fillStyle = color;
         ctx.strokeStyle = color;
-        
+
         points.forEach((point, index) => {
             // Calculate hover scale
             const hoverScale = getHoverScale(
-                point.x, point.y, 
+                point.x, point.y,
                 textData.mouseX, textData.mouseY,
                 textData.hoverRadius, textData.hoverIntensity
             );
             const scaledShapeSize = shapeSize * hoverScale;
-            
+
             // Each shape rotates at slightly different phase for variety
             const phase = (index * 0.1) % (Math.PI * 2);
             const angle = rotationAngle + phase;
-            
+
             ctx.save();
             ctx.translate(point.x, point.y);
-            
+
             if (shapeType === 'dots') {
                 // Dots rotate around themselves (circular fill)
                 ctx.beginPath();
                 ctx.arc(0, 0, scaledShapeSize / 2, 0, Math.PI * 2);
                 ctx.fill();
-                
+
                 // Add a small marker to show rotation for dots
                 if (rotationAngle !== 0) {
                     ctx.beginPath();
@@ -252,7 +355,7 @@ function drawShapes(ctx, points, fillMode, shapeType, shapeSize, color, rotation
                 ctx.beginPath();
                 ctx.arc(0, 0, scaledShapeSize / 2, 0, Math.PI * 2);
                 ctx.stroke();
-                
+
                 // Add a marker line to show rotation
                 if (rotationAngle !== 0) {
                     ctx.rotate(angle);
@@ -262,9 +365,26 @@ function drawShapes(ctx, points, fillMode, shapeType, shapeSize, color, rotation
                     ctx.stroke();
                 }
             }
-            
+
             ctx.restore();
         });
+    }
+
+    // Draw debug circle for auto mode
+    if (textData.autoDebug && textData.interactionMode === 'auto' && textData.mouseX !== null) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(textData.mouseX, textData.mouseY, textData.hoverRadius, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Draw center dot
+        ctx.beginPath();
+        ctx.arc(textData.mouseX, textData.mouseY, 10, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 0, 0, 0.7)';
+        ctx.fill();
+        ctx.restore();
     }
 }
 
@@ -272,17 +392,17 @@ function drawShapes(ctx, points, fillMode, shapeType, shapeSize, color, rotation
 function render(rotationAngle = 0) {
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
+
     // Draw background FIRST
     if (window.Chatooly && window.Chatooly.backgroundManager) {
         Chatooly.backgroundManager.drawToCanvas(ctx, canvas.width, canvas.height);
     }
-    
+
     // Recalculate points if needed (when text/size changes)
     if (!cachedPoints) {
         cachedPoints = getTextPoints(textData.text, textData.fontSize, textData.shapeSize * textData.spacing);
     }
-    
+
     // Draw shapes or images with rotation
     drawShapes(ctx, cachedPoints, textData.fillMode, textData.shapeType, textData.shapeSize, textData.shapeColor, rotationAngle);
 }
@@ -293,14 +413,14 @@ function animate() {
         animationFrameId = null;
         return;
     }
-    
+
     // Update animation time
     textData.animationTime += 0.016 * textData.animationSpeed; // ~60fps
-    
+
     // Render with rotation (hover effect is automatically included in render)
     const rotationAngle = textData.animationTime;
     render(rotationAngle);
-    
+
     // Continue animation
     animationFrameId = requestAnimationFrame(animate);
 }
@@ -312,7 +432,7 @@ function startAnimation() {
         if (window.stopHoverRendering) {
             window.stopHoverRendering();
         }
-        
+
         textData.isAnimating = true;
         textData.animationTime = 0;
         animate();
@@ -328,7 +448,7 @@ function stopAnimation() {
         }
         // Render static frame
         render(0);
-        
+
         // Resume hover rendering if enabled
         if (textData.hoverEffectEnabled && window.startHoverRendering) {
             window.startHoverRendering();
@@ -338,34 +458,116 @@ function stopAnimation() {
 
 // ========== EVENT LISTENERS ==========
 function setupEventListeners() {
-    // Text input
+    // Text input (now textarea for multiline)
     document.getElementById('text-input').addEventListener('input', (e) => {
         textData.text = e.target.value || ' ';
         cachedPoints = null; // Force recalculation
+        traceIndex = 0; // Reset trace
         if (textData.isAnimating) {
             render(textData.animationTime);
         } else {
             render();
         }
     });
-    
+
+    // Font selector
+    const fontSelector = document.getElementById('font-selector');
+    if (fontSelector) {
+        fontSelector.addEventListener('change', (e) => {
+            textData.fontFamily = e.target.value;
+            cachedPoints = null;
+            traceIndex = 0;
+            if (textData.isAnimating) {
+                render(textData.animationTime);
+            } else {
+                render();
+            }
+        });
+    }
+
+    // Custom font upload
+    const customFontInput = document.getElementById('custom-font-input');
+    if (customFontInput) {
+        customFontInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                const fontDataUrl = event.target.result;
+                const fontName = 'UploadedFont_' + Date.now();
+
+                // Create @font-face rule dynamically
+                const newStyle = document.createElement('style');
+                newStyle.textContent = `@font-face { font-family: '${fontName}'; src: url(${fontDataUrl}); }`;
+                document.head.appendChild(newStyle);
+
+                // Add to font selector dropdown
+                if (fontSelector) {
+                    const option = document.createElement('option');
+                    option.value = fontName;
+                    option.textContent = file.name;
+                    fontSelector.appendChild(option);
+                    fontSelector.value = fontName;
+                    textData.fontFamily = fontName;
+
+                    // Wait for font to load before rendering
+                    try {
+                        await document.fonts.load(`bold ${textData.fontSize}px ${fontName}`);
+                    } catch (err) {
+                        console.warn('Font load warning:', err);
+                    }
+
+                    cachedPoints = null;
+                    traceIndex = 0;
+                    if (textData.isAnimating) {
+                        render(textData.animationTime);
+                    } else {
+                        render();
+                    }
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // Line height
+    const lineHeightInput = document.getElementById('line-height');
+    const lineHeightValue = document.getElementById('line-height-value');
+    if (lineHeightInput) {
+        lineHeightInput.addEventListener('input', (e) => {
+            textData.lineHeight = parseFloat(e.target.value);
+            if (lineHeightValue) lineHeightValue.textContent = textData.lineHeight.toFixed(1);
+            cachedPoints = null;
+            traceIndex = 0;
+            if (textData.isAnimating) {
+                render(textData.animationTime);
+            } else {
+                render();
+            }
+        });
+    }
+
     // Fill mode (shapes vs image)
     const fillModeSelect = document.getElementById('fill-mode');
     const shapeTypeGroup = document.getElementById('shape-type-group');
     const imageUploadGroup = document.getElementById('image-upload-group');
-    
+    const shapeColorGroup = document.getElementById('shape-color-group');
+
     fillModeSelect.addEventListener('change', (e) => {
         textData.fillMode = e.target.value;
-        
+
         // Show/hide relevant controls
         if (textData.fillMode === 'image') {
-            shapeTypeGroup.style.display = 'none';
-            imageUploadGroup.style.display = 'block';
+            if (shapeTypeGroup) shapeTypeGroup.style.display = 'none';
+            if (imageUploadGroup) imageUploadGroup.style.display = 'block';
+            if (shapeColorGroup) shapeColorGroup.style.display = 'none';
         } else {
-            shapeTypeGroup.style.display = 'block';
-            imageUploadGroup.style.display = 'none';
+            if (shapeTypeGroup) shapeTypeGroup.style.display = 'block';
+            if (imageUploadGroup) imageUploadGroup.style.display = 'none';
+            if (shapeColorGroup) shapeColorGroup.style.display = 'block';
         }
-        
+
         cachedPoints = null; // Force recalculation
         if (textData.isAnimating) {
             render(textData.animationTime);
@@ -373,7 +575,7 @@ function setupEventListeners() {
             render();
         }
     });
-    
+
     // Shape type
     document.getElementById('shape-type').addEventListener('change', (e) => {
         textData.shapeType = e.target.value;
@@ -384,11 +586,11 @@ function setupEventListeners() {
             render();
         }
     });
-    
+
     // Tile image upload
     const tileImageInput = document.getElementById('tile-image');
     const clearTileImageBtn = document.getElementById('clear-tile-image');
-    
+
     tileImageInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -410,7 +612,7 @@ function setupEventListeners() {
             reader.readAsDataURL(file);
         }
     });
-    
+
     // Clear tile image
     clearTileImageBtn.addEventListener('click', () => {
         tileImage = null;
@@ -423,7 +625,7 @@ function setupEventListeners() {
             render();
         }
     });
-    
+
     // Shape size
     const shapeSizeInput = document.getElementById('shape-size');
     const shapeSizeValue = document.getElementById('shape-size-value');
@@ -437,7 +639,7 @@ function setupEventListeners() {
             render();
         }
     });
-    
+
     // Spacing
     const spacingInput = document.getElementById('spacing');
     const spacingValue = document.getElementById('spacing-value');
@@ -451,7 +653,7 @@ function setupEventListeners() {
             render();
         }
     });
-    
+
     // Font size
     const fontSizeInput = document.getElementById('font-size');
     const fontSizeValue = document.getElementById('font-size-value');
@@ -465,7 +667,7 @@ function setupEventListeners() {
             render();
         }
     });
-    
+
     // Shape color
     document.getElementById('shape-color').addEventListener('input', (e) => {
         textData.shapeColor = e.target.value;
@@ -475,12 +677,12 @@ function setupEventListeners() {
             render();
         }
     });
-    
-    // Animation toggle
-    const animateCheckbox = document.getElementById('animate-shapes');
+
+    // Animation toggle - using toggle-change event for the new toggle button
+    const animateToggle = document.getElementById('animate-shapes');
     const animationSpeedGroup = document.getElementById('animation-speed-group');
-    animateCheckbox.addEventListener('change', (e) => {
-        if (e.target.checked) {
+    animateToggle.addEventListener('toggle-change', (e) => {
+        if (e.detail.checked) {
             animationSpeedGroup.style.display = 'block';
             startAnimation();
         } else {
@@ -488,7 +690,7 @@ function setupEventListeners() {
             stopAnimation();
         }
     });
-    
+
     // Animation speed
     const animationSpeedInput = document.getElementById('animation-speed');
     const animationSpeedValue = document.getElementById('animation-speed-value');
@@ -496,24 +698,21 @@ function setupEventListeners() {
         textData.animationSpeed = parseFloat(e.target.value);
         animationSpeedValue.textContent = textData.animationSpeed.toFixed(1);
     });
-    
-    // Hover effect toggle
-    const hoverEffectCheckbox = document.getElementById('hover-effect');
-    const hoverEffectGroup = document.getElementById('hover-effect-group');
-    const hoverIntensityGroup = document.getElementById('hover-intensity-group');
-    
-    hoverEffectCheckbox.addEventListener('change', (e) => {
-        textData.hoverEffectEnabled = e.target.checked;
-        
+
+    // Hover effect toggle - using toggle-change event for the new toggle button
+    const hoverEffectToggle = document.getElementById('hover-effect');
+    const hoverControlsGroup = document.getElementById('hover-controls-group');
+
+    hoverEffectToggle.addEventListener('toggle-change', (e) => {
+        textData.hoverEffectEnabled = e.detail.checked;
+
         if (textData.hoverEffectEnabled) {
-            hoverEffectGroup.style.display = 'block';
-            hoverIntensityGroup.style.display = 'block';
+            if (hoverControlsGroup) hoverControlsGroup.style.display = 'block';
             if (window.startHoverRendering) {
                 window.startHoverRendering();
             }
         } else {
-            hoverEffectGroup.style.display = 'none';
-            hoverIntensityGroup.style.display = 'none';
+            if (hoverControlsGroup) hoverControlsGroup.style.display = 'none';
             if (window.stopHoverRendering) {
                 window.stopHoverRendering();
             }
@@ -527,7 +726,72 @@ function setupEventListeners() {
             }
         }
     });
-    
+
+    // Interaction mode buttons (Mouse vs Auto)
+    const modeMouseBtn = document.getElementById('mode-mouse');
+    const modeAutoBtn = document.getElementById('mode-auto');
+    const autoModeControls = document.getElementById('auto-mode-controls');
+
+    if (modeMouseBtn && modeAutoBtn) {
+        modeMouseBtn.addEventListener('click', () => {
+            textData.interactionMode = 'mouse';
+            modeMouseBtn.classList.add('active');
+            modeAutoBtn.classList.remove('active');
+            if (autoModeControls) autoModeControls.style.display = 'none';
+            // Reset mouse position
+            textData.mouseX = null;
+            textData.mouseY = null;
+        });
+
+        modeAutoBtn.addEventListener('click', () => {
+            textData.interactionMode = 'auto';
+            modeAutoBtn.classList.add('active');
+            modeMouseBtn.classList.remove('active');
+            if (autoModeControls) autoModeControls.style.display = 'block';
+            textData.autoTime = 0;
+            randomInitialized = false;
+            traceIndex = 0;
+        });
+    }
+
+    // Auto pattern selector
+    const autoPatternSelect = document.getElementById('auto-pattern');
+    if (autoPatternSelect) {
+        autoPatternSelect.addEventListener('change', (e) => {
+            textData.autoPattern = e.target.value;
+            randomInitialized = false;
+            traceIndex = 0;
+        });
+    }
+
+    // Auto speed (now supports decimal values for slower speeds)
+    const autoSpeedInput = document.getElementById('auto-speed');
+    const autoSpeedValue = document.getElementById('auto-speed-value');
+    if (autoSpeedInput) {
+        autoSpeedInput.addEventListener('input', (e) => {
+            textData.autoSpeed = parseFloat(e.target.value);
+            if (autoSpeedValue) autoSpeedValue.textContent = textData.autoSpeed.toFixed(1);
+        });
+    }
+
+    // Auto size
+    const autoSizeInput = document.getElementById('auto-size');
+    const autoSizeValue = document.getElementById('auto-size-value');
+    if (autoSizeInput) {
+        autoSizeInput.addEventListener('input', (e) => {
+            textData.autoSize = parseInt(e.target.value);
+            if (autoSizeValue) autoSizeValue.textContent = textData.autoSize;
+        });
+    }
+
+    // Auto debug toggle
+    const autoDebugToggle = document.getElementById('auto-debug');
+    if (autoDebugToggle) {
+        autoDebugToggle.addEventListener('toggle-change', (e) => {
+            textData.autoDebug = e.detail.checked;
+        });
+    }
+
     // Hover radius
     const hoverRadiusInput = document.getElementById('hover-radius');
     const hoverRadiusValue = document.getElementById('hover-radius-value');
@@ -535,7 +799,7 @@ function setupEventListeners() {
         textData.hoverRadius = parseInt(e.target.value);
         hoverRadiusValue.textContent = textData.hoverRadius;
     });
-    
+
     // Hover intensity
     const hoverIntensityInput = document.getElementById('hover-intensity');
     const hoverIntensityValue = document.getElementById('hover-intensity-value');
@@ -543,20 +807,20 @@ function setupEventListeners() {
         textData.hoverIntensity = parseFloat(e.target.value);
         hoverIntensityValue.textContent = textData.hoverIntensity.toFixed(1);
     });
-    
+
     // Mouse tracking for hover effect
     function updateMousePosition(e) {
-        if (!textData.hoverEffectEnabled) return;
-        
+        if (!textData.hoverEffectEnabled || textData.interactionMode !== 'mouse') return;
+
         // Use Chatooly's mouse coordinate mapping if available
-        const coords = window.Chatooly ? 
+        const coords = window.Chatooly ?
             window.Chatooly.utils.mapMouseToCanvas(e, canvas) :
             fallbackMouseMapping(e);
-        
+
         textData.mouseX = coords.x;
         textData.mouseY = coords.y;
     }
-    
+
     function fallbackMouseMapping(e) {
         const rect = canvas.getBoundingClientRect();
         const displayX = e.clientX - rect.left;
@@ -565,44 +829,55 @@ function setupEventListeners() {
         const scaleY = canvas.height / rect.height;
         return { x: displayX * scaleX, y: displayY * scaleY };
     }
-    
+
     canvas.addEventListener('mousemove', updateMousePosition);
     canvas.addEventListener('mouseleave', () => {
-        textData.mouseX = null;
-        textData.mouseY = null;
-        if (textData.hoverEffectEnabled && !textData.isAnimating) {
-            render();
+        if (textData.interactionMode === 'mouse') {
+            textData.mouseX = null;
+            textData.mouseY = null;
+            if (textData.hoverEffectEnabled && !textData.isAnimating) {
+                render();
+            }
         }
     });
-    
+
     // Hover rendering loop (when hover is enabled but animation is not)
     function startHoverRendering() {
         stopHoverRendering(); // Clear any existing loop
-        
+
         if (textData.hoverEffectEnabled && !textData.isAnimating) {
             function hoverRenderLoop() {
                 if (!textData.hoverEffectEnabled || textData.isAnimating) {
                     hoverAnimationFrameId = null;
                     return;
                 }
+
+                // Update auto position if in auto mode
+                if (textData.interactionMode === 'auto') {
+                    textData.autoTime += 16; // ~60fps
+                    const autoPos = getAutoPosition(textData.autoTime, textData.autoPattern);
+                    textData.mouseX = autoPos.x;
+                    textData.mouseY = autoPos.y;
+                }
+
                 render();
                 hoverAnimationFrameId = requestAnimationFrame(hoverRenderLoop);
             }
             hoverAnimationFrameId = requestAnimationFrame(hoverRenderLoop);
         }
     }
-    
+
     function stopHoverRendering() {
         if (hoverAnimationFrameId) {
             cancelAnimationFrame(hoverAnimationFrameId);
             hoverAnimationFrameId = null;
         }
     }
-    
+
     // Store references for animation toggle handlers
     window.startHoverRendering = startHoverRendering;
     window.stopHoverRendering = stopHoverRendering;
-    
+
     // Canvas resize handling
     document.addEventListener('chatooly:canvas-resized', (e) => {
         if (textData.text && textData.text.trim()) {
@@ -610,7 +885,7 @@ function setupEventListeners() {
             const oldHeight = textData.previousCanvasSize.height;
             const newWidth = e.detail.canvas.width;
             const newHeight = e.detail.canvas.height;
-            
+
             if (oldWidth === 0 || oldHeight === 0) {
                 textData.previousCanvasSize = { width: newWidth, height: newHeight };
                 cachedPoints = null; // Force recalculation
@@ -621,11 +896,11 @@ function setupEventListeners() {
                 }
                 return;
             }
-            
+
             // Update canvas size tracking
             textData.previousCanvasSize = { width: newWidth, height: newHeight };
             cachedPoints = null; // Force recalculation
-            
+
             // Re-render (text will auto-center)
             if (textData.isAnimating) {
                 render(textData.animationTime);
@@ -634,7 +909,7 @@ function setupEventListeners() {
             }
         }
     });
-    
+
     // Initial canvas size tracking
     textData.previousCanvasSize = { width: canvas.width, height: canvas.height };
 }
@@ -645,72 +920,74 @@ window.renderHighResolution = function(targetCanvas, scale) {
         console.warn('No text to export');
         return;
     }
-    
+
     const exportCtx = targetCanvas.getContext('2d');
     const scaledWidth = canvas.width * scale;
     const scaledHeight = canvas.height * scale;
-    
+
     targetCanvas.width = scaledWidth;
     targetCanvas.height = scaledHeight;
-    
+
     // Scale context
     exportCtx.scale(scale, scale);
-    
+
     // Draw background FIRST
     if (window.Chatooly && window.Chatooly.backgroundManager) {
         Chatooly.backgroundManager.drawToCanvas(exportCtx, canvas.width, canvas.height);
     }
-    
+
     // Scale properties for high-res
     const scaledFontSize = textData.fontSize * scale;
     const scaledShapeSize = textData.shapeSize * scale;
-    
-    // Get points at high resolution
+
+    // Get points at high resolution using multiline support
     const tempCanvas = document.createElement('canvas');
     const tempCtx = tempCanvas.getContext('2d');
     tempCanvas.width = canvas.width;
     tempCanvas.height = canvas.height;
-    
-    tempCtx.font = `bold ${textData.fontSize}px Arial, sans-serif`;
+
+    tempCtx.font = `bold ${textData.fontSize}px ${textData.fontFamily}, sans-serif`;
     tempCtx.textAlign = 'center';
     tempCtx.textBaseline = 'middle';
     tempCtx.fillStyle = '#FFFFFF';
-    
-    const metrics = tempCtx.measureText(textData.text);
-    const textWidth = metrics.width;
-    const textHeight = textData.fontSize;
-    
+
+    // Split text into lines for multiline support
+    const lines = textData.text.split('\n');
+    const lineHeightPixels = textData.fontSize * textData.lineHeight;
+    const totalTextHeight = textData.fontSize + (lines.length - 1) * lineHeightPixels;
+    const startY = (canvas.height / 2) - (totalTextHeight / 2) + (textData.fontSize / 2);
     const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    
-    tempCtx.fillText(textData.text, centerX, centerY);
-    
+
+    lines.forEach((line, index) => {
+        const y = startY + (index * lineHeightPixels);
+        tempCtx.fillText(line, centerX, y);
+    });
+
     const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
     const data = imageData.data;
-    
+
     const step = textData.shapeSize * textData.spacing;
     const points = [];
-    
-    for (let y = centerY - textHeight / 2; y < centerY + textHeight / 2; y += step) {
-        for (let x = centerX - textWidth / 2; x < centerX + textWidth / 2; x += step) {
+
+    for (let y = 0; y < tempCanvas.height; y += step) {
+        for (let x = 0; x < tempCanvas.width; x += step) {
             const px = Math.floor(x);
             const py = Math.floor(y);
-            
+
             if (px >= 0 && px < tempCanvas.width && py >= 0 && py < tempCanvas.height) {
                 const index = (py * tempCanvas.width + px) * 4;
                 const alpha = data[index + 3];
-                
+
                 if (alpha > 128) {
                     points.push({ x: px * scale, y: py * scale });
                 }
             }
         }
     }
-    
+
     // Draw shapes or images at scaled size (static frame - no animation)
-    // For high-res export, drawImage will handle scaling automatically
     drawShapes(exportCtx, points, textData.fillMode, textData.shapeType, scaledShapeSize, textData.shapeColor, 0);
-    
+
     console.log(`High-res export completed at ${scale}x resolution`);
 };
 

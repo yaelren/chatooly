@@ -6,7 +6,45 @@
     <title>Type Shaper - Chatooly</title>
     
     <!-- ========== DO NOT EDIT: Required CDN Styles ========== -->
-    <link id="chatooly-unified-styles" rel="stylesheet" href="https://yaelren.github.io/chatooly-cdn/css/unified.min.css"><link rel="stylesheet" href="https://yaelren.github.io/chatooly-cdn/css/unified.min.css">
+    <link id="chatooly-unified-styles" rel="stylesheet" href="https://yaelren.github.io/chatooly-cdn/css/unified.min.css">
+
+    <style>
+        /* Collapsible section cards */
+        .chatooly-section-header {
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chatooly-section-header::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-right: 2px solid currentColor;
+            border-bottom: 2px solid currentColor;
+            transform: rotate(-135deg);
+            transition: transform 0.2s ease;
+            opacity: 0.6;
+        }
+
+        .chatooly-section-header[aria-expanded="false"]::after {
+            transform: rotate(45deg);
+        }
+
+        .chatooly-section-content {
+            transition: max-height 0.3s ease, opacity 0.2s ease, padding 0.2s ease;
+            overflow: hidden;
+        }
+
+        .chatooly-section-card.collapsed .chatooly-section-content {
+            max-height: 0 !important;
+            opacity: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+    </style>
 <style id="chatooly-canvas-area-styles">
                 /* Canvas area container - works with both template and legacy */
                 #chatooly-container, #chatooly-canvas-area {
@@ -690,144 +728,264 @@
             </div>
             
             <div class="chatooly-controls-content">
-                <!-- ========== CANVAS CONTROLS AUTO-INJECTED BY CDN ========== -->
-                <!-- The Chatooly CDN automatically injects canvas controls here when it detects chatooly-canvas -->
+                <!-- ========== TEXT SETTINGS ========== -->
+                <div class="chatooly-section-card" data-section="text">
+                    <span class="chatooly-section-header" role="button" tabindex="0">TEXT</span>
+                    <div class="chatooly-section-content">
+                        <div class="chatooly-input-group">
+                            <label class="chatooly-input-label">Text</label>
+                            <textarea class="chatooly-textarea" id="text-input" rows="2" placeholder="Enter your text here (press Enter for new line)">Type Shaper</textarea>
+                        </div>
 
-                <!-- ========== EDIT BELOW: Add Your Custom Tool Controls Here ========== -->
+                        <div class="chatooly-input-group">
+                            <label class="chatooly-input-label">Font</label>
+                            <select class="chatooly-select" id="font-selector">
+                                <option value="Arial" selected>Arial</option>
+                                <option value="Georgia">Georgia</option>
+                                <option value="Times New Roman">Times New Roman</option>
+                                <option value="Courier New">Courier New</option>
+                                <option value="Verdana">Verdana</option>
+                                <option value="Impact">Impact</option>
+                            </select>
+                        </div>
 
-                <!-- Text Input -->
-                <div class="chatooly-control-group">
-                    <label for="text-input">Text</label>
-                    <input type="text" id="text-input" placeholder="Enter your text here" value="Type Shaper">
-                </div>
+                        <div class="chatooly-upload-area" style="height: 80px;">
+                            <div class="chatooly-upload-icon">
+                                <svg viewBox="0 0 11 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M7.94444 0L11 3V11.4048C10.9998 11.5627 10.9358 11.7141 10.822 11.8257C10.7083 11.9373 10.554 12 10.3932 12H0.606833C0.446342 11.9989 0.292733 11.9359 0.179189 11.8245C0.0656443 11.7131 0.00128006 11.5624 0 11.4048V0.5952C0 0.2664 0.271944 0 0.606833 0H7.94444ZM6.11111 6H7.94444L5.5 3.6L3.05556 6H4.88889V8.4H6.11111V6Z" fill="var(--fill-0, #454545)"/>
+                                </svg>
+                            </div>
+                            <div class="chatooly-upload-text">Upload Custom Font</div>
+                            <input type="file" class="chatooly-upload-input" id="custom-font-input" accept=".ttf,.otf,.woff,.woff2">
+                        </div>
 
-                <!-- Mode Selector -->
-                <div class="chatooly-control-group">
-                    <label for="fill-mode">Fill Mode</label>
-                    <select id="fill-mode">
-                        <option value="shapes">Shapes</option>
-                        <option value="image">Image</option>
-                    </select>
-                </div>
+                        <div class="chatooly-slider-group">
+                            <div class="chatooly-slider-label">
+                                <span>Font Size</span>
+                                <span class="chatooly-slider-value" id="font-size-value">72</span>
+                            </div>
+                            <input type="range" class="chatooly-slider" id="font-size" min="24" max="400" value="72">
+                        </div>
 
-                <!-- Shape Type Selector (only visible when in shapes mode) -->
-                <div class="chatooly-control-group" id="shape-type-group">
-                    <label for="shape-type">Shape Type</label>
-                    <select id="shape-type">
-                        <option value="dots">Dots</option>
-                        <option value="lines">Lines</option>
-                        <option value="circles">Circles</option>
-                    </select>
-                </div>
-
-                <!-- Image Upload (only visible when in image mode) -->
-                <div class="chatooly-control-group" id="image-upload-group" style="display: none;">
-                    <label for="tile-image">Tile Image</label>
-                    <input type="file" id="tile-image" accept="image/*">
-                    <button id="clear-tile-image" type="button" style="display: none; margin-top: 8px;" title="Remove image">Clear Image</button>
-                </div>
-
-                <!-- Shape Size Control -->
-                <div class="chatooly-control-group">
-                    <label for="shape-size">Shape Size</label>
-                    <input type="range" id="shape-size" min="2" max="50" value="5">
-                    <span id="shape-size-value">5</span>
-                </div>
-
-                <!-- Spacing Control -->
-                <div class="chatooly-control-group">
-                    <label for="spacing">Spacing</label>
-                    <input type="range" id="spacing" min="0" max="2" step="0.1" value="1">
-                    <span id="spacing-value">1.0</span>
-                </div>
-
-                <!-- Font Size Control -->
-                <div class="chatooly-control-group">
-                    <label for="font-size">Font Size</label>
-                    <input type="range" id="font-size" min="24" max="400" value="72">
-                    <span id="font-size-value">237</span>
-                </div>
-
-                <!-- Shape Color -->
-                <div class="chatooly-control-group">
-                    <label for="shape-color">Shape Color</label>
-                    <input type="color" id="shape-color" value="#000000">
-                </div>
-
-                <!-- Animation Toggle -->
-                <div class="chatooly-control-group">
-                    <label>
-                        <input type="checkbox" id="animate-shapes"> Animate Shapes (Rotate)
-                    </label>
-                </div>
-
-                <!-- Animation Speed -->
-                <div class="chatooly-control-group" id="animation-speed-group" style="display: none;">
-                    <label for="animation-speed">Animation Speed</label>
-                    <input type="range" id="animation-speed" min="0.5" max="5" step="0.1" value="1">
-                    <span id="animation-speed-value">1.0</span>
-                </div>
-
-                <!-- Hover Effect Toggle -->
-                <div class="chatooly-control-group">
-                    <label>
-                        <input type="checkbox" id="hover-effect"> Enable Hover Magnification
-                    </label>
-                </div>
-
-                <!-- Hover Effect Controls -->
-                <div class="chatooly-control-group" id="hover-effect-group" style="display: block;">
-                    <label for="hover-radius">Hover Radius</label>
-                    <input type="range" id="hover-radius" min="50" max="500" value="150">
-                    <span id="hover-radius-value">99</span>
-                </div>
-
-                <div class="chatooly-control-group" id="hover-intensity-group" style="display: block;">
-                    <label for="hover-intensity">Magnification Strength</label>
-                    <input type="range" id="hover-intensity" min="-5" max="5" step="0.1" value="2">
-                    <span id="hover-intensity-value">5.0</span>
-                </div>
-
-                <!-- ========== BACKGROUND CONTROLS ========== -->
-                <h3 class="section-header" id="background-header" style="cursor: pointer;">
-                    ◼ Background <span class="section-toggle">▼</span>
-                </h3>
-                <div id="background-section" class="section-content">
-                    <!-- Transparent Background Checkbox -->
-                    <div class="chatooly-control-group">
-                        <label>
-                            <input type="checkbox" id="transparent-bg"> Transparent Background
-                        </label>
-                    </div>
-
-                    <!-- Background Color Picker -->
-                    <div class="chatooly-control-group" id="bg-color-group">
-                        <label for="bg-color">Background Color</label>
-                        <input type="color" id="bg-color" value="#FFFFFF">
-                    </div>
-
-                    <!-- Background Image Upload with Remove Button (X) -->
-                    <div class="chatooly-control-group">
-                        <label for="bg-image">Background Image</label>
-                        <div class="chatooly-bg-image-wrapper">
-                            <input type="file" id="bg-image" accept="image/*">
-                            <button id="clear-bg-image" type="button" class="chatooly-bg-image-remove" style="display: none;" title="Remove image">×</button>
+                        <div class="chatooly-slider-group">
+                            <div class="chatooly-slider-label">
+                                <span>Line Height</span>
+                                <span class="chatooly-slider-value" id="line-height-value">1.2</span>
+                            </div>
+                            <input type="range" class="chatooly-slider" id="line-height" min="0.8" max="3" step="0.1" value="1.2">
                         </div>
                     </div>
+                </div>
 
-                    <!-- Image Fit Dropdown (hidden until image uploaded) -->
-                    <div class="chatooly-control-group" id="bg-fit-group" style="display: none;">
-                        <label for="bg-fit">Image Fit</label>
-                        <select id="bg-fit">
-                            <option value="cover">Fill Frame</option>
-                            <option value="contain">Fit in Frame</option>
-                            <option value="fill">Stretch to Fill</option>
-                        </select>
+                <!-- ========== FILL MODE ========== -->
+                <div class="chatooly-section-card" data-section="fill">
+                    <span class="chatooly-section-header" role="button" tabindex="0">FILL MODE</span>
+                    <div class="chatooly-section-content">
+                        <div class="chatooly-input-group">
+                            <label class="chatooly-input-label">Mode</label>
+                            <select class="chatooly-select" id="fill-mode">
+                                <option value="shapes">Shapes</option>
+                                <option value="image">Image</option>
+                            </select>
+                        </div>
+
+                        <!-- Shape Type Selector (only visible when in shapes mode) -->
+                        <div class="chatooly-input-group" id="shape-type-group">
+                            <label class="chatooly-input-label">Shape Type</label>
+                            <select class="chatooly-select" id="shape-type">
+                                <option value="dots">Dots</option>
+                                <option value="lines">Lines</option>
+                                <option value="circles">Circles</option>
+                            </select>
+                        </div>
+
+                        <!-- Image Upload (only visible when in image mode) -->
+                        <div id="image-upload-group" style="display: none;">
+                            <div class="chatooly-upload-area" style="height: 80px;">
+                                <div class="chatooly-upload-icon">
+                                    <svg viewBox="0 0 11 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M7.94444 0L11 3V11.4048C10.9998 11.5627 10.9358 11.7141 10.822 11.8257C10.7083 11.9373 10.554 12 10.3932 12H0.606833C0.446342 11.9989 0.292733 11.9359 0.179189 11.8245C0.0656443 11.7131 0.00128006 11.5624 0 11.4048V0.5952C0 0.2664 0.271944 0 0.606833 0H7.94444ZM6.11111 6H7.94444L5.5 3.6L3.05556 6H4.88889V8.4H6.11111V6Z" fill="var(--fill-0, #454545)"/>
+                                    </svg>
+                                </div>
+                                <div class="chatooly-upload-text">Tile Image</div>
+                                <input type="file" class="chatooly-upload-input" id="tile-image" accept="image/*">
+                            </div>
+                            <button id="clear-tile-image" type="button" class="chatooly-btn" style="display: none; width: 100%; margin-top: 8px;" title="Remove image">Clear Image</button>
+                        </div>
+
+                        <div class="chatooly-color-group" id="shape-color-group">
+                            <label class="chatooly-color-label">Shape Color</label>
+                            <input type="color" class="chatooly-color-input" id="shape-color" value="#000000">
+                        </div>
                     </div>
                 </div>
-                <!-- ========== END BACKGROUND CONTROLS ========== -->
 
-                <!-- ========== END EDIT SECTION ========== -->
+                <!-- ========== SHAPE SETTINGS ========== -->
+                <div class="chatooly-section-card" data-section="shapes">
+                    <span class="chatooly-section-header" role="button" tabindex="0">SHAPES</span>
+                    <div class="chatooly-section-content">
+                        <div class="chatooly-slider-group">
+                            <div class="chatooly-slider-label">
+                                <span>Shape Size</span>
+                                <span class="chatooly-slider-value" id="shape-size-value">5</span>
+                            </div>
+                            <input type="range" class="chatooly-slider" id="shape-size" min="2" max="50" value="5">
+                        </div>
+
+                        <div class="chatooly-slider-group">
+                            <div class="chatooly-slider-label">
+                                <span>Spacing</span>
+                                <span class="chatooly-slider-value" id="spacing-value">1.0</span>
+                            </div>
+                            <input type="range" class="chatooly-slider" id="spacing" min="0" max="2" step="0.1" value="1">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== ANIMATION ========== -->
+                <div class="chatooly-section-card" data-section="animation">
+                    <span class="chatooly-section-header" role="button" tabindex="0">ANIMATION</span>
+                    <div class="chatooly-section-content">
+                        <div class="chatooly-toggle-group">
+                            <button class="chatooly-toggle" id="animate-shapes" role="switch" aria-pressed="false" aria-labelledby="toggle-animate">
+                                <span class="chatooly-toggle-slider"></span>
+                            </button>
+                            <span class="chatooly-toggle-label" id="toggle-animate">Animate Shapes (Rotate)</span>
+                        </div>
+
+                        <div class="chatooly-slider-group" id="animation-speed-group" style="display: none;">
+                            <div class="chatooly-slider-label">
+                                <span>Animation Speed</span>
+                                <span class="chatooly-slider-value" id="animation-speed-value">1.0</span>
+                            </div>
+                            <input type="range" class="chatooly-slider" id="animation-speed" min="0.5" max="5" step="0.1" value="1">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== HOVER EFFECTS ========== -->
+                <div class="chatooly-section-card" data-section="hover">
+                    <span class="chatooly-section-header" role="button" tabindex="0">HOVER EFFECTS</span>
+                    <div class="chatooly-section-content">
+                        <div class="chatooly-toggle-group">
+                            <button class="chatooly-toggle" id="hover-effect" role="switch" aria-pressed="false" aria-labelledby="toggle-hover">
+                                <span class="chatooly-toggle-slider"></span>
+                            </button>
+                            <span class="chatooly-toggle-label" id="toggle-hover">Enable Hover Magnification</span>
+                        </div>
+
+                        <div id="hover-controls-group">
+                            <!-- Interaction Mode Toggle -->
+                            <div class="chatooly-input-group">
+                                <label class="chatooly-input-label">Interaction Mode</label>
+                                <div class="chatooly-preset-grid" style="grid-template-columns: 1fr 1fr;">
+                                    <button class="chatooly-btn active" id="mode-mouse" data-mode="mouse">Mouse</button>
+                                    <button class="chatooly-btn" id="mode-auto" data-mode="auto">Auto</button>
+                                </div>
+                            </div>
+
+                            <!-- Auto Mode Controls (hidden by default) -->
+                            <div id="auto-mode-controls" style="display: none;">
+                                <div class="chatooly-toggle-group">
+                                    <button class="chatooly-toggle" id="auto-debug" role="switch" aria-pressed="false" aria-labelledby="toggle-auto-debug">
+                                        <span class="chatooly-toggle-slider"></span>
+                                    </button>
+                                    <span class="chatooly-toggle-label" id="toggle-auto-debug">Show Debug Circle</span>
+                                </div>
+
+                                <div class="chatooly-input-group">
+                                    <label class="chatooly-input-label">Pattern</label>
+                                    <select class="chatooly-select" id="auto-pattern">
+                                        <option value="infinity" selected>Infinity Loop</option>
+                                        <option value="sine">Sine Wave</option>
+                                        <option value="circle">Circle</option>
+                                        <option value="random">Random</option>
+                                        <option value="trace">Trace Text</option>
+                                    </select>
+                                </div>
+
+                                <div class="chatooly-slider-group">
+                                    <div class="chatooly-slider-label">
+                                        <span>Speed</span>
+                                        <span class="chatooly-slider-value" id="auto-speed-value">1</span>
+                                    </div>
+                                    <input type="range" class="chatooly-slider" id="auto-speed" min="0.1" max="10" step="0.1" value="1">
+                                </div>
+
+                                <div class="chatooly-slider-group">
+                                    <div class="chatooly-slider-label">
+                                        <span>Movement Size</span>
+                                        <span class="chatooly-slider-value" id="auto-size-value">5</span>
+                                    </div>
+                                    <input type="range" class="chatooly-slider" id="auto-size" min="1" max="10" step="1" value="5">
+                                </div>
+                            </div>
+
+                            <div class="chatooly-slider-group" id="hover-effect-group">
+                                <div class="chatooly-slider-label">
+                                    <span>Hover Radius</span>
+                                    <span class="chatooly-slider-value" id="hover-radius-value">150</span>
+                                </div>
+                                <input type="range" class="chatooly-slider" id="hover-radius" min="50" max="500" value="150">
+                            </div>
+
+                            <div class="chatooly-slider-group" id="hover-intensity-group">
+                                <div class="chatooly-slider-label">
+                                    <span>Magnification Strength</span>
+                                    <span class="chatooly-slider-value" id="hover-intensity-value">2.0</span>
+                                </div>
+                                <input type="range" class="chatooly-slider" id="hover-intensity" min="-5" max="5" step="0.1" value="2">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== BACKGROUND ========== -->
+                <div class="chatooly-section-card" data-section="background">
+                    <span class="chatooly-section-header" role="button" tabindex="0">BACKGROUND</span>
+                    <div class="chatooly-section-content">
+                        <div class="chatooly-toggle-group">
+                            <button class="chatooly-toggle" id="transparent-bg" role="switch" aria-pressed="false" aria-labelledby="toggle-transparent">
+                                <span class="chatooly-toggle-slider"></span>
+                            </button>
+                            <span class="chatooly-toggle-label" id="toggle-transparent">Transparent Background</span>
+                        </div>
+
+                        <div class="chatooly-color-group" id="bg-color-group">
+                            <label class="chatooly-color-label">Background Color</label>
+                            <input type="color" class="chatooly-color-input" id="bg-color" value="#FFFFFF">
+                        </div>
+
+                        <div style="position: relative;">
+                            <div class="chatooly-upload-area" style="height: 80px;">
+                                <div class="chatooly-upload-icon">
+                                    <svg viewBox="0 0 11 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M7.94444 0L11 3V11.4048C10.9998 11.5627 10.9358 11.7141 10.822 11.8257C10.7083 11.9373 10.554 12 10.3932 12H0.606833C0.446342 11.9989 0.292733 11.9359 0.179189 11.8245C0.0656443 11.7131 0.00128006 11.5624 0 11.4048V0.5952C0 0.2664 0.271944 0 0.606833 0H7.94444ZM6.11111 6H7.94444L5.5 3.6L3.05556 6H4.88889V8.4H6.11111V6Z" fill="var(--fill-0, #454545)"/>
+                                    </svg>
+                                </div>
+                                <div class="chatooly-upload-text">Background Image</div>
+                                <input type="file" class="chatooly-upload-input" id="bg-image" accept="image/*">
+                            </div>
+                            <button id="clear-bg-image" type="button" class="chatooly-btn" style="display: none; position: absolute; top: 8px; right: 8px; padding: 4px 8px; min-width: auto; z-index: 10;" title="Remove image">×</button>
+                        </div>
+
+                        <div class="chatooly-input-group" id="bg-fit-group" style="display: none;">
+                            <label class="chatooly-input-label">Image Fit</label>
+                            <select class="chatooly-select" id="bg-fit">
+                                <option value="cover">Fill Frame</option>
+                                <option value="contain">Fit in Frame</option>
+                                <option value="fill">Stretch to Fill</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer with Export Button -->
+            <div class="chatooly-controls-footer">
+                <button class="chatooly-btn chatooly-btn-export">
+                    Export
+                </button>
             </div>
         </div>
         

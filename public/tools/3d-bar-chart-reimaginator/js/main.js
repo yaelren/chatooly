@@ -15,8 +15,8 @@ canvas.height = 1080;
 let scene, camera, renderer, controls;
 let backgroundTexture = null;
 
-// Chart data and visualization
-let chartData = null;
+// Chart data and visualization (will be set as global)
+// let chartData = null; // Removed - using window.chartData instead
 let chartBars = [];
 let chartImage = null;
 let is3DMode = true;
@@ -316,20 +316,24 @@ function updateBackground() {
 
 // ========== CHART PARSING AND GENERATION ==========
 function parseChartImage(imageElement) {
-    // This is a simplified chart parsing system
-    // In a production system, you'd use computer vision or ML for robust parsing
+    console.log('Parsing chart image:', imageElement.naturalWidth, 'x', imageElement.naturalHeight);
 
-    // Create a temporary canvas to analyze the image
+    // Create a temporary canvas to analyze the image at full resolution
     const tempCanvas = document.createElement('canvas');
     const ctx = tempCanvas.getContext('2d');
-    tempCanvas.width = imageElement.width;
-    tempCanvas.height = imageElement.height;
 
-    ctx.drawImage(imageElement, 0, 0);
+    // Use natural dimensions for better accuracy
+    tempCanvas.width = imageElement.naturalWidth || imageElement.width;
+    tempCanvas.height = imageElement.naturalHeight || imageElement.height;
+
+    // Draw image and get pixel data
+    ctx.drawImage(imageElement, 0, 0, tempCanvas.width, tempCanvas.height);
     const imageData = ctx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
 
-    // Simple bar detection algorithm
+    // Enhanced bar detection algorithm
     const bars = detectBars(imageData, tempCanvas.width, tempCanvas.height);
+
+    console.log(`Chart parsing complete: found ${bars.length} bars`);
 
     return {
         bars: bars,
@@ -340,19 +344,191 @@ function parseChartImage(imageElement) {
 }
 
 function detectBars(imageData, width, height) {
-    // Simplified bar detection - look for rectangular regions
-    // This is a placeholder implementation
-    const bars = [];
-    const numBars = 5; // Default number of bars for demo
+    // Advanced bar detection algorithm
+    console.log('Starting bar detection on image:', width, 'x', height);
 
-    for (let i = 0; i < numBars; i++) {
+    const data = imageData.data;
+    const bars = [];
+
+    // Detect bars by finding regions with consistent color that differ from background
+    const backgroundThreshold = 220; // Brightness threshold for background (light colors)
+    const barThreshold = 200; // Brightness threshold for bars (darker than background)
+    const minBarWidth = Math.floor(width * 0.01); // Minimum bar width (1% of image width)
+    const minBarHeight = Math.floor(height * 0.05); // Minimum bar height (5% of image height)
+
+    // Scan for vertical bars by analyzing columns
+    const columnScores = [];
+    for (let x = 0; x < width; x++) {
+        let barPixels = 0;
+        let totalPixels = 0;
+
+        for (let y = 0; y < height; y++) {
+            const pixelIndex = (y * width + x) * 4;
+            const r = data[pixelIndex];
+            const g = data[pixelIndex + 1];
+            const b = data[pixelIndex + 2];
+            const brightness = (r + g + b) / 3;
+
+            totalPixels++;
+
+            // Check if this pixel is part of a bar (not background)
+            const isBackground = (brightness > backgroundThreshold) &&
+                                (Math.abs(r - g) < 20 && Math.abs(g - b) < 20); // Near white/gray
+
+            if (!isBackground) {
+                // Additional checks for different bar colors
+                const isColoredBar = (r > g + 20 && r > b + 20) || // Red-ish/Orange-ish
+                                   (g > r + 20 && g > b + 20) || // Green-ish
+                                   (b > r + 20 && b > g + 20) || // Blue-ish
+                                   (r > 100 && g > 80 && b < 100 && r > g) || // Orange
+                                   brightness < backgroundThreshold; // Any sufficiently dark color
+
+                if (isColoredBar) {
+                    barPixels++;
+                }
+            }
+        }
+
+        columnScores[x] = barPixels;
+    }
+
+    // Find bar regions by analyzing column scores
+    const barRegions = [];
+    let inBar = false;
+    let barStart = 0;
+    let barEnd = 0;
+
+    for (let x = 0; x < width; x++) {
+        const isBarColumn = columnScores[x] > minBarHeight;
+
+        if (!inBar && isBarColumn) {
+            // Starting a new bar
+            inBar = true;
+            barStart = x;
+        } else if (inBar && !isBarColumn) {
+            // Ending current bar
+            barEnd = x - 1;
+            const barWidth = barEnd - barStart + 1;
+
+            if (barWidth >= minBarWidth) {
+                barRegions.push({
+                    start: barStart,
+                    end: barEnd,
+                    center: Math.floor((barStart + barEnd) / 2),
+                    width: barWidth,
+                    score: Math.max(...columnScores.slice(barStart, barEnd + 1))
+                });
+            }
+            inBar = false;
+        }
+    }
+
+    // Handle case where last bar extends to image edge
+    if (inBar) {
+        barEnd = width - 1;
+        const barWidth = barEnd - barStart + 1;
+        if (barWidth >= minBarWidth) {
+            barRegions.push({
+                start: barStart,
+                end: barEnd,
+                center: Math.floor((barStart + barEnd) / 2),
+                width: barWidth
+            });
+        }
+    }
+
+    console.log('Detected bar regions:', barRegions);
+
+    // Convert bar regions to 3D bar data
+    barRegions.forEach((region, index) => {
+        // Calculate bar height by finding the highest point in this region
+        let maxHeight = 0;
+        for (let x = region.start; x <= region.end; x++) {
+            for (let y = 0; y < height; y++) {
+                const pixelIndex = (y * width + x) * 4;
+                const r = data[pixelIndex];
+                const g = data[pixelIndex + 1];
+                const b = data[pixelIndex + 2];
+                const brightness = (r + g + b) / 3;
+
+                // Use the same logic as column detection for consistency
+                const isBackground = (brightness > backgroundThreshold) &&
+                                    (Math.abs(r - g) < 20 && Math.abs(g - b) < 20); // Near white/gray
+
+                const isColoredBar = (r > g + 20 && r > b + 20) || // Red-ish/Orange-ish
+                                   (g > r + 20 && g > b + 20) || // Green-ish
+                                   (b > r + 20 && b > g + 20) || // Blue-ish
+                                   (r > 100 && g > 80 && b < 100 && r > g) || // Orange
+                                   brightness < backgroundThreshold; // Any sufficiently dark color
+
+                if (!isBackground && isColoredBar) {
+                    const barHeight = (height - y) / height; // Normalize height
+                    maxHeight = Math.max(maxHeight, barHeight);
+                    break; // Found top of bar in this column
+                }
+            }
+        }
+
+        // Get the dominant color from the bar region
+        let totalR = 0, totalG = 0, totalB = 0, colorSamples = 0;
+        const sampleStep = Math.max(1, Math.floor(region.width / 10)); // Sample every few pixels
+
+        for (let x = region.start; x <= region.end; x += sampleStep) {
+            for (let y = Math.floor(height * (1 - maxHeight)); y < height; y += 5) {
+                const pixelIndex = (y * width + x) * 4;
+                const r = data[pixelIndex];
+                const g = data[pixelIndex + 1];
+                const b = data[pixelIndex + 2];
+                const brightness = (r + g + b) / 3;
+
+                // Use the same detection logic
+                const isBackground = (brightness > backgroundThreshold) &&
+                                    (Math.abs(r - g) < 20 && Math.abs(g - b) < 20); // Near white/gray
+
+                const isColoredBar = (r > g + 20 && r > b + 20) || // Red-ish/Orange-ish
+                                   (g > r + 20 && g > b + 20) || // Green-ish
+                                   (b > r + 20 && b > g + 20) || // Blue-ish
+                                   (r > 100 && g > 80 && b < 100 && r > g) || // Orange
+                                   brightness < backgroundThreshold; // Any sufficiently dark color
+
+                if (!isBackground && isColoredBar) {
+                    totalR += r;
+                    totalG += g;
+                    totalB += b;
+                    colorSamples++;
+                    break;
+                }
+            }
+        }
+
+        // Calculate average color or use default if no samples
+        const avgR = colorSamples > 0 ? totalR / colorSamples : 100 + index * 30;
+        const avgG = colorSamples > 0 ? totalG / colorSamples : 150 + index * 20;
+        const avgB = colorSamples > 0 ? totalB / colorSamples : 200 + index * 10;
+
+        // Convert to normalized coordinates for 3D scene
+        const normalizedX = ((region.center / width) - 0.5) * 4; // Scale to roughly -2 to 2
+        const normalizedHeight = Math.max(0.2, maxHeight * 3); // Scale height appropriately
+        const normalizedWidth = Math.max(0.3, (region.width / width) * 3);
+
         bars.push({
-            x: (i / numBars) * 2 - 1, // Normalize to -1 to 1
-            height: 0.5 + Math.random() * 1.5, // Random height for demo
-            width: 0.3,
-            color: new THREE.Color().setHSL((i / numBars) * 0.7, 0.8, 0.6),
-            value: Math.random() * 100 // Demo value
+            x: normalizedX,
+            height: normalizedHeight,
+            width: normalizedWidth,
+            depth: 1.0,
+            color: new THREE.Color().setRGB(avgR/255, avgG/255, avgB/255),
+            value: Math.round(maxHeight * 100),
+            originalHeight: normalizedHeight,
+            region: region // Keep region info for debugging
         });
+    });
+
+    console.log('Final detected bars:', bars.length, bars);
+
+    // If no bars detected, return demo data
+    if (bars.length === 0) {
+        console.warn('No bars detected, using demo data');
+        return generateDemoChart().bars;
     }
 
     return bars;
@@ -389,6 +565,9 @@ function create3DBars(chartData) {
         if (bar.material) bar.material.dispose();
     });
     chartBars = [];
+
+    // Store chart data globally
+    window.chartData = chartData;
 
     chartData.bars.forEach((barData, index) => {
         const geometry = new THREE.BoxGeometry(barData.width, barData.height, barData.depth || 1.0);
@@ -603,9 +782,9 @@ window.updatePointLight = function(enabled) {
 
 // ========== 3D CONTROLS ==========
 window.updateBarDepth = function(depth) {
-    if (!chartData) return;
+    if (!window.chartData) return;
 
-    chartData.bars.forEach((barData, index) => {
+    window.chartData.bars.forEach((barData, index) => {
         barData.depth = depth;
 
         if (chartBars[index]) {
@@ -618,10 +797,10 @@ window.updateBarDepth = function(depth) {
 };
 
 window.updateBarSpacing = function(spacing) {
-    if (!chartData) return;
+    if (!window.chartData) return;
 
-    chartData.bars.forEach((barData, index) => {
-        const baseX = (index - chartData.bars.length/2 + 0.5) * (0.8 + spacing);
+    window.chartData.bars.forEach((barData, index) => {
+        const baseX = (index - window.chartData.bars.length/2 + 0.5) * (0.8 + spacing);
         barData.x = baseX;
 
         if (chartBars[index]) {
@@ -631,9 +810,9 @@ window.updateBarSpacing = function(spacing) {
 };
 
 window.updateExtrusionMultiplier = function(multiplier) {
-    if (!chartData) return;
+    if (!window.chartData) return;
 
-    chartData.bars.forEach((barData, index) => {
+    window.chartData.bars.forEach((barData, index) => {
         const newHeight = barData.originalHeight * multiplier;
         barData.height = newHeight;
 
@@ -688,7 +867,7 @@ window.applyAnimationPreset = function(animationType) {
 
     // Reset all bar positions and scales
     chartBars.forEach((bar, index) => {
-        gsap.set(bar.position, { y: chartData.bars[index].height / 2 });
+        gsap.set(bar.position, { y: window.chartData.bars[index].height / 2 });
         gsap.set(bar.scale, { x: 1, y: 1, z: 1 });
         gsap.set(bar.rotation, { x: 0, y: 0, z: 0 });
     });
@@ -711,7 +890,7 @@ window.applyAnimationPreset = function(animationType) {
                 currentAnimations.push(tween);
 
                 const positionTween = gsap.to(bar.position, {
-                    y: chartData.bars[index].height / 2,
+                    y: window.chartData.bars[index].height / 2,
                     duration: duration,
                     delay: index * 0.1,
                     ease: "back.out(1.7)"
@@ -789,7 +968,7 @@ window.applyAnimationPreset = function(animationType) {
                 currentAnimations.push(tween);
 
                 const positionTween = gsap.to(bar.position, {
-                    y: chartData.bars[index].height / 2,
+                    y: window.chartData.bars[index].height / 2,
                     duration: duration,
                     delay: index * 0.2,
                     ease: "bounce.out"
@@ -842,7 +1021,7 @@ window.resetAnimations = function() {
     currentAnimations = [];
 
     chartBars.forEach((bar, index) => {
-        gsap.set(bar.position, { y: chartData.bars[index].height / 2 });
+        gsap.set(bar.position, { y: window.chartData.bars[index].height / 2 });
         gsap.set(bar.scale, { x: 1, y: 1, z: 1 });
         gsap.set(bar.rotation, { x: 0, y: 0, z: 0 });
     });
@@ -873,9 +1052,22 @@ window.resetCamera = function() {
     window.UIControls.updateAllSliderDisplays();
 };
 
+// ========== GLOBAL FUNCTION EXPORTS ==========
+// Export functions for UI to use
+window.parseChartImage = parseChartImage;
+window.create3DBars = create3DBars;
+window.generateDemoChart = generateDemoChart;
+window.chartData = null; // Global chart data
+
+// Debug: Log that functions are exported
+console.log('Chart functions exported to window:');
+console.log('- parseChartImage:', typeof window.parseChartImage);
+console.log('- create3DBars:', typeof window.create3DBars);
+console.log('- generateDemoChart:', typeof window.generateDemoChart);
+
 // Generate demo chart on startup
 setTimeout(() => {
     const demoData = generateDemoChart();
-    chartData = demoData;
+    window.chartData = demoData;
     create3DBars(demoData);
 }, 100);

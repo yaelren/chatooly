@@ -48,6 +48,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const bgFitSelect = document.getElementById('bg-fit');
     const bgColorGroup = document.getElementById('bg-color-group');
     const bgFitGroup = document.getElementById('bg-fit-group');
+
+    // Foreground controls
+    const fgImageInput = document.getElementById('fg-image');
+    const clearFgImageBtn = document.getElementById('clear-fg-image');
+    const fgFitSelect = document.getElementById('fg-fit');
+    const fgFitGroup = document.getElementById('fg-fit-group');
+    const fgOpacitySlider = document.getElementById('fg-opacity');
+    const fgOpacityValue = document.getElementById('fg-opacity-value');
+    const fgOpacityGroup = document.getElementById('fg-opacity-group');
     
     // Get settings object from main.js
     const settings = window.liquidTypographySettings;
@@ -113,7 +122,57 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     }
-    
+
+    // ========== FOREGROUND IMAGE SYSTEM ==========
+    // Foreground image upload
+    if (fgImageInput) {
+        fgImageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        settings.foregroundImage = img;
+                        if (clearFgImageBtn) clearFgImageBtn.style.display = 'block';
+                        if (fgFitGroup) fgFitGroup.style.display = 'block';
+                        if (fgOpacityGroup) fgOpacityGroup.style.display = 'block';
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    // Clear foreground image
+    if (clearFgImageBtn) {
+        clearFgImageBtn.addEventListener('click', () => {
+            settings.foregroundImage = null;
+            clearFgImageBtn.style.display = 'none';
+            if (fgFitGroup) fgFitGroup.style.display = 'none';
+            if (fgOpacityGroup) fgOpacityGroup.style.display = 'none';
+            if (fgImageInput) fgImageInput.value = '';
+        });
+    }
+
+    // Foreground fit mode
+    if (fgFitSelect) {
+        fgFitSelect.addEventListener('change', (e) => {
+            settings.foregroundFit = e.target.value;
+        });
+    }
+
+    // Foreground opacity slider
+    if (fgOpacitySlider) {
+        fgOpacitySlider.addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            settings.foregroundOpacity = value / 100; // Convert 0-100 to 0-1
+            updateSliderValue(fgOpacitySlider, fgOpacityValue);
+        });
+        updateSliderValue(fgOpacitySlider, fgOpacityValue);
+    }
+
     // ========== SLIDER UPDATES ==========
     function updateSliderValue(slider, valueDisplay, formatFn = (v) => v) {
         if (valueDisplay) {

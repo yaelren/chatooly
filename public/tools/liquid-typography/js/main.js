@@ -42,6 +42,10 @@ let settings = {
     autoSpeed: 5,              // 1-10 scale
     autoSize: 5,               // 1-10 scale for movement amplitude
     autoDebug: false,          // Show debug circle for auto mode
+    // Foreground image settings
+    foregroundImage: null,     // HTMLImageElement
+    foregroundFit: 'contain',  // 'contain' | 'cover' | 'fill'
+    foregroundOpacity: 1,      // 0-1
 };
 
 // ========== MOUSE TRACKING ==========
@@ -174,6 +178,65 @@ function init(callback) {
     if (callback) callback();
 }
 
+// ========== FOREGROUND IMAGE DRAWING ==========
+function drawForegroundImage(targetCtx, width, height) {
+    if (!settings.foregroundImage) return;
+
+    const img = settings.foregroundImage;
+    const fit = settings.foregroundFit;
+    const opacity = settings.foregroundOpacity;
+
+    // Save context state
+    targetCtx.save();
+    targetCtx.globalAlpha = opacity;
+
+    let drawX, drawY, drawWidth, drawHeight;
+    const imgAspect = img.width / img.height;
+    const canvasAspect = width / height;
+
+    switch (fit) {
+        case 'contain':
+            // Fit entire image within canvas, maintaining aspect ratio
+            if (imgAspect > canvasAspect) {
+                drawWidth = width;
+                drawHeight = width / imgAspect;
+            } else {
+                drawHeight = height;
+                drawWidth = height * imgAspect;
+            }
+            drawX = (width - drawWidth) / 2;
+            drawY = (height - drawHeight) / 2;
+            break;
+
+        case 'cover':
+            // Cover entire canvas, maintaining aspect ratio (may crop)
+            if (imgAspect > canvasAspect) {
+                drawHeight = height;
+                drawWidth = height * imgAspect;
+            } else {
+                drawWidth = width;
+                drawHeight = width / imgAspect;
+            }
+            drawX = (width - drawWidth) / 2;
+            drawY = (height - drawHeight) / 2;
+            break;
+
+        case 'fill':
+        default:
+            // Stretch to fill canvas
+            drawX = 0;
+            drawY = 0;
+            drawWidth = width;
+            drawHeight = height;
+            break;
+    }
+
+    targetCtx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
+
+    // Restore context state
+    targetCtx.restore();
+}
+
 // ========== AUTO-MOTION PATTERN GENERATOR ==========
 // Random target points for random pattern
 let randomTarget = { x: 0, y: 0 };
@@ -288,6 +351,9 @@ function animate(timestamp) {
         ctx.arc(mouse.x, mouse.y, 8, 0, Math.PI * 2);
         ctx.fill();
     }
+
+    // Draw foreground image on top of particles
+    drawForegroundImage(ctx, canvas.width, canvas.height);
 
     animationFrameId = requestAnimationFrame(animate);
 }
@@ -499,7 +565,13 @@ window.renderHighResolution = function(targetCanvas, scale) {
         exportCtx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
         exportCtx.fill();
     });
-    
+
+    // Reset scale for foreground image
+    exportCtx.setTransform(1, 0, 0, 1, 0, 0);
+
+    // Draw foreground image on top
+    drawForegroundImage(exportCtx, scaledWidth, scaledHeight);
+
     console.log(`High-res export completed at ${scale}x resolution (${scaledWidth}x${scaledHeight})`);
 };
 
@@ -553,7 +625,10 @@ async function exportPngSequence() {
                 tempCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
                 tempCtx.fill();
             });
-            
+
+            // Draw foreground image on top
+            drawForegroundImage(tempCtx, tempCanvas.width, tempCanvas.height);
+
             // Convert to blob
             const blob = await new Promise(resolve => tempCanvas.toBlob(resolve, 'image/png'));
             const paddedIndex = String(i).padStart(5, '0');

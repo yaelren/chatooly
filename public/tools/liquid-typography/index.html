@@ -787,14 +787,14 @@
                                     <span>X Position</span>
                                     <span class="chatooly-slider-value" id="xOffset-value">0</span>
                                 </div>
-                                <input type="range" class="chatooly-slider" id="xOffset" min="-500" max="500" step="1" value="0">
+                                <input type="range" class="chatooly-slider" id="xOffset" min="-1500" max="1500" step="1" value="0">
                             </div>
                             <div class="chatooly-slider-group">
                                 <div class="chatooly-slider-label">
                                     <span>Y Position</span>
                                     <span class="chatooly-slider-value" id="yOffset-value">0</span>
                                 </div>
-                                <input type="range" class="chatooly-slider" id="yOffset" min="-500" max="500" step="1" value="0">
+                                <input type="range" class="chatooly-slider" id="yOffset" min="-1500" max="1500" step="1" value="0">
                             </div>
                         </div>
                     </div>
@@ -945,6 +945,39 @@
                                 <option value="contain">Fit in Frame</option>
                                 <option value="fill">Stretch to Fill</option>
                             </select>
+                        </div>
+
+                        <!-- Foreground Image Upload -->
+                        <div style="position: relative; margin-top: 15px;">
+                            <div class="chatooly-upload-area" style="height: 80px;">
+                                <div class="chatooly-upload-icon">
+                                    <svg viewBox="0 0 11 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M7.94444 0L11 3V11.4048C10.9998 11.5627 10.9358 11.7141 10.822 11.8257C10.7083 11.9373 10.554 12 10.3932 12H0.606833C0.446342 11.9989 0.292733 11.9359 0.179189 11.8245C0.0656443 11.7131 0.00128006 11.5624 0 11.4048V0.5952C0 0.2664 0.271944 0 0.606833 0H7.94444ZM6.11111 6H7.94444L5.5 3.6L3.05556 6H4.88889V8.4H6.11111V6Z" fill="var(--fill-0, #454545)"></path>
+                                    </svg>
+                                </div>
+                                <div class="chatooly-upload-text">Foreground Image</div>
+                                <input type="file" class="chatooly-upload-input" id="fg-image" accept="image/*">
+                            </div>
+                            <button id="clear-fg-image" type="button" class="chatooly-btn" style="display: none; position: absolute; top: 8px; right: 8px; padding: 4px 8px; min-width: auto; z-index: 10;" title="Remove image">×</button>
+                        </div>
+
+                        <!-- Foreground Image Fit Dropdown -->
+                        <div class="chatooly-input-group" id="fg-fit-group" style="display: none;">
+                            <label class="chatooly-input-label" for="fg-fit">Foreground Fit</label>
+                            <select class="chatooly-select" id="fg-fit">
+                                <option value="contain" selected>Fit in Frame</option>
+                                <option value="cover">Fill Frame</option>
+                                <option value="fill">Stretch to Fill</option>
+                            </select>
+                        </div>
+
+                        <!-- Foreground Opacity -->
+                        <div class="chatooly-slider-group" id="fg-opacity-group" style="display: none;">
+                            <div class="chatooly-slider-label">
+                                <span>Foreground Opacity</span>
+                                <span class="chatooly-slider-value" id="fg-opacity-value">100</span>
+                            </div>
+                            <input type="range" class="chatooly-slider" id="fg-opacity" min="0" max="100" step="1" value="100">
                         </div>
                     </div>
                 </div>

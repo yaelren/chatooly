@@ -17,7 +17,7 @@ let textData = {
     shapeType: 'dots',  // 'dots', 'lines', 'circles'
     shapeSize: 5,
     spacing: 1.0,
-    fontSize: 72,
+    fontSize: 200,
     fontFamily: 'Arial',
     lineHeight: 1.2,
     shapeColor: '#000000',
@@ -416,6 +416,14 @@ function animate() {
 
     // Update animation time
     textData.animationTime += 0.016 * textData.animationSpeed; // ~60fps
+
+    // Update auto position if hover effect is enabled in auto mode
+    if (textData.hoverEffectEnabled && textData.interactionMode === 'auto') {
+        textData.autoTime += 16; // ~60fps
+        const autoPos = getAutoPosition(textData.autoTime, textData.autoPattern);
+        textData.mouseX = autoPos.x;
+        textData.mouseY = autoPos.y;
+    }
 
     // Render with rotation (hover effect is automatically included in render)
     const rotationAngle = textData.animationTime;

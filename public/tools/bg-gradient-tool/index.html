@@ -41,9 +41,9 @@
                         <div class="chatooly-slider-group" id="polygon-sides-group" style="display: none;">
                             <div class="chatooly-slider-label">
                                 <span>Polygon Sides</span>
-                                <span class="chatooly-slider-value" id="polygon-sides-value">6</span>
+                                <span class="chatooly-slider-value" id="polygon-sides-value">3</span>
                             </div>
-                            <input type="range" class="chatooly-slider" id="polygon-sides" min="3" max="12" value="6">
+                            <input type="range" class="chatooly-slider" id="polygon-sides" min="3" max="12" value="3">
                         </div>
 
                         <!-- Randomize All (conditional) -->
@@ -59,6 +59,7 @@
 
                         <hr style="border: none; border-top: 1px solid var(--chatooly-color-border, #e0e0e0); margin: 12px 0;">
 
+                        <div class="shapes-list-header">Shapes</div>
                         <div id="shapes-list">
                             <!-- Shape cards will be added here dynamically -->
                         </div>
@@ -211,13 +212,11 @@
     <template id="shape-card-template">
         <div class="shape-card" data-shape-id="">
             <button class="shape-remove-btn" type="button" aria-label="Remove shape">&times;</button>
-            <span class="shape-card-title">Shape</span>
+            <span class="shape-card-number">1</span>
             <input type="color" class="shape-color" value="#BAB6FF">
-            <div class="shape-scale-group">
-                <span class="shape-scale-label">Scale:</span>
-                <input type="range" class="shape-scale" min="0.1" max="5" step="0.1" value="1">
-                <span class="shape-scale-value">1.0</span>
-            </div>
+            <span class="shape-scale-label">Scale</span>
+            <input type="range" class="shape-scale" min="0.1" max="5" step="0.1" value="1">
+            <span class="shape-scale-value">1.0</span>
         </div>
     </template>
 

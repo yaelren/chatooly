@@ -223,9 +223,9 @@ function addShapeCard(color = '#ffffff') {
     const shapeId = `shape-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
     card.setAttribute('data-shape-id', shapeId);
 
-    // Update title
+    // Update number
     const shapeCount = shapesList.querySelectorAll('.shape-card').length + 1;
-    card.querySelector('.shape-card-title').textContent = `Shape ${shapeCount}`;
+    card.querySelector('.shape-card-number').textContent = shapeCount;
 
     // Set initial color
     const colorInput = card.querySelector('.shape-color');
@@ -289,13 +289,13 @@ function setupShapeCardListeners(card, shapeId) {
 }
 
 /**
- * Update shape card titles after removal
+ * Update shape card numbers after removal
  */
 function updateShapeTitles() {
     const shapesList = document.getElementById('shapes-list');
     const cards = shapesList.querySelectorAll('.shape-card');
     cards.forEach((card, index) => {
-        card.querySelector('.shape-card-title').textContent = `Shape ${index + 1}`;
+        card.querySelector('.shape-card-number').textContent = index + 1;
     });
 }
 

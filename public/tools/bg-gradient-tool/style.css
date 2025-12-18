@@ -45,64 +45,65 @@
     color: var(--chatooly-color-text, #333);
 }
 
-.shape-card-title {
-    font-size: 11px;
+/* Shapes list header */
+.shapes-list-header {
+    font-size: 10px;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.5px;
     color: var(--chatooly-color-text-muted, #666);
-    white-space: nowrap;
-    flex-shrink: 0;
-    min-width: 50px;
+    margin-bottom: 8px;
 }
 
-/* Compact color input - smaller square */
+.shape-card-number {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--chatooly-color-text-muted, #666);
+    flex-shrink: 0;
+    min-width: 14px;
+}
+
+/* Compact color input - tiny square */
 .shape-card .shape-color {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    width: 18px;
-    height: 18px;
-    min-width: 18px;
-    min-height: 18px;
-    padding: 0;
-    border: 1px solid var(--chatooly-color-border, #e0e0e0);
-    border-radius: 3px;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    width: 14px !important;
+    height: 14px !important;
+    min-width: 14px !important;
+    max-width: 14px !important;
+    min-height: 14px !important;
+    max-height: 14px !important;
+    padding: 0 !important;
+    border: 1px solid var(--chatooly-color-border, #e0e0e0) !important;
+    border-radius: 2px !important;
     cursor: pointer;
     flex-shrink: 0;
-    background: none;
+    background: none !important;
 }
 
 .shape-card .shape-color::-webkit-color-swatch-wrapper {
-    padding: 0;
+    padding: 0 !important;
 }
 
 .shape-card .shape-color::-webkit-color-swatch {
-    border: none;
-    border-radius: 2px;
+    border: none !important;
+    border-radius: 1px !important;
 }
 
 .shape-card .shape-color::-moz-color-swatch {
-    border: none;
-    border-radius: 2px;
+    border: none !important;
+    border-radius: 1px !important;
 }
 
-/* Scale slider group */
-.shape-card .shape-scale-group {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    min-width: 0;
-}
-
+/* Scale label */
 .shape-card .shape-scale-label {
     font-size: 10px;
     color: var(--chatooly-color-text-muted, #666);
-    white-space: nowrap;
     flex-shrink: 0;
 }
 
+/* Scale slider */
 .shape-card .shape-scale {
     flex: 1;
     min-width: 40px;

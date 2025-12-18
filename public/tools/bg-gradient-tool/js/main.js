@@ -21,7 +21,7 @@ const gradientState = {
     spacing: 160,
     // Global shape settings
     shapeType: 'circle',  // 'circle', 'polygon', 'random'
-    polygonSides: 6,
+    polygonSides: 3,
     randomCurved: true,  // true = bezier curves, false = sharp edges
     // Grain effect
     grainEnabled: false,

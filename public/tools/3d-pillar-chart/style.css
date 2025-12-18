@@ -1,0 +1,671 @@
+
+        .chatooly-app-container {
+            grid-template-columns: 320px 1fr !important;
+        }
+
+        /* Data preview table */
+        .data-preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            margin-top: 8px;
+        }
+        .data-preview-table th,
+        .data-preview-table td {
+            border: 1px solid var(--chatooly-color-border);
+            padding: 4px 6px;
+            text-align: left;
+            max-width: 80px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .data-preview-table th {
+            background: var(--chatooly-color-surface);
+            font-weight: bold;
+        }
+
+        /* Drag and drop highlight */
+        .chatooly-upload-area.drag-over {
+            border-color: var(--chatooly-color-primary) !important;
+            background: rgba(0, 123, 255, 0.1) !important;
+        }
+
+        /* Camera preset buttons */
+        .camera-presets {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .camera-presets .chatooly-btn {
+            flex: 1;
+            min-width: 60px;
+            padding: 6px 8px;
+            font-size: 11px;
+        }
+
+        /* Series color inputs */
+        .series-colors {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+        .series-color-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+        }
+        .series-color-item input[type="color"] {
+            width: 24px;
+            height: 24px;
+            padding: 0;
+            border: 1px solid var(--chatooly-color-border);
+        }
+
+        /* 2D Labels container */
+        #label-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .chart-label {
+            position: absolute;
+            color: white;
+            font-family: var(--chatooly-font-family);
+            font-size: 12px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            white-space: nowrap;
+            transform: translate(-50%, -100%);
+        }
+
+        /* Collapsible section cards */
+        .chatooly-section-header {
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .chatooly-section-header::after {
+            content: '▼';
+            font-size: 10px;
+            opacity: 0.6;
+            transition: transform 0.2s ease;
+        }
+        .chatooly-section-card.collapsed .chatooly-section-header::after {
+            transform: rotate(-90deg);
+        }
+        .chatooly-section-card.collapsed .chatooly-section-content {
+            display: none;
+        }
+    
+
+                /* Canvas area container - works with both template and legacy */
+                #chatooly-container, #chatooly-canvas-area {
+                    box-sizing: border-box;
+                    transition: all 0.3s ease;
+                }
+                
+                /* Template structure - ensure proper centering */
+                .chatooly-preview-panel {
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                }
+                
+                #chatooly-container {
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    width: 100%;
+                    height: 100%;
+                }
+                
+                /* Canvas inside the area - universal rules */
+                #chatooly-container canvas, #chatooly-canvas-area canvas {
+                    display: block;
+                    margin: 0; /* Remove auto margin - let flexbox handle centering */
+                    max-width: 100%;
+                    max-height: 100%;
+                    object-fit: contain;
+                    image-rendering: crisp-edges;
+                    image-rendering: -moz-crisp-edges;
+                    image-rendering: -webkit-crisp-edges;
+                    image-rendering: pixelated;
+                    /* Ensure canvas is centered by flexbox parent */
+                    flex-shrink: 0;
+                }
+                
+                /* When zoomed, allow canvas to exceed container bounds */
+                #chatooly-container.zoomed, #chatooly-canvas-area.zoomed {
+                    overflow: auto;
+                    cursor: grab;
+                }
+                
+                #chatooly-container.zoomed.dragging, #chatooly-canvas-area.zoomed.dragging {
+                    cursor: grabbing;
+                    user-select: none;
+                }
+                
+                /* Custom scrollbar for canvas area */
+                #chatooly-container::-webkit-scrollbar, #chatooly-canvas-area::-webkit-scrollbar {
+                    width: 12px;
+                    height: 12px;
+                }
+                
+                #chatooly-container::-webkit-scrollbar-track, #chatooly-canvas-area::-webkit-scrollbar-track {
+                    background: #f1f1f1;
+                    border-radius: 6px;
+                }
+                
+                #chatooly-container::-webkit-scrollbar-thumb, #chatooly-canvas-area::-webkit-scrollbar-thumb {
+                    background: #888;
+                    border-radius: 6px;
+                }
+                
+                #chatooly-container::-webkit-scrollbar-thumb:hover, #chatooly-canvas-area::-webkit-scrollbar-thumb:hover {
+                    background: #555;
+                }
+                
+                /* Zoom indicator inside canvas area */
+                #chatooly-container .zoom-indicator, #chatooly-canvas-area .zoom-indicator {
+                    position: absolute;
+                    top: 10px;
+                    right: 10px;
+                    background: rgba(0, 0, 0, 0.7);
+                    color: white;
+                    padding: 5px 10px;
+                    border-radius: 4px;
+                    font-family: monospace;
+                    font-size: 12px;
+                    pointer-events: none;
+                    z-index: 10;
+                }
+                
+                /* Canvas fit modes */
+                #chatooly-container[data-fit="contain"] canvas, #chatooly-canvas-area[data-fit="contain"] canvas {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: contain;
+                }
+                
+                #chatooly-container[data-fit="cover"] canvas, #chatooly-canvas-area[data-fit="cover"] canvas {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                }
+                
+                #chatooly-container[data-fit="actual"] canvas, #chatooly-canvas-area[data-fit="actual"] canvas {
+                    width: auto;
+                    height: auto;
+                    max-width: none;
+                    max-height: none;
+                }
+            
+
+/* ========== EXPORT MODAL ========== */
+.chatooly-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.chatooly-modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.chatooly-modal-container {
+  width: 350px;
+  max-height: 90vh;
+  overflow-y: auto;
+  transform: scale(0.95);
+  transition: transform 0.2s ease;
+}
+
+.chatooly-modal-overlay.active .chatooly-modal-container {
+  transform: scale(1);
+}
+
+.chatooly-modal-content {
+  background: #232323;
+  border: 1px solid #343434;
+  border-radius: 10px;
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.chatooly-modal-header {
+  background: #454545;
+  padding: 15px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.chatooly-modal-header span {
+  font-family: 'TASA Orbiter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: #ffffff;
+  flex: 1;
+}
+
+.chatooly-modal-close {
+  width: 12px;
+  height: 12px;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+}
+
+.chatooly-modal-close:hover {
+  opacity: 1;
+}
+
+.chatooly-modal-body {
+  padding: 0 10px;
+}
+
+.chatooly-export-section {
+  background: #d9e5d7;
+  border-radius: 5px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.chatooly-export-toggle {
+  display: flex;
+  gap: 5px;
+  width: 100%;
+}
+
+.chatooly-toggle-btn {
+  flex: 1;
+  padding: 5px 6px;
+  background: #6d736c;
+  color: #d9e5d7;
+  border: none;
+  border-radius: 3px;
+  font-family: 'TASA Orbiter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  text-align: center;
+}
+
+.chatooly-toggle-btn:hover {
+  background: #7d837c;
+}
+
+.chatooly-toggle-btn.active {
+  background: #000000;
+  color: #FFFFFF;
+}
+
+.chatooly-export-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chatooly-export-row {
+  display: flex;
+  gap: 5px;
+}
+
+.chatooly-export-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chatooly-export-field label {
+  font-family: 'TASA Orbiter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  color: #000000;
+}
+
+.chatooly-multiplier-buttons {
+  display: flex;
+  gap: 5px;
+  width: 100%;
+}
+
+.chatooly-multiplier-btn {
+  flex: 1;
+  padding: 8px 10px;
+  background: #6d736c;
+  color: #d9e5d7;
+  border: none;
+  border-radius: 5px;
+  font-family: 'TASA Orbiter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  text-align: center;
+}
+
+.chatooly-multiplier-btn:hover {
+  opacity: 0.85;
+}
+
+.chatooly-multiplier-btn.active {
+  background: #000000;
+  color: #FFFFFF;
+}
+
+.chatooly-modal-footer {
+  display: flex;
+  justify-content: center;
+  padding: 0 10px;
+}
+
+.chatooly-modal-footer .chatooly-modal-export-btn {
+  width: 100%;
+  padding: 12px 15px;
+  background: #F4E4A3;
+  color: #000000;
+  border: none;
+  border-radius: 5px;
+  font-family: 'TASA Orbiter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  text-align: center;
+}
+
+.chatooly-modal-footer .chatooly-modal-export-btn:hover {
+  background: #FFF4C4;
+}
+            
+
+/* ========== PUBLISH BUTTON (DEV MODE) ========== */
+.chatooly-publish-button {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1050;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 15px;
+
+    background: var(--chatooly-color-button-primary);
+    color: var(--chatooly-color-button-primary-text);
+    border: 1px solid var(--chatooly-color-border);
+    border-radius: var(--chatooly-button-radius);
+
+    font-family: var(--chatooly-font-family);
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+
+    cursor: pointer;
+    transition: all var(--chatooly-transition-fast);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.chatooly-publish-button:hover {
+    background: var(--chatooly-color-button-hover);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transform: translateY(-1px);
+}
+
+.chatooly-publish-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Dev badge */
+.chatooly-publish-badge {
+    padding: 2px 6px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+    font-size: 8px;
+    font-weight: 600;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .chatooly-publish-button {
+        top: 10px;
+        right: 10px;
+        padding: 6px 12px;
+        font-size: 9px;
+    }
+
+    .chatooly-publish-badge {
+        padding: 2px 4px;
+        font-size: 7px;
+    }
+}
+            
+
+                .chatooly-resize-bar {
+                    position: absolute;
+                    bottom: 20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    z-index: 1000;
+
+                    display: inline-flex;
+                    padding: 5px 5px 5px 15px;
+                    align-items: center;
+                    gap: 15px;
+
+                    border-radius: 10px;
+                    border: 1px solid var(--chatooly-color-border);
+                    background: var(--chatooly-color-surface);
+
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+                    font-family: var(--chatooly-font-family);
+                }
+
+                .chatooly-resize-bar-label {
+                    font-size: 12px;
+                    color: var(--chatooly-color-text-muted);
+                    font-weight: 500;
+                    white-space: nowrap;
+                    flex-shrink: 0;
+                }
+
+                .chatooly-resize-format {
+                    background: var(--chatooly-color-accent-bg);
+                    border-radius: 5px;
+                    padding: 5px 5px 5px 15px;
+                    display: flex;
+                    align-items: center;
+                    gap: 15px;
+                }
+
+                .chatooly-resize-inputs {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+
+                .chatooly-resize-inputs label {
+                    font-size: 10px;
+                    font-weight: 500;
+                    color: var(--chatooly-color-accent-text);
+                    margin: 0;
+                }
+
+                .chatooly-input-box {
+                    background: var(--chatooly-color-accent-input);
+                    border-radius: 5px;
+                    padding: 8px 10px;
+                    display: flex;
+                    align-items: center;
+                    gap: 5px;
+                    width: 59px;
+                }
+
+                .chatooly-input-box input {
+                    width: 100%;
+                    background: transparent;
+                    border: none;
+                    color: var(--chatooly-color-accent-input-text);
+                    font-size: 10px;
+                    font-weight: 500;
+                    padding: 0;
+                    text-align: center;
+                    outline: none;
+
+                    /* Remove spinner arrows */
+                    -moz-appearance: textfield;
+                }
+
+                .chatooly-input-box input::-webkit-outer-spin-button,
+                .chatooly-input-box input::-webkit-inner-spin-button {
+                    -webkit-appearance: none;
+                    margin: 0;
+                }
+
+                .chatooly-input-box span {
+                    font-size: 10px;
+                    color: var(--chatooly-color-accent-input-text);
+                    font-weight: 500;
+                }
+
+                .chatooly-presets-label {
+                    font-size: 10px;
+                    font-weight: 500;
+                    color: var(--chatooly-color-accent-text);
+                    flex-shrink: 0;
+                }
+
+                .chatooly-preset-buttons {
+                    display: flex;
+                    gap: 5px;
+                    flex-wrap: nowrap;
+                    align-items: center;
+                }
+
+                /* Buttons inherit from base .chatooly-btn in components.css */
+
+                /* Button text visibility - show full text by default */
+                .chatooly-btn-full {
+                    display: inline;
+                }
+
+                .chatooly-btn-abbr {
+                    display: none;
+                }
+
+                /* Responsive adjustments */
+                @media (max-width: 1024px) {
+                    .chatooly-resize-bar {
+                        padding: 5px 10px;
+                        gap: 10px;
+                        max-width: calc(100vw - 40px);
+                    }
+
+                    .chatooly-resize-format {
+                        padding: 5px 10px;
+                        gap: 10px;
+                    }
+
+                    /* Keep buttons in single line, no wrapping */
+                    .chatooly-preset-buttons {
+                        flex-wrap: nowrap;
+                        gap: 3px;
+                    }
+
+                    /* Switch to abbreviated text on tablet and below */
+                    .chatooly-btn-full {
+                        display: none;
+                    }
+
+                    .chatooly-btn-abbr {
+                        display: inline;
+                    }
+
+                    /* Scale down preset buttons to fit in single line */
+                    .chatooly-preset-buttons .chatooly-btn {
+                        min-width: 28px;
+                        padding: 6px 4px;
+                        font-size: 8px;
+                        text-align: center;
+                        white-space: nowrap;
+                    }
+                }
+
+                @media (max-width: 768px) {
+                    .chatooly-resize-bar {
+                        bottom: 10px;
+                        left: 50%;
+                        right: auto;
+                        transform: translateX(-50%);
+                        flex-wrap: wrap;
+                        max-width: calc(100% - 20px);
+                    }
+
+                    .chatooly-resize-bar-label {
+                        width: 100%;
+                        margin-bottom: 5px;
+                    }
+
+                    .chatooly-resize-format {
+                        flex-wrap: wrap;
+                        width: 100%;
+                    }
+
+                    .chatooly-resize-inputs {
+                        flex-wrap: wrap;
+                    }
+
+                    /* Further scale down buttons on mobile */
+                    .chatooly-preset-buttons {
+                        gap: 2px;
+                    }
+
+                    .chatooly-preset-buttons .chatooly-btn {
+                        min-width: 24px;
+                        padding: 5px 3px;
+                        font-size: 7px;
+                    }
+                }
+            
+
+                    @keyframes chatooly-spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+                

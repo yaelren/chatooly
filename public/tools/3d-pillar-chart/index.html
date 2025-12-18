@@ -1,0 +1,1197 @@
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>3D Pillar Chart - Chatooly</title>
+
+    <!-- Required CDN Styles -->
+    <link id="chatooly-unified-styles" rel="stylesheet" href="https://yaelren.github.io/chatooly-cdn/css/unified.min.css"><link rel="stylesheet" href="https://yaelren.github.io/chatooly-cdn/css/unified.min.css?v=2.1">
+
+    <!-- Three.js ES Module Import Map -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <!-- GSAP for animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <!-- Tool Layout Styles -->
+    <style>
+        .chatooly-app-container {
+            grid-template-columns: 320px 1fr !important;
+        }
+
+        /* Data preview table */
+        .data-preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            margin-top: 8px;
+        }
+        .data-preview-table th,
+        .data-preview-table td {
+            border: 1px solid var(--chatooly-color-border);
+            padding: 4px 6px;
+            text-align: left;
+            max-width: 80px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .data-preview-table th {
+            background: var(--chatooly-color-surface);
+            font-weight: bold;
+        }
+
+        /* Drag and drop highlight */
+        .chatooly-upload-area.drag-over {
+            border-color: var(--chatooly-color-primary) !important;
+            background: rgba(0, 123, 255, 0.1) !important;
+        }
+
+        /* Camera preset buttons */
+        .camera-presets {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .camera-presets .chatooly-btn {
+            flex: 1;
+            min-width: 60px;
+            padding: 6px 8px;
+            font-size: 11px;
+        }
+
+        /* Series color inputs */
+        .series-colors {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+        .series-color-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+        }
+        .series-color-item input[type="color"] {
+            width: 24px;
+            height: 24px;
+            padding: 0;
+            border: 1px solid var(--chatooly-color-border);
+        }
+
+        /* 2D Labels container */
+        #label-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .chart-label {
+            position: absolute;
+            color: white;
+            font-family: var(--chatooly-font-family);
+            font-size: 12px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            white-space: nowrap;
+            transform: translate(-50%, -100%);
+        }
+
+        /* Collapsible section cards */
+        .chatooly-section-header {
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .chatooly-section-header::after {
+            content: '▼';
+            font-size: 10px;
+            opacity: 0.6;
+            transition: transform 0.2s ease;
+        }
+        .chatooly-section-card.collapsed .chatooly-section-header::after {
+            transform: rotate(-90deg);
+        }
+        .chatooly-section-card.collapsed .chatooly-section-content {
+            display: none;
+        }
+    </style>
+<style id="chatooly-canvas-area-styles">
+                /* Canvas area container - works with both template and legacy */
+                #chatooly-container, #chatooly-canvas-area {
+                    box-sizing: border-box;
+                    transition: all 0.3s ease;
+                }
+                
+                /* Template structure - ensure proper centering */
+                .chatooly-preview-panel {
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                }
+                
+                #chatooly-container {
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    width: 100%;
+                    height: 100%;
+                }
+                
+                /* Canvas inside the area - universal rules */
+                #chatooly-container canvas, #chatooly-canvas-area canvas {
+                    display: block;
+                    margin: 0; /* Remove auto margin - let flexbox handle centering */
+                    max-width: 100%;
+                    max-height: 100%;
+                    object-fit: contain;
+                    image-rendering: crisp-edges;
+                    image-rendering: -moz-crisp-edges;
+                    image-rendering: -webkit-crisp-edges;
+                    image-rendering: pixelated;
+                    /* Ensure canvas is centered by flexbox parent */
+                    flex-shrink: 0;
+                }
+                
+                /* When zoomed, allow canvas to exceed container bounds */
+                #chatooly-container.zoomed, #chatooly-canvas-area.zoomed {
+                    overflow: auto;
+                    cursor: grab;
+                }
+                
+                #chatooly-container.zoomed.dragging, #chatooly-canvas-area.zoomed.dragging {
+                    cursor: grabbing;
+                    user-select: none;
+                }
+                
+                /* Custom scrollbar for canvas area */
+                #chatooly-container::-webkit-scrollbar, #chatooly-canvas-area::-webkit-scrollbar {
+                    width: 12px;
+                    height: 12px;
+                }
+                
+                #chatooly-container::-webkit-scrollbar-track, #chatooly-canvas-area::-webkit-scrollbar-track {
+                    background: #f1f1f1;
+                    border-radius: 6px;
+                }
+                
+                #chatooly-container::-webkit-scrollbar-thumb, #chatooly-canvas-area::-webkit-scrollbar-thumb {
+                    background: #888;
+                    border-radius: 6px;
+                }
+                
+                #chatooly-container::-webkit-scrollbar-thumb:hover, #chatooly-canvas-area::-webkit-scrollbar-thumb:hover {
+                    background: #555;
+                }
+                
+                /* Zoom indicator inside canvas area */
+                #chatooly-container .zoom-indicator, #chatooly-canvas-area .zoom-indicator {
+                    position: absolute;
+                    top: 10px;
+                    right: 10px;
+                    background: rgba(0, 0, 0, 0.7);
+                    color: white;
+                    padding: 5px 10px;
+                    border-radius: 4px;
+                    font-family: monospace;
+                    font-size: 12px;
+                    pointer-events: none;
+                    z-index: 10;
+                }
+                
+                /* Canvas fit modes */
+                #chatooly-container[data-fit="contain"] canvas, #chatooly-canvas-area[data-fit="contain"] canvas {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: contain;
+                }
+                
+                #chatooly-container[data-fit="cover"] canvas, #chatooly-canvas-area[data-fit="cover"] canvas {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                }
+                
+                #chatooly-container[data-fit="actual"] canvas, #chatooly-canvas-area[data-fit="actual"] canvas {
+                    width: auto;
+                    height: auto;
+                    max-width: none;
+                    max-height: none;
+                }
+            </style><style id="chatooly-modal-styles">
+/* ========== EXPORT MODAL ========== */
+.chatooly-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.chatooly-modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.chatooly-modal-container {
+  width: 350px;
+  max-height: 90vh;
+  overflow-y: auto;
+  transform: scale(0.95);
+  transition: transform 0.2s ease;
+}
+
+.chatooly-modal-overlay.active .chatooly-modal-container {
+  transform: scale(1);
+}
+
+.chatooly-modal-content {
+  background: #232323;
+  border: 1px solid #343434;
+  border-radius: 10px;
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.chatooly-modal-header {
+  background: #454545;
+  padding: 15px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.chatooly-modal-header span {
+  font-family: 'TASA Orbiter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: #ffffff;
+  flex: 1;
+}
+
+.chatooly-modal-close {
+  width: 12px;
+  height: 12px;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+}
+
+.chatooly-modal-close:hover {
+  opacity: 1;
+}
+
+.chatooly-modal-body {
+  padding: 0 10px;
+}
+
+.chatooly-export-section {
+  background: #d9e5d7;
+  border-radius: 5px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.chatooly-export-toggle {
+  display: flex;
+  gap: 5px;
+  width: 100%;
+}
+
+.chatooly-toggle-btn {
+  flex: 1;
+  padding: 5px 6px;
+  background: #6d736c;
+  color: #d9e5d7;
+  border: none;
+  border-radius: 3px;
+  font-family: 'TASA Orbiter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  text-align: center;
+}
+
+.chatooly-toggle-btn:hover {
+  background: #7d837c;
+}
+
+.chatooly-toggle-btn.active {
+  background: #000000;
+  color: #FFFFFF;
+}
+
+.chatooly-export-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chatooly-export-row {
+  display: flex;
+  gap: 5px;
+}
+
+.chatooly-export-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chatooly-export-field label {
+  font-family: 'TASA Orbiter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  color: #000000;
+}
+
+.chatooly-multiplier-buttons {
+  display: flex;
+  gap: 5px;
+  width: 100%;
+}
+
+.chatooly-multiplier-btn {
+  flex: 1;
+  padding: 8px 10px;
+  background: #6d736c;
+  color: #d9e5d7;
+  border: none;
+  border-radius: 5px;
+  font-family: 'TASA Orbiter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  text-align: center;
+}
+
+.chatooly-multiplier-btn:hover {
+  opacity: 0.85;
+}
+
+.chatooly-multiplier-btn.active {
+  background: #000000;
+  color: #FFFFFF;
+}
+
+.chatooly-modal-footer {
+  display: flex;
+  justify-content: center;
+  padding: 0 10px;
+}
+
+.chatooly-modal-footer .chatooly-modal-export-btn {
+  width: 100%;
+  padding: 12px 15px;
+  background: #F4E4A3;
+  color: #000000;
+  border: none;
+  border-radius: 5px;
+  font-family: 'TASA Orbiter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  text-align: center;
+}
+
+.chatooly-modal-footer .chatooly-modal-export-btn:hover {
+  background: #FFF4C4;
+}
+            </style><style id="chatooly-resize-bar-styles">
+                .chatooly-resize-bar {
+                    position: absolute;
+                    bottom: 20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    z-index: 1000;
+
+                    display: inline-flex;
+                    padding: 5px 5px 5px 15px;
+                    align-items: center;
+                    gap: 15px;
+
+                    border-radius: 10px;
+                    border: 1px solid var(--chatooly-color-border);
+                    background: var(--chatooly-color-surface);
+
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+                    font-family: var(--chatooly-font-family);
+                }
+
+                .chatooly-resize-bar-label {
+                    font-size: 12px;
+                    color: var(--chatooly-color-text-muted);
+                    font-weight: 500;
+                    white-space: nowrap;
+                    flex-shrink: 0;
+                }
+
+                .chatooly-resize-format {
+                    background: var(--chatooly-color-accent-bg);
+                    border-radius: 5px;
+                    padding: 5px 5px 5px 15px;
+                    display: flex;
+                    align-items: center;
+                    gap: 15px;
+                }
+
+                .chatooly-resize-inputs {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+
+                .chatooly-resize-inputs label {
+                    font-size: 10px;
+                    font-weight: 500;
+                    color: var(--chatooly-color-accent-text);
+                    margin: 0;
+                }
+
+                .chatooly-input-box {
+                    background: var(--chatooly-color-accent-input);
+                    border-radius: 5px;
+                    padding: 8px 10px;
+                    display: flex;
+                    align-items: center;
+                    gap: 5px;
+                    width: 59px;
+                }
+
+                .chatooly-input-box input {
+                    width: 100%;
+                    background: transparent;
+                    border: none;
+                    color: var(--chatooly-color-accent-input-text);
+                    font-size: 10px;
+                    font-weight: 500;
+                    padding: 0;
+                    text-align: center;
+                    outline: none;
+
+                    /* Remove spinner arrows */
+                    -moz-appearance: textfield;
+                }
+
+                .chatooly-input-box input::-webkit-outer-spin-button,
+                .chatooly-input-box input::-webkit-inner-spin-button {
+                    -webkit-appearance: none;
+                    margin: 0;
+                }
+
+                .chatooly-input-box span {
+                    font-size: 10px;
+                    color: var(--chatooly-color-accent-input-text);
+                    font-weight: 500;
+                }
+
+                .chatooly-presets-label {
+                    font-size: 10px;
+                    font-weight: 500;
+                    color: var(--chatooly-color-accent-text);
+                    flex-shrink: 0;
+                }
+
+                .chatooly-preset-buttons {
+                    display: flex;
+                    gap: 5px;
+                    flex-wrap: nowrap;
+                    align-items: center;
+                }
+
+                /* Buttons inherit from base .chatooly-btn in components.css */
+
+                /* Button text visibility - show full text by default */
+                .chatooly-btn-full {
+                    display: inline;
+                }
+
+                .chatooly-btn-abbr {
+                    display: none;
+                }
+
+                /* Responsive adjustments */
+                @media (max-width: 1024px) {
+                    .chatooly-resize-bar {
+                        padding: 5px 10px;
+                        gap: 10px;
+                        max-width: calc(100vw - 40px);
+                    }
+
+                    .chatooly-resize-format {
+                        padding: 5px 10px;
+                        gap: 10px;
+                    }
+
+                    /* Keep buttons in single line, no wrapping */
+                    .chatooly-preset-buttons {
+                        flex-wrap: nowrap;
+                        gap: 3px;
+                    }
+
+                    /* Switch to abbreviated text on tablet and below */
+                    .chatooly-btn-full {
+                        display: none;
+                    }
+
+                    .chatooly-btn-abbr {
+                        display: inline;
+                    }
+
+                    /* Scale down preset buttons to fit in single line */
+                    .chatooly-preset-buttons .chatooly-btn {
+                        min-width: 28px;
+                        padding: 6px 4px;
+                        font-size: 8px;
+                        text-align: center;
+                        white-space: nowrap;
+                    }
+                }
+
+                @media (max-width: 768px) {
+                    .chatooly-resize-bar {
+                        bottom: 10px;
+                        left: 50%;
+                        right: auto;
+                        transform: translateX(-50%);
+                        flex-wrap: wrap;
+                        max-width: calc(100% - 20px);
+                    }
+
+                    .chatooly-resize-bar-label {
+                        width: 100%;
+                        margin-bottom: 5px;
+                    }
+
+                    .chatooly-resize-format {
+                        flex-wrap: wrap;
+                        width: 100%;
+                    }
+
+                    .chatooly-resize-inputs {
+                        flex-wrap: wrap;
+                    }
+
+                    /* Further scale down buttons on mobile */
+                    .chatooly-preset-buttons {
+                        gap: 2px;
+                    }
+
+                    .chatooly-preset-buttons .chatooly-btn {
+                        min-width: 24px;
+                        padding: 5px 3px;
+                        font-size: 7px;
+                    }
+                }
+            </style></head>
+<body class="chatooly-styles-loaded">
+    <header class="chatooly-header">
+        <div class="chatooly-header-title">3D Pillar Chart</div>
+        <div class="chatooly-header-credit">MADE WITH CHATOOLY</div>
+    </header>
+
+    <div class="chatooly-app-container">
+        <!-- Left Panel: Tool Controls -->
+        <div class="chatooly-controls-panel">
+            <div class="chatooly-controls-header">
+                <p>Create stunning 3D pillar charts from CSV data with customizable themes and animations</p>
+            </div>
+
+            <div class="chatooly-controls-content">
+
+                <!-- DATA INPUT SECTION -->
+                <div class="chatooly-section-card" data-section="data">
+                    <h3 class="chatooly-section-header">📁 Data Input</h3>
+                    <div class="chatooly-section-content">
+
+                        <!-- CSV Upload -->
+                        <div class="chatooly-upload-area" id="csv-drop-zone" style="height: 80px;">
+                            <div class="chatooly-upload-icon">
+                                <svg viewBox="0 0 11 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M7.94444 0L11 3V11.4048C10.9998 11.5627 10.9358 11.7141 10.822 11.8257C10.7083 11.9373 10.554 12 10.3932 12H0.606833C0.446342 11.9989 0.292733 11.9359 0.179189 11.8245C0.0656443 11.7131 0.00128006 11.5624 0 11.4048V0.5952C0 0.2664 0.271944 0 0.606833 0H7.94444ZM6.11111 6H7.94444L5.5 3.6L3.05556 6H4.88889V8.4H6.11111V6Z" fill="var(--fill-0, #454545)"></path>
+                                </svg>
+                            </div>
+                            <div class="chatooly-upload-text">Upload CSV or drag &amp; drop</div>
+                            <input type="file" class="chatooly-upload-input" id="csv-upload" accept=".csv,text/csv">
+                        </div>
+
+                        <!-- Data Preview -->
+                        <div id="data-preview" style="display: none;">
+                            <div style="font-size: 11px; color: var(--chatooly-color-text-muted); margin-bottom: 4px;">
+                                Data Preview (first 5 rows):
+                            </div>
+                            <div id="data-preview-content"></div>
+                        </div>
+
+                        <!-- Load Sample Data Button -->
+                        <button class="chatooly-btn" id="load-sample" style="width: 100%; margin-top: 8px;">
+                            Load Sample Data
+                        </button>
+
+                    </div>
+                </div>
+
+                <!-- PILLAR SHAPE SECTION -->
+                <div class="chatooly-section-card" data-section="shape">
+                    <h3 class="chatooly-section-header">📊 Pillar Shape</h3>
+                    <div class="chatooly-section-content">
+
+                        <!-- Shape Dropdown -->
+                        <div class="chatooly-input-group">
+                            <label class="chatooly-input-label" for="pillar-shape">Shape</label>
+                            <select class="chatooly-select" id="pillar-shape">
+                                <option value="cylinder">Cylinder (Round)</option>
+                                <option value="box">Box (Square)</option>
+                                <option value="roundedBox" selected="">Rounded Box</option>
+                            </select>
+                        </div>
+
+                        <!-- Pillar Width -->
+                        <div class="chatooly-slider-group">
+                            <div class="chatooly-slider-label">
+                                <span>Pillar Width</span>
+                                <span class="chatooly-slider-value" id="pillar-width-value">1</span>
+                            </div>
+                            <input type="range" class="chatooly-slider" id="pillar-width" min="0.1" max="2" step="0.05" value="1">
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- MATERIAL SECTION -->
+                <div class="chatooly-section-card" data-section="material">
+                    <h3 class="chatooly-section-header">🎨 Material</h3>
+                    <div class="chatooly-section-content">
+
+                        <!-- Material Type Dropdown -->
+                        <div class="chatooly-input-group">
+                            <label class="chatooly-input-label" for="material-type">Material Type</label>
+                            <select class="chatooly-select" id="material-type">
+                                <option value="metallic">Metallic</option>
+                                <option value="glass" selected="">Glass</option>
+                                <option value="matcap">Matcap (from assets)</option>
+                                <option value="custom-matcap">Custom Matcap (upload)</option>
+                                <option value="custom">Custom Color</option>
+                            </select>
+                        </div>
+
+                        <!-- Matcap Preset Dropdown -->
+                        <div class="chatooly-input-group" id="matcap-preset-group" style="display: none;">
+                            <label class="chatooly-input-label" for="matcap-preset">Matcap Preset</label>
+                            <select class="chatooly-select" id="matcap-preset">
+                                <option value="">-- Select Matcap --</option>
+                                <optgroup label="Matte / Clay">
+                                    <option value="cdn:050505_747474_4C4C4C_333333">Dark Gray Clay</option>
+                                    <option value="cdn:15100F_241D1B_292424_2C2C27">Charcoal</option>
+                                    <option value="cdn:191514_6D5145_4E3324_3B564D">Brown Clay</option>
+                                    <option value="cdn:281813_604233_4B3426_442B22">Terracotta</option>
+                                    <option value="cdn:32201D_613C3C_563533_8C655F">Warm Brown</option>
+                                </optgroup>
+                                <optgroup label="Metallic">
+                                    <option value="cdn:1B1B1B_999999_575757_747474">Dark Silver</option>
+                                    <option value="cdn:2A2A2A_DBDBDB_6A6A6A_949494">Brushed Metal</option>
+                                    <option value="cdn:313131_BBBBBB_878787_A3A4A4">Silver</option>
+                                    <option value="cdn:353535_CFCFCF_828282_A4A4A4">Bright Chrome</option>
+                                    <option value="cdn:36220C_C6C391_8C844A_8B7B4C">Bronze</option>
+                                </optgroup>
+                                <optgroup label="Colorful">
+                                    <option value="cdn:04E804_04B504_04CB04_33FC33">Neon Green</option>
+                                    <option value="cdn:0489C5_0DDDF9_04C3EE_04AFE1">Cyan</option>
+                                    <option value="cdn:36C8FA_176ACB_24A7EF_1D93EC">Sky Blue</option>
+                                    <option value="cdn:254FB0_99AFF0_6587D8_1D3279">Blue</option>
+                                    <option value="cdn:37C337_279F27_186018_248824">Green</option>
+                                </optgroup>
+                            </select>
+                        </div>
+
+                        <!-- Custom Matcap Upload -->
+                        <div id="matcap-upload-group" style="display: none; margin-top: 8px;">
+                            <div style="font-size: 11px; color: var(--chatooly-color-text-muted); margin-bottom: 4px;">
+                                Upload Matcap Image:
+                            </div>
+                            <div class="chatooly-upload-area" style="height: 60px;">
+                                <div class="chatooly-upload-text">Drop matcap image here</div>
+                                <input type="file" class="chatooly-upload-input" id="matcap-upload" accept="image/*">
+                            </div>
+                            <div id="matcap-preview" style="display: none; margin-top: 8px; align-items: center;">
+                                <img id="matcap-preview-img" style="width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--chatooly-color-border);">
+                                <button class="chatooly-btn" id="clear-matcap" style="margin-left: 8px; padding: 4px 8px;">×</button>
+                            </div>
+                        </div>
+
+                        <!-- Custom Color Picker -->
+                        <div class="chatooly-color-group" id="custom-color-group" style="display: none;">
+                            <label class="chatooly-color-label" for="custom-color">Base Color</label>
+                            <input type="color" class="chatooly-color-input" id="custom-color" value="#4a90d9">
+                        </div>
+
+                        <!-- HDRI Environment Preset -->
+                        <div class="chatooly-input-group" style="margin-top: 12px;">
+                            <label class="chatooly-input-label" for="hdri-preset">Environment (HDRI)</label>
+                            <select class="chatooly-select" id="hdri-preset">
+                                <option value="studio">Studio</option>
+                                <option value="ballroom">Ballroom</option>
+                                <option value="sunset" selected="">Sunset</option>
+                                <option value="city">City Street</option>
+                                <option value="cape">Cape Hill</option>
+                                <option value="metro">Metro</option>
+                                <option value="none">None (Color Only)</option>
+                            </select>
+                        </div>
+
+                        <!-- Show HDRI as Background Toggle -->
+                        <div class="chatooly-toggle-group">
+                            <button type="button" class="chatooly-toggle" id="show-hdri-bg" role="switch" aria-pressed="true">
+                                <span class="chatooly-toggle-slider"></span>
+                            </button>
+                            <label class="chatooly-toggle-label" for="show-hdri-bg">Show HDRI as Background</label>
+                        </div>
+
+                        <!-- Background Blurriness -->
+                        <div class="chatooly-slider-group" id="bg-blur-group">
+                            <div class="chatooly-slider-label">
+                                <span>Background Blur</span>
+                                <span class="chatooly-slider-value" id="bg-blur-value">0.0</span>
+                            </div>
+                            <input type="range" class="chatooly-slider" id="bg-blur" min="0" max="1" step="0.05" value="0">
+                        </div>
+
+                        <!-- Series Colors -->
+                        <div id="series-colors-container">
+                            <div style="font-size: 11px; color: var(--chatooly-color-text-muted); margin-bottom: 8px;">
+                                Pillar Colors:
+                            </div>
+                            <div style="display: flex; gap: 16px; align-items: flex-start;">
+                                <div class="chatooly-color-group" style="flex: 1;" id="series-a-group">
+                                    <label class="chatooly-color-label" for="series-color-a" style="display: block; margin-bottom: 4px;">Series A</label>
+                                    <input type="color" class="chatooly-color-input" id="series-color-a" value="#cce7ff">
+                                </div>
+                                <div class="chatooly-color-group" style="flex: 1 1 0%; display: block;" id="series-b-group">
+                                    <label class="chatooly-color-label" for="series-color-b" style="display: block; margin-bottom: 4px;">Series B</label>
+                                    <input type="color" class="chatooly-color-input" id="series-color-b" value="#ff0000">
+                                </div>
+                            </div>
+                            <div class="series-colors" id="series-colors" style="display: none;"></div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- LABELS SECTION -->
+                <div class="chatooly-section-card" data-section="labels">
+                    <h3 class="chatooly-section-header">🏷️ Labels</h3>
+                    <div class="chatooly-section-content">
+
+                        <!-- Label Mode -->
+                        <div class="chatooly-input-group">
+                            <label class="chatooly-input-label" for="label-mode">Label Mode</label>
+                            <select class="chatooly-select" id="label-mode">
+                                <option value="none">None</option>
+                                <option value="3d" selected="">3D Floating Text</option>
+                            </select>
+                        </div>
+
+                        <!-- Show Values Toggle -->
+                        <div class="chatooly-toggle-group">
+                            <button type="button" class="chatooly-toggle" id="show-values" role="switch" aria-pressed="true">
+                                <span class="chatooly-toggle-slider"></span>
+                            </button>
+                            <label class="chatooly-toggle-label" for="show-values">Show Values</label>
+                        </div>
+
+                        <!-- Show Labels Toggle -->
+                        <div class="chatooly-toggle-group">
+                            <button type="button" class="chatooly-toggle" id="show-labels" role="switch" aria-pressed="true">
+                                <span class="chatooly-toggle-slider"></span>
+                            </button>
+                            <label class="chatooly-toggle-label" for="show-labels">Show Category Labels</label>
+                        </div>
+
+                        <!-- Font Size -->
+                        <div class="chatooly-slider-group">
+                            <div class="chatooly-slider-label">
+                                <span>Font Size</span>
+                                <span class="chatooly-slider-value" id="font-size-value">14</span>
+                            </div>
+                            <input type="range" class="chatooly-slider" id="font-size" min="8" max="24" value="14">
+                        </div>
+
+                        <!-- Text Color -->
+                        <div class="chatooly-color-group">
+                            <label class="chatooly-color-label" for="text-color">Text Color</label>
+                            <input type="color" class="chatooly-color-input" id="text-color" value="#ff3838">
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- EFFECTS SECTION -->
+                <div class="chatooly-section-card" data-section="effects">
+                    <h3 class="chatooly-section-header">✨ Effects</h3>
+                    <div class="chatooly-section-content">
+
+                        <!-- Bloom Toggle -->
+                        <div class="chatooly-toggle-group">
+                            <button type="button" class="chatooly-toggle" id="bloom-toggle" role="switch" aria-pressed="false">
+                                <span class="chatooly-toggle-slider"></span>
+                            </button>
+                            <label class="chatooly-toggle-label" for="bloom-toggle">Bloom / Glow Effect</label>
+                        </div>
+
+                        <!-- Bloom Intensity -->
+                        <div class="chatooly-slider-group" id="bloom-intensity-group" style="display: none;">
+                            <div class="chatooly-slider-label">
+                                <span>Bloom Intensity</span>
+                                <span class="chatooly-slider-value" id="bloom-intensity-value">1.0</span>
+                            </div>
+                            <input type="range" class="chatooly-slider" id="bloom-intensity" min="0" max="3" step="0.1" value="1.0">
+                        </div>
+
+                        <!-- Auto Rotate Toggle -->
+                        <div class="chatooly-toggle-group">
+                            <button type="button" class="chatooly-toggle active" id="auto-rotate" role="switch" aria-pressed="true">
+                                <span class="chatooly-toggle-slider"></span>
+                            </button>
+                            <label class="chatooly-toggle-label" for="auto-rotate">Auto Rotate</label>
+                        </div>
+
+                        <!-- Rotation Speed -->
+                        <div class="chatooly-slider-group" id="rotation-speed-group">
+                            <div class="chatooly-slider-label">
+                                <span>Rotation Speed</span>
+                                <span class="chatooly-slider-value" id="rotation-speed-value">1</span>
+                            </div>
+                            <input type="range" class="chatooly-slider" id="rotation-speed" min="0.5" max="10" step="0.5" value="1">
+                        </div>
+
+                        <!-- Environment Reflections Toggle -->
+                        <div class="chatooly-toggle-group">
+                            <button type="button" class="chatooly-toggle" id="env-reflections" role="switch" aria-pressed="true">
+                                <span class="chatooly-toggle-slider"></span>
+                            </button>
+                            <label class="chatooly-toggle-label" for="env-reflections">Environment Reflections</label>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- LAYOUT SECTION -->
+                <div class="chatooly-section-card" data-section="layout">
+                    <h3 class="chatooly-section-header">📐 Layout</h3>
+                    <div class="chatooly-section-content">
+
+                        <!-- Pillar Spacing -->
+                        <div class="chatooly-slider-group">
+                            <div class="chatooly-slider-label">
+                                <span>Pillar Spacing</span>
+                                <span class="chatooly-slider-value" id="pillar-spacing-value">3</span>
+                            </div>
+                            <input type="range" class="chatooly-slider" id="pillar-spacing" min="0.5" max="10" step="0.1" value="3">
+                        </div>
+
+                        <!-- Group Spacing (for multi-series) -->
+                        <div class="chatooly-slider-group" id="group-spacing-group">
+                            <div class="chatooly-slider-label">
+                                <span>Group Z-Spacing</span>
+                                <span class="chatooly-slider-value" id="group-spacing-value">0.5</span>
+                            </div>
+                            <input type="range" class="chatooly-slider" id="group-spacing" min="0" max="3" step="0.05" value="0.5">
+                        </div>
+
+                        <!-- Group X-Offset (for multi-series diagonal arrangement) -->
+                        <div class="chatooly-slider-group" id="group-x-offset-group">
+                            <div class="chatooly-slider-label">
+                                <span>Group X-Offset</span>
+                                <span class="chatooly-slider-value" id="group-x-offset-value">0.25</span>
+                            </div>
+                            <input type="range" class="chatooly-slider" id="group-x-offset" min="0" max="2" step="0.05" value="0.25">
+                        </div>
+
+                        <!-- Max Height -->
+                        <div class="chatooly-slider-group">
+                            <div class="chatooly-slider-label">
+                                <span>Max Height</span>
+                                <span class="chatooly-slider-value" id="max-height-value">6</span>
+                            </div>
+                            <input type="range" class="chatooly-slider" id="max-height" min="2" max="10" step="0.5" value="6">
+                        </div>
+
+                        <!-- Camera Presets -->
+                        <div style="margin-top: 12px;">
+                            <div style="font-size: 11px; color: var(--chatooly-color-text-muted); margin-bottom: 8px;">
+                                Camera Presets:
+                            </div>
+                            <div class="camera-presets">
+                                <button class="chatooly-btn" data-camera="front">Front</button>
+                                <button class="chatooly-btn" data-camera="top">Top</button>
+                                <button class="chatooly-btn" data-camera="isometric">Isometric</button>
+                                <button class="chatooly-btn" data-camera="quarter">3/4 View</button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- ANIMATION SECTION -->
+                <div class="chatooly-section-card" data-section="animation">
+                    <h3 class="chatooly-section-header">🎬 Animation</h3>
+                    <div class="chatooly-section-content">
+
+                        <!-- Play Animation Button -->
+                        <button class="chatooly-btn" id="play-animation" style="width: 100%;">
+                            ▶ Play Entrance Animation
+                        </button>
+
+                        <!-- Animation Style -->
+                        <div class="chatooly-input-group" style="margin-top: 12px;">
+                            <label class="chatooly-input-label" for="animation-style">Animation Style</label>
+                            <select class="chatooly-select" id="animation-style">
+                                <option value="grow">Grow Up</option>
+                                <option value="pop">Pop In</option>
+                                <option value="wave">Wave</option>
+                            </select>
+                        </div>
+
+                        <!-- Animation Duration -->
+                        <div class="chatooly-slider-group">
+                            <div class="chatooly-slider-label">
+                                <span>Duration (sec)</span>
+                                <span class="chatooly-slider-value" id="animation-duration-value">3</span>
+                            </div>
+                            <input type="range" class="chatooly-slider" id="animation-duration" min="0.3" max="5" step="0.1" value="3">
+                        </div>
+
+                        <!-- Stagger Delay -->
+                        <div class="chatooly-slider-group">
+                            <div class="chatooly-slider-label">
+                                <span>Stagger Delay</span>
+                                <span class="chatooly-slider-value" id="stagger-delay-value">0.5</span>
+                            </div>
+                            <input type="range" class="chatooly-slider" id="stagger-delay" min="0" max="1" step="0.02" value="0.5">
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- BACKGROUND CONTROLS -->
+                <div class="chatooly-section-card" data-section="background">
+                    <h3 class="chatooly-section-header">◼ Background</h3>
+                    <div class="chatooly-section-content">
+                        <!-- Transparent Background Toggle -->
+                        <div class="chatooly-toggle-group">
+                            <button type="button" class="chatooly-toggle" id="transparent-bg" role="switch" aria-pressed="false">
+                                <span class="chatooly-toggle-slider"></span>
+                            </button>
+                            <label class="chatooly-toggle-label" for="transparent-bg">Transparent Background</label>
+                        </div>
+
+                        <!-- Background Color Picker -->
+                        <div class="chatooly-color-group" id="bg-color-group">
+                            <label class="chatooly-color-label" for="bg-color">Background Color</label>
+                            <input type="color" class="chatooly-color-input" id="bg-color" value="#1a1a2e">
+                        </div>
+
+                        <!-- Background Image Upload -->
+                        <div style="position: relative;">
+                            <div class="chatooly-upload-area" style="height: 80px;">
+                                <div class="chatooly-upload-icon">
+                                    <svg viewBox="0 0 11 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M7.94444 0L11 3V11.4048C10.9998 11.5627 10.9358 11.7141 10.822 11.8257C10.7083 11.9373 10.554 12 10.3932 12H0.606833C0.446342 11.9989 0.292733 11.9359 0.179189 11.8245C0.0656443 11.7131 0.00128006 11.5624 0 11.4048V0.5952C0 0.2664 0.271944 0 0.606833 0H7.94444ZM6.11111 6H7.94444L5.5 3.6L3.05556 6H4.88889V8.4H6.11111V6Z" fill="var(--fill-0, #454545)"></path>
+                                    </svg>
+                                </div>
+                                <div class="chatooly-upload-text">Background Image</div>
+                                <input type="file" class="chatooly-upload-input" id="bg-image" accept="image/*">
+                            </div>
+                            <button id="clear-bg-image" type="button" class="chatooly-btn" style="display: none; position: absolute; top: 8px; right: 8px; padding: 4px 8px; min-width: auto; z-index: 10;" title="Remove image">×</button>
+                        </div>
+
+                        <!-- Image Fit Dropdown -->
+                        <div class="chatooly-input-group" id="bg-fit-group" style="display: none;">
+                            <label class="chatooly-input-label" for="bg-fit">Image Fit</label>
+                            <select class="chatooly-select" id="bg-fit">
+                                <option value="cover">Fill Frame</option>
+                                <option value="contain">Fit in Frame</option>
+                                <option value="fill">Stretch to Fill</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        <div class="chatooly-controls-footer"><button class="chatooly-btn chatooly-btn-export">Export</button></div></div>
+
+        <!-- Right Panel: Preview/Canvas Area -->
+        <div class="chatooly-preview-panel" style="display: flex; align-items: center; justify-content: center;">
+            <div id="chatooly-container" style="width: 100%; height: 100%; position: relative; display: flex; align-items: center; justify-content: center; box-sizing: border-box; overflow: auto;">
+                <canvas id="chatooly-canvas" width="1920" height="1080" data-engine="three.js r160" style="width: 687px; height: 386.438px; touch-action: none; position: static; margin: 0px; transform-origin: center center;"></canvas>
+                <!-- 2D Labels overlay container -->
+                <div id="label-container"></div>
+            </div>
+        <div id="chatooly-resize-bar" class="chatooly-resize-bar">
+                <span class="chatooly-resize-bar-label">Canvas Size</span>
+                <div class="chatooly-resize-format">
+                    <div class="chatooly-resize-inputs">
+                        <label>W</label>
+                        <div class="chatooly-input-box">
+                            <input type="number" id="chatooly-bar-width" value="1920" min="100" max="4000">
+                            <span>px</span>
+                        </div>
+
+                        <label>H</label>
+                        <div class="chatooly-input-box">
+                            <input type="number" id="chatooly-bar-height" value="1080" min="100" max="4000">
+                            <span>px</span>
+                        </div>
+                    </div>
+
+                    <span class="chatooly-presets-label">Presets</span>
+
+                    <div class="chatooly-preset-buttons">
+                        
+                    <button class="chatooly-btn " data-preset="HD (16:9)" data-abbr="HD">
+                        <span class="chatooly-btn-full">HD (16:9)</span>
+                        <span class="chatooly-btn-abbr">HD</span>
+                    </button>
+                
+                    <button class="chatooly-btn active" data-preset="SQUARE (1:1)" data-abbr="SQ">
+                        <span class="chatooly-btn-full">SQUARE (1:1)</span>
+                        <span class="chatooly-btn-abbr">SQ</span>
+                    </button>
+                
+                    <button class="chatooly-btn " data-preset="4:3" data-abbr="4:3">
+                        <span class="chatooly-btn-full">4:3</span>
+                        <span class="chatooly-btn-abbr">4:3</span>
+                    </button>
+                
+                    <button class="chatooly-btn " data-preset="PORTRAIT (9:16)" data-abbr="PT">
+                        <span class="chatooly-btn-full">PORTRAIT (9:16)</span>
+                        <span class="chatooly-btn-abbr">PT</span>
+                    </button>
+                
+                    </div>
+                </div>
+            </div></div>
+    </div>
+
+    <!-- Chatooly CDN -->
+    <script src="https://yaelren.github.io/chatooly-cdn/js/core.min.js"></script>
+
+    <!-- Chatooly Configuration -->
+    <script src="js/chatooly-config.js"></script>
+
+    <!-- UI Controls -->
+    <script src="js/ui.js"></script>
+
+    <!-- Main Tool Logic (ES Module for Three.js) -->
+    <script type="module" src="js/main.js"></script>
+
+    <!-- Tool IPC -->
+    <script src="js/tool-ipc.js"></script>
+
+
+<div id="chatooly-export-modal" class="chatooly-modal-overlay">
+                <div class="chatooly-modal-container">
+                    <div class="chatooly-modal-content">
+                        <!-- Header -->
+                        <div class="chatooly-modal-header">
+                            <span>Export</span>
+                            <button class="chatooly-modal-close" aria-label="Close">
+                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M1 1L11 11M1 11L11 1" stroke="white" stroke-width="1.5" stroke-linecap="round"></path>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <!-- Body -->
+                        <div class="chatooly-modal-body">
+                            <div class="chatooly-export-section">
+                                <!-- Format Toggle -->
+                                <div class="chatooly-export-toggle">
+                                    <button class="chatooly-toggle-btn active" data-format="image">Image</button>
+                                    <button class="chatooly-toggle-btn" data-format="video">Video</button>
+                                </div>
+
+                                <!-- Image Options -->
+                                <div class="chatooly-export-options" data-type="image">
+                                    <div class="chatooly-export-field">
+                                        <label>Size</label>
+                                        <div class="chatooly-multiplier-buttons">
+                                            <button class="chatooly-multiplier-btn" data-multiplier="0.5">0.5X</button>
+                                            <button class="chatooly-multiplier-btn" data-multiplier="1">1X</button>
+                                            <button class="chatooly-multiplier-btn active" data-multiplier="2">2X</button>
+                                            <button class="chatooly-multiplier-btn" data-multiplier="3">3X</button>
+                                            <button class="chatooly-multiplier-btn" data-multiplier="4">4X</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Video Options -->
+                                <div class="chatooly-export-options" data-type="video" style="display: none;">
+                                    <div class="chatooly-export-row">
+                                        <div class="chatooly-input-group">
+                                            <label class="chatooly-input-label">Duration</label>
+                                            <input type="number" class="chatooly-input" value="5" id="anim-duration">
+                                        </div>
+                                        <div class="chatooly-input-group">
+                                            <label class="chatooly-input-label">FPS</label>
+                                            <input type="number" class="chatooly-input" value="30" id="anim-fps">
+                                        </div>
+                                    </div>
+
+                                    <div class="chatooly-input-group">
+                                        <label class="chatooly-input-label">Format</label>
+                                        <select class="chatooly-select" id="anim-format">
+                                            <option value="webm">WebM</option>
+                                            <option value="mp4">MP4</option>
+                                            <option value="png-sequence">PNG Sequence</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="chatooly-modal-footer">
+                            <button class="chatooly-modal-export-btn">
+                                Export Image
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div></body></html>

@@ -547,6 +547,19 @@
                 <div class="chatooly-section-card" data-section="chain">
                     <h3 class="chatooly-section-header">🔗 Chain Properties</h3>
                     <div class="chatooly-section-content">
+                        <!-- Bead Shape -->
+                        <div class="chatooly-input-group">
+                            <label class="chatooly-input-label" for="bead-shape">Bead Shape</label>
+                            <select class="chatooly-select" id="bead-shape">
+                                <option value="circle">Circle</option>
+                                <option value="square">Square</option>
+                                <option value="triangle">Triangle</option>
+                                <option value="diamond">Diamond</option>
+                                <option value="hexagon">Hexagon</option>
+                                <option value="star">Star</option>
+                            </select>
+                        </div>
+
                         <!-- Chain Length -->
                         <div class="chatooly-slider-group">
                             <div class="chatooly-slider-label">
@@ -589,32 +602,27 @@
                             <input type="color" class="chatooly-color-input" id="chain-color" value="#ff5500">
                         </div>
 
+                        <!-- Show Stroke Toggle -->
+                        <div class="chatooly-toggle-group">
+                            <button type="button" class="chatooly-toggle" id="show-stroke" role="switch" aria-pressed="true">
+                                <span class="chatooly-toggle-slider"></span>
+                            </button>
+                            <label class="chatooly-toggle-label" for="show-stroke">Show Stroke</label>
+                        </div>
+
                         <!-- Stroke Color -->
-                        <div class="chatooly-color-group">
+                        <div class="chatooly-color-group" id="stroke-color-group">
                             <label class="chatooly-color-label" for="stroke-color">Stroke Color</label>
                             <input type="color" class="chatooly-color-input" id="stroke-color" value="#ff5500">
                         </div>
 
                         <!-- Stroke Width -->
-                        <div class="chatooly-slider-group">
+                        <div class="chatooly-slider-group" id="stroke-width-group">
                             <div class="chatooly-slider-label">
                                 <span>Stroke Width</span>
                                 <span class="chatooly-slider-value" id="stroke-width-value">2</span>
                             </div>
                             <input type="range" class="chatooly-slider" id="stroke-width" min="1" max="200" value="2">
-                        </div>
-
-                        <!-- Bead Shape -->
-                        <div class="chatooly-input-group">
-                            <label class="chatooly-input-label" for="bead-shape">Bead Shape</label>
-                            <select class="chatooly-select" id="bead-shape">
-                                <option value="circle">Circle</option>
-                                <option value="square">Square</option>
-                                <option value="triangle">Triangle</option>
-                                <option value="diamond">Diamond</option>
-                                <option value="hexagon">Hexagon</option>
-                                <option value="star">Star</option>
-                            </select>
                         </div>
 
                         <!-- Font Color -->

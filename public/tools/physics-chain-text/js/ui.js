@@ -32,4 +32,33 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // Setup toggle button functionality for show stroke
+    const showStrokeToggle = document.getElementById('show-stroke');
+
+    if (showStrokeToggle) {
+        // Initialize toggle button click handler
+        showStrokeToggle.addEventListener('click', () => {
+            const isPressed = showStrokeToggle.getAttribute('aria-pressed') === 'true';
+            const newState = !isPressed;
+
+            // Update toggle button state
+            showStrokeToggle.setAttribute('aria-pressed', newState);
+
+            // Show/hide stroke controls based on toggle state
+            const strokeColorGroup = document.getElementById('stroke-color-group');
+            const strokeWidthGroup = document.getElementById('stroke-width-group');
+            if (strokeColorGroup) {
+                strokeColorGroup.style.display = newState ? 'block' : 'none';
+            }
+            if (strokeWidthGroup) {
+                strokeWidthGroup.style.display = newState ? 'block' : 'none';
+            }
+
+            // Update the showStroke variable in main.js if it exists
+            if (typeof window.updateShowStroke === 'function') {
+                window.updateShowStroke(newState);
+            }
+        });
+    }
 });

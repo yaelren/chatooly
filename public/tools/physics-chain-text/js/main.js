@@ -23,6 +23,7 @@ let gravity = 0.5;
 let chainColor = '#ff5500';
 let strokeColor = '#ff5500';
 let strokeWidth = 2; // Width of chain connection lines
+let showStroke = true; // Whether to show chain connection lines
 let fontColor = '#ffffff';
 let beadShape = 'circle'; // Shape for bead heads: circle, square, triangle, diamond, hexagon, star
 let inputText = 'HELLO';
@@ -52,6 +53,7 @@ class Chain {
         this.chainColor = chainColor;
         this.strokeColor = strokeColor;
         this.strokeWidth = strokeWidth;
+        this.showStroke = showStroke;
         this.fontColor = fontColor;
         this.chainLength = chainLength;
         this.beadSize = beadSize;
@@ -63,16 +65,17 @@ class Chain {
     createBeads() {
         this.beads = [];
         const letters = this.text.toUpperCase().split('');
-        
+
         for (let i = 0; i < letters.length; i++) {
             const letter = letters[i];
-            if (letter === ' ') continue; // Skip spaces
-            
+            const isSpace = letter === ' ';
+
             const x = this.anchorX;
             const y = this.anchorY + (this.beads.length * this.chainLength);
-            
+
             const bead = new Bead(x, y, letter, this.beads.length, this);
             bead.isAnchored = this.beads.length === 0;
+            bead.isEmpty = isSpace; // Mark space beads as empty
             this.beads.push(bead);
         }
     }
@@ -116,21 +119,26 @@ class Chain {
     
     draw(p) {
         if (this.beads.length === 0) return;
-        
-        // Draw connections
-        p.stroke(this.strokeColor);
-        p.strokeWeight(this.strokeWidth);
-        p.noFill();
-        
-        for (let i = 1; i < this.beads.length; i++) {
-            p.line(this.beads[i - 1].x, this.beads[i - 1].y, this.beads[i].x, this.beads[i].y);
+
+        // Draw connections (only if showStroke is enabled)
+        if (this.showStroke) {
+            p.stroke(this.strokeColor);
+            p.strokeWeight(this.strokeWidth);
+            p.noFill();
+
+            for (let i = 1; i < this.beads.length; i++) {
+                p.line(this.beads[i - 1].x, this.beads[i - 1].y, this.beads[i].x, this.beads[i].y);
+            }
         }
         
         // Draw beads
         for (let bead of this.beads) {
+            // Skip drawing empty beads (spaces) - they still participate in physics
+            if (bead.isEmpty) continue;
+
             // Check if this is the anchor bead and if it's being hovered
             const isHovered = bead.isAnchored && hoveredAnchorChain === this;
-            
+
             // Draw bead shape with hover effect for anchor
             if (isHovered) {
                 // Highlight the anchor bead on hover
@@ -143,7 +151,7 @@ class Chain {
                 p.strokeWeight(2);
             }
             this.drawBeadShape(p, bead.x, bead.y, bead.radius, this.beadShape);
-            
+
             // Draw letter
             p.fill(this.fontColor);
             p.noStroke();
@@ -447,8 +455,11 @@ function initP5() {
                 const canvas = document.getElementById('chatooly-canvas');
                 if (canvas) {
                     const rect = canvas.getBoundingClientRect();
-                    pinTooltip.style.left = (rect.left + p.mouseX + 20) + 'px';
-                    pinTooltip.style.top = (rect.top + p.mouseY - 10) + 'px';
+                    // Scale mouse position from canvas coords to screen coords
+                    const scaleX = rect.width / p.width;
+                    const scaleY = rect.height / p.height;
+                    pinTooltip.style.left = (rect.left + p.mouseX * scaleX + 15) + 'px';
+                    pinTooltip.style.top = (rect.top + p.mouseY * scaleY + 15) + 'px';
                     pinTooltip.style.display = 'block';
                     // Update text based on pin state
                     pinTooltip.textContent = draggedBead.isPinned ? 'Press P to unpin bead' : 'Press P to pin bead';
@@ -677,7 +688,17 @@ function updateChainUI(chain) {
         const valueDisplay = document.getElementById('stroke-width-value');
         if (valueDisplay) valueDisplay.textContent = chain.strokeWidth;
     }
-    
+
+    // Update show stroke toggle and visibility of stroke controls
+    const showStrokeToggle = document.getElementById('show-stroke');
+    if (showStrokeToggle) {
+        showStrokeToggle.setAttribute('aria-pressed', chain.showStroke);
+        const strokeColorGroup = document.getElementById('stroke-color-group');
+        const strokeWidthGroup = document.getElementById('stroke-width-group');
+        if (strokeColorGroup) strokeColorGroup.style.display = chain.showStroke ? 'block' : 'none';
+        if (strokeWidthGroup) strokeWidthGroup.style.display = chain.showStroke ? 'block' : 'none';
+    }
+
     const fontColorInput = document.getElementById('font-color');
     if (fontColorInput) fontColorInput.value = chain.fontColor;
     
@@ -939,7 +960,16 @@ function setupUIControls() {
             }
         });
     }
-    
+
+    // Show stroke toggle - exposed globally for ui.js to call
+    window.updateShowStroke = function(value) {
+        showStroke = value;
+        const chain = getSelectedChain();
+        if (chain) {
+            chain.showStroke = showStroke;
+        }
+    };
+
     // Font color
     const fontColorInput = document.getElementById('font-color');
     if (fontColorInput) {

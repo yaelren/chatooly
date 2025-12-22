@@ -1,0 +1,999 @@
+<!DOCTYPE html><html lang="en"><plasmo-csui></plasmo-csui><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- ========== EDIT THIS: Your Tool Name ========== -->
+    <title>3D Tetris Block Builder - Chatooly</title>
+    
+    <!-- ========== DO NOT EDIT: Required CDN Styles ========== -->
+    <link id="chatooly-unified-styles" rel="stylesheet" href="https://yaelren.github.io/chatooly-cdn/css/unified.min.css"><link rel="stylesheet" href="https://yaelren.github.io/chatooly-cdn/css/unified.min.css?v=2.1">
+
+    <!-- Tool Layout Styles (AI sidebar is in shell.html) -->
+    <style>
+        /* Two-column layout for tool (no AI sidebar - it's in parent shell) */
+        .chatooly-app-container {
+            grid-template-columns: 300px 1fr !important;
+        }
+    </style>
+<style id="chatooly-canvas-area-styles">
+                /* Canvas area container - works with both template and legacy */
+                #chatooly-container, #chatooly-canvas-area {
+                    box-sizing: border-box;
+                    transition: all 0.3s ease;
+                }
+                
+                /* Template structure - ensure proper centering */
+                .chatooly-preview-panel {
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                }
+                
+                #chatooly-container {
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    width: 100%;
+                    height: 100%;
+                }
+                
+                /* Canvas inside the area - universal rules */
+                #chatooly-container canvas, #chatooly-canvas-area canvas {
+                    display: block;
+                    margin: 0; /* Remove auto margin - let flexbox handle centering */
+                    max-width: 100%;
+                    max-height: 100%;
+                    object-fit: contain;
+                    image-rendering: crisp-edges;
+                    image-rendering: -moz-crisp-edges;
+                    image-rendering: -webkit-crisp-edges;
+                    image-rendering: pixelated;
+                    /* Ensure canvas is centered by flexbox parent */
+                    flex-shrink: 0;
+                }
+                
+                /* When zoomed, allow canvas to exceed container bounds */
+                #chatooly-container.zoomed, #chatooly-canvas-area.zoomed {
+                    overflow: auto;
+                    cursor: grab;
+                }
+                
+                #chatooly-container.zoomed.dragging, #chatooly-canvas-area.zoomed.dragging {
+                    cursor: grabbing;
+                    user-select: none;
+                }
+                
+                /* Custom scrollbar for canvas area */
+                #chatooly-container::-webkit-scrollbar, #chatooly-canvas-area::-webkit-scrollbar {
+                    width: 12px;
+                    height: 12px;
+                }
+                
+                #chatooly-container::-webkit-scrollbar-track, #chatooly-canvas-area::-webkit-scrollbar-track {
+                    background: #f1f1f1;
+                    border-radius: 6px;
+                }
+                
+                #chatooly-container::-webkit-scrollbar-thumb, #chatooly-canvas-area::-webkit-scrollbar-thumb {
+                    background: #888;
+                    border-radius: 6px;
+                }
+                
+                #chatooly-container::-webkit-scrollbar-thumb:hover, #chatooly-canvas-area::-webkit-scrollbar-thumb:hover {
+                    background: #555;
+                }
+                
+                /* Zoom indicator inside canvas area */
+                #chatooly-container .zoom-indicator, #chatooly-canvas-area .zoom-indicator {
+                    position: absolute;
+                    top: 10px;
+                    right: 10px;
+                    background: rgba(0, 0, 0, 0.7);
+                    color: white;
+                    padding: 5px 10px;
+                    border-radius: 4px;
+                    font-family: monospace;
+                    font-size: 12px;
+                    pointer-events: none;
+                    z-index: 10;
+                }
+                
+                /* Canvas fit modes */
+                #chatooly-container[data-fit="contain"] canvas, #chatooly-canvas-area[data-fit="contain"] canvas {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: contain;
+                }
+                
+                #chatooly-container[data-fit="cover"] canvas, #chatooly-canvas-area[data-fit="cover"] canvas {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                }
+                
+                #chatooly-container[data-fit="actual"] canvas, #chatooly-canvas-area[data-fit="actual"] canvas {
+                    width: auto;
+                    height: auto;
+                    max-width: none;
+                    max-height: none;
+                }
+            </style><style id="chatooly-modal-styles">
+/* ========== EXPORT MODAL ========== */
+.chatooly-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.chatooly-modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.chatooly-modal-container {
+  width: 350px;
+  max-height: 90vh;
+  overflow-y: auto;
+  transform: scale(0.95);
+  transition: transform 0.2s ease;
+}
+
+.chatooly-modal-overlay.active .chatooly-modal-container {
+  transform: scale(1);
+}
+
+.chatooly-modal-content {
+  background: #232323;
+  border: 1px solid #343434;
+  border-radius: 10px;
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.chatooly-modal-header {
+  background: #454545;
+  padding: 15px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.chatooly-modal-header span {
+  font-family: 'TASA Orbiter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: #ffffff;
+  flex: 1;
+}
+
+.chatooly-modal-close {
+  width: 12px;
+  height: 12px;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+}
+
+.chatooly-modal-close:hover {
+  opacity: 1;
+}
+
+.chatooly-modal-body {
+  padding: 0 10px;
+}
+
+.chatooly-export-section {
+  background: #d9e5d7;
+  border-radius: 5px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.chatooly-export-toggle {
+  display: flex;
+  gap: 5px;
+  width: 100%;
+}
+
+.chatooly-toggle-btn {
+  flex: 1;
+  padding: 5px 6px;
+  background: #6d736c;
+  color: #d9e5d7;
+  border: none;
+  border-radius: 3px;
+  font-family: 'TASA Orbiter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  text-align: center;
+}
+
+.chatooly-toggle-btn:hover {
+  background: #7d837c;
+}
+
+.chatooly-toggle-btn.active {
+  background: #000000;
+  color: #FFFFFF;
+}
+
+.chatooly-export-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chatooly-export-row {
+  display: flex;
+  gap: 5px;
+}
+
+.chatooly-export-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chatooly-export-field label {
+  font-family: 'TASA Orbiter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  color: #000000;
+}
+
+.chatooly-multiplier-buttons {
+  display: flex;
+  gap: 5px;
+  width: 100%;
+}
+
+.chatooly-multiplier-btn {
+  flex: 1;
+  padding: 8px 10px;
+  background: #6d736c;
+  color: #d9e5d7;
+  border: none;
+  border-radius: 5px;
+  font-family: 'TASA Orbiter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  text-align: center;
+}
+
+.chatooly-multiplier-btn:hover {
+  opacity: 0.85;
+}
+
+.chatooly-multiplier-btn.active {
+  background: #000000;
+  color: #FFFFFF;
+}
+
+.chatooly-modal-footer {
+  display: flex;
+  justify-content: center;
+  padding: 0 10px;
+}
+
+.chatooly-modal-footer .chatooly-modal-export-btn {
+  width: 100%;
+  padding: 12px 15px;
+  background: #F4E4A3;
+  color: #000000;
+  border: none;
+  border-radius: 5px;
+  font-family: 'TASA Orbiter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  text-align: center;
+}
+
+.chatooly-modal-footer .chatooly-modal-export-btn:hover {
+  background: #FFF4C4;
+}
+            </style><link type="text/css" rel="stylesheet" href="blob:http://localhost:8000/147fa24f-0ae8-4350-a525-1cf33fcccdeb"><link type="text/css" rel="stylesheet" href="blob:http://localhost:8000/70838751-32ce-473c-a463-696e02b007a1"><link type="text/css" rel="stylesheet" href="blob:http://localhost:8000/3b21f083-2cb9-4787-990b-57d12d7ea2e0"><link type="text/css" rel="stylesheet" href="blob:http://localhost:8000/a9e0e21d-2364-4449-8892-1b950180538e"><link type="text/css" rel="stylesheet" href="blob:http://localhost:8000/767b0954-6e77-4b62-b1a2-5411ada78ff8"><link type="text/css" rel="stylesheet" href="blob:http://localhost:8000/5f3ad703-cdb1-43e3-9644-3b48cfdad19c"><link type="text/css" rel="stylesheet" href="blob:http://localhost:8000/b24eaf26-1495-4b4d-9735-fa9d4d710f35"><link type="text/css" rel="stylesheet" href="blob:http://localhost:8000/71d553a0-75b4-4575-807b-7c66e51540f7"><link type="text/css" rel="stylesheet" href="blob:http://localhost:8000/f45fab81-2f26-4c25-8f5c-70db9102fc7f"><link type="text/css" rel="stylesheet" href="blob:http://localhost:8000/4943f7dd-43ee-42c1-b829-effb5e11e4c3"><link type="text/css" rel="stylesheet" href="blob:http://localhost:8000/144c0fc0-4736-401f-983e-613c5f04a9fb"><link type="text/css" rel="stylesheet" href="blob:http://localhost:8000/0576c8ea-8efc-495b-a831-a0c82ac48abf"><link type="text/css" rel="stylesheet" href="blob:http://localhost:8000/188f414a-7f84-4338-9d88-9d8023977c67"><link type="text/css" rel="stylesheet" href="blob:http://localhost:8000/7aa766e6-5afe-4469-abc1-73fa599ff672"><link type="text/css" rel="stylesheet" href="blob:http://localhost:8000/0d3d0b80-faef-498a-9a18-39ee7b37f5ae"><link type="text/css" rel="stylesheet" href="blob:http://localhost:8000/1ca2f2e8-0385-4efa-b147-b6dead324ba6"><link type="text/css" rel="stylesheet" href="blob:http://localhost:8000/647702e5-ed41-45a9-8c64-f4b1abd3e752"><link type="text/css" rel="stylesheet" href="blob:http://localhost:8000/df610ad0-1e59-4488-8897-3d84747f3bd5"><link type="text/css" rel="stylesheet" href="blob:http://localhost:8000/3704b9fa-fa2d-4494-8942-e5eff2b7ff19"><link type="text/css" rel="stylesheet" href="blob:http://localhost:8000/577df2e1-515d-4624-98d6-90a1a72296e5"><link type="text/css" rel="stylesheet" href="blob:http://localhost:8000/96459d17-1797-4ff8-ae7b-1f2e35eeaba4"><link type="text/css" rel="stylesheet" href="blob:http://localhost:8000/6d7c9764-8dc5-4895-86bc-42af9f4a7fde"><link type="text/css" rel="stylesheet" href="blob:http://localhost:8000/816f021a-2cbf-4751-beff-ce79f3a9ae76"><link type="text/css" rel="stylesheet" href="blob:http://localhost:8000/9e8da502-384f-4697-a8b7-c0a38fa9e747"><link type="text/css" rel="stylesheet" href="blob:http://localhost:8000/8b047e84-ea1e-472c-b333-d9105c56cef1"><link type="text/css" rel="stylesheet" href="blob:http://localhost:8000/4ac88bc3-effa-4724-ae68-3d6ce6b8d505"><link type="text/css" rel="stylesheet" href="blob:http://localhost:8000/be82e282-975b-47bf-9c5a-2a8fea438685"><link type="text/css" rel="stylesheet" href="blob:http://localhost:8000/5cc2c933-b6df-4444-80f0-b21effd3f4c8"><link type="text/css" rel="stylesheet" href="blob:http://localhost:8000/63fa7710-435d-41d9-ba92-e78367a185de"><style id="chatooly-resize-bar-styles">
+                .chatooly-resize-bar {
+                    position: absolute;
+                    bottom: 20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    z-index: 1000;
+
+                    display: inline-flex;
+                    padding: 5px 5px 5px 15px;
+                    align-items: center;
+                    gap: 15px;
+
+                    border-radius: 10px;
+                    border: 1px solid var(--chatooly-color-border);
+                    background: var(--chatooly-color-surface);
+
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+                    font-family: var(--chatooly-font-family);
+                }
+
+                .chatooly-resize-bar-label {
+                    font-size: 12px;
+                    color: var(--chatooly-color-text-muted);
+                    font-weight: 500;
+                    white-space: nowrap;
+                    flex-shrink: 0;
+                }
+
+                .chatooly-resize-format {
+                    background: var(--chatooly-color-accent-bg);
+                    border-radius: 5px;
+                    padding: 5px 5px 5px 15px;
+                    display: flex;
+                    align-items: center;
+                    gap: 15px;
+                }
+
+                .chatooly-resize-inputs {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+
+                .chatooly-resize-inputs label {
+                    font-size: 10px;
+                    font-weight: 500;
+                    color: var(--chatooly-color-accent-text);
+                    margin: 0;
+                }
+
+                .chatooly-input-box {
+                    background: var(--chatooly-color-accent-input);
+                    border-radius: 5px;
+                    padding: 8px 10px;
+                    display: flex;
+                    align-items: center;
+                    gap: 5px;
+                    width: 59px;
+                }
+
+                .chatooly-input-box input {
+                    width: 100%;
+                    background: transparent;
+                    border: none;
+                    color: var(--chatooly-color-accent-input-text);
+                    font-size: 10px;
+                    font-weight: 500;
+                    padding: 0;
+                    text-align: center;
+                    outline: none;
+
+                    /* Remove spinner arrows */
+                    -moz-appearance: textfield;
+                }
+
+                .chatooly-input-box input::-webkit-outer-spin-button,
+                .chatooly-input-box input::-webkit-inner-spin-button {
+                    -webkit-appearance: none;
+                    margin: 0;
+                }
+
+                .chatooly-input-box span {
+                    font-size: 10px;
+                    color: var(--chatooly-color-accent-input-text);
+                    font-weight: 500;
+                }
+
+                .chatooly-presets-label {
+                    font-size: 10px;
+                    font-weight: 500;
+                    color: var(--chatooly-color-accent-text);
+                    flex-shrink: 0;
+                }
+
+                .chatooly-preset-buttons {
+                    display: flex;
+                    gap: 5px;
+                    flex-wrap: nowrap;
+                    align-items: center;
+                }
+
+                /* Buttons inherit from base .chatooly-btn in components.css */
+
+                /* Button text visibility - show full text by default */
+                .chatooly-btn-full {
+                    display: inline;
+                }
+
+                .chatooly-btn-abbr {
+                    display: none;
+                }
+
+                /* Responsive adjustments */
+                @media (max-width: 1024px) {
+                    .chatooly-resize-bar {
+                        padding: 5px 10px;
+                        gap: 10px;
+                        max-width: calc(100vw - 40px);
+                    }
+
+                    .chatooly-resize-format {
+                        padding: 5px 10px;
+                        gap: 10px;
+                    }
+
+                    /* Keep buttons in single line, no wrapping */
+                    .chatooly-preset-buttons {
+                        flex-wrap: nowrap;
+                        gap: 3px;
+                    }
+
+                    /* Switch to abbreviated text on tablet and below */
+                    .chatooly-btn-full {
+                        display: none;
+                    }
+
+                    .chatooly-btn-abbr {
+                        display: inline;
+                    }
+
+                    /* Scale down preset buttons to fit in single line */
+                    .chatooly-preset-buttons .chatooly-btn {
+                        min-width: 28px;
+                        padding: 6px 4px;
+                        font-size: 8px;
+                        text-align: center;
+                        white-space: nowrap;
+                    }
+                }
+
+                @media (max-width: 768px) {
+                    .chatooly-resize-bar {
+                        bottom: 10px;
+                        left: 50%;
+                        right: auto;
+                        transform: translateX(-50%);
+                        flex-wrap: wrap;
+                        max-width: calc(100% - 20px);
+                    }
+
+                    .chatooly-resize-bar-label {
+                        width: 100%;
+                        margin-bottom: 5px;
+                    }
+
+                    .chatooly-resize-format {
+                        flex-wrap: wrap;
+                        width: 100%;
+                    }
+
+                    .chatooly-resize-inputs {
+                        flex-wrap: wrap;
+                    }
+
+                    /* Further scale down buttons on mobile */
+                    .chatooly-preset-buttons {
+                        gap: 2px;
+                    }
+
+                    .chatooly-preset-buttons .chatooly-btn {
+                        min-width: 24px;
+                        padding: 5px 3px;
+                        font-size: 7px;
+                    }
+                }
+            </style></head>
+<body class="chatooly-styles-loaded">
+    <!-- ========== EDIT THIS: Update header title to match your tool ========== -->
+    <header class="chatooly-header">
+        <div class="chatooly-header-title">3D Tetris Block Builder</div>
+        <div class="chatooly-header-credit">MADE WITH CHATOOLY</div>
+    </header>
+
+    <div class="chatooly-app-container">
+        <!-- Left Panel: Tool Controls -->
+        <div class="chatooly-controls-panel">
+            <!-- ========== EDIT THIS: Tool Description ========== -->
+            <div class="chatooly-controls-header">
+                <p>Build text and shapes using classic Tetris blocks with stunning 3D effects, rotation, and lighting</p>
+            </div>
+            
+            <div class="chatooly-controls-content">
+                <!-- ========== CANVAS CONTROLS AUTO-INJECTED BY CDN ========== -->
+                <!-- The Chatooly CDN automatically injects canvas controls here when it detects chatooly-canvas -->
+
+                <!-- ========== TEXT INPUT SECTION ========== -->
+                <div class="chatooly-section-card" data-section="text-input">
+                    <h3 class="chatooly-section-header">📝 Text &amp; Shapes</h3>
+                    <div class="chatooly-section-content">
+                        <!-- Text Input -->
+                        <div class="chatooly-input-group">
+                            <label class="chatooly-input-label" for="text-input">Enter Text</label>
+                            <textarea class="chatooly-textarea" id="text-input" placeholder="HELLO" rows="3">TETRIS</textarea>
+                        </div>
+
+                        <!-- Shape Templates -->
+                        <div class="chatooly-input-group">
+                            <label class="chatooly-input-label" for="shape-template">Shape Template</label>
+                            <select class="chatooly-select" id="shape-template">
+                                <option value="text">Custom Text</option>
+                                <option value="heart">❤️ Heart</option>
+                                <option value="star">⭐ Star</option>
+                                <option value="diamond">💎 Diamond</option>
+                                <option value="arrow">➡️ Arrow</option>
+                                <option value="smiley">😊 Smiley</option>
+                            </select>
+                        </div>
+
+                        <!-- Letter Spacing -->
+                        <div class="chatooly-slider-group">
+                            <div class="chatooly-slider-label">
+                                <span>Letter Spacing</span>
+                                <span class="chatooly-slider-value" id="letter-spacing-value">0</span>
+                            </div>
+                            <input type="range" class="chatooly-slider" id="letter-spacing" min="0" max="3" step="0.1" value="1">
+                        </div>
+
+                        <!-- Tetris Animation Toggle -->
+                        <div class="chatooly-toggle-group" style="margin-top: 12px;">
+                            <button type="button" class="chatooly-toggle" id="tetris-animation" role="switch" aria-pressed="false">
+                                <span class="chatooly-toggle-slider"></span>
+                            </button>
+                            <label class="chatooly-toggle-label" for="tetris-animation">Tetris Drop Animation</label>
+                        </div>
+
+                        <!-- Animation Speed -->
+                        <div class="chatooly-slider-group" id="animation-speed-group" style="display: block;">
+                            <div class="chatooly-slider-label">
+                                <span>Animation Speed</span>
+                                <span class="chatooly-slider-value" id="animation-speed-value">1.0</span>
+                            </div>
+                            <input type="range" class="chatooly-slider" id="animation-speed" min="0.1" max="3.0" step="0.1" value="1.0">
+                        </div>
+
+                        <!-- Animation Order -->
+                        <div class="chatooly-input-group" id="animation-order-group" style="display: block;">
+                            <label class="chatooly-input-label" for="animation-order">Animation Order</label>
+                            <select class="chatooly-select" id="animation-order">
+                                <option value="left-to-right">Left to Right</option>
+                                <option value="right-to-left">Right to Left</option>
+                                <option value="top-to-bottom">Top to Bottom</option>
+                                <option value="bottom-to-top">Bottom to Top</option>
+                                <option value="random">Random</option>
+                                <option value="by-letter">By Letter</option>
+                                <option value="by-color">By Color</option>
+                            </select>
+                        </div>
+
+                        <!-- Animation Easing -->
+                        <div class="chatooly-input-group" id="animation-easing-group" style="display: block;">
+                            <label class="chatooly-input-label" for="animation-easing">Easing Style</label>
+                            <select class="chatooly-select" id="animation-easing">
+                                <option value="smooth">Smooth</option>
+                                <option value="snappy">Snappy</option>
+                                <option value="bounce">Bounce</option>
+                                <option value="elastic">Elastic</option>
+                                <option value="playful">Playful</option>
+                            </select>
+                        </div>
+
+                        <!-- Generate Button -->
+                        <button id="generate-blocks" class="chatooly-btn" style="width: 100%; margin-top: 12px;">
+                            Build with Blocks
+                        </button>
+
+                        <!-- Export JSON Button -->
+                        <button id="export-json" class="chatooly-btn" style="width: 100%; margin-top: 8px; background: var(--chatooly-color-secondary, #6c757d);">
+                            📥 Export Project (JSON)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Block Selection Section -->
+                <div class="chatooly-section-card" data-section="block-selection">
+                    <h3 class="chatooly-section-header">🧩 Block Types</h3>
+                    <div class="chatooly-section-content">
+                        <!-- Block Type Selection -->
+                        <div class="chatooly-input-group">
+                            <label class="chatooly-input-label" for="block-type">Default Block Type</label>
+                            <select class="chatooly-select" id="block-type">
+                                <option value="random">Random (Classic)</option>
+                                <option value="I">I-Block (Line)</option>
+                                <option value="O">O-Block (Square)</option>
+                                <option value="T">T-Block</option>
+                                <option value="S">S-Block</option>
+                                <option value="Z">Z-Block</option>
+                                <option value="J">J-Block</option>
+                                <option value="L">L-Block</option>
+                            </select>
+                        </div>
+
+                        <!-- Block Spacing -->
+                        <div class="chatooly-slider-group">
+                            <div class="chatooly-slider-label">
+                                <span>Block Spacing</span>
+                                <span class="chatooly-slider-value" id="block-spacing-value">1.1</span>
+                            </div>
+                            <input type="range" class="chatooly-slider" id="block-spacing" min="0.8" max="2.0" step="0.1" value="1.2">
+                        </div>
+
+                        <!-- Block Size -->
+                        <div class="chatooly-slider-group">
+                            <div class="chatooly-slider-label">
+                                <span>Block Size</span>
+                                <span class="chatooly-slider-value" id="block-size-value">0.8</span>
+                            </div>
+                            <input type="range" class="chatooly-slider" id="block-size" min="0.5" max="1.5" step="0.1" value="0.8">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Color & Material Section -->
+                <div class="chatooly-section-card" data-section="color-material">
+                    <h3 class="chatooly-section-header">🎨 Colors &amp; Materials</h3>
+                    <div class="chatooly-section-content">
+                        <!-- Color Mode -->
+                        <div class="chatooly-input-group">
+                            <label class="chatooly-input-label" for="color-mode">Color Mode</label>
+                            <select class="chatooly-select" id="color-mode">
+                                <option value="classic">Classic Tetris</option>
+                                <option value="rainbow">Rainbow</option>
+                                <option value="monochrome">Monochrome</option>
+                                <option value="custom">Custom Color</option>
+                            </select>
+                        </div>
+
+                        <!-- Custom Block Color -->
+                        <div class="chatooly-color-group" id="custom-color-group" style="display: none;">
+                            <label class="chatooly-color-label" for="block-color">Block Color</label>
+                            <input type="color" class="chatooly-color-input" id="block-color" value="#00ff00">
+                        </div>
+
+                        <!-- Material Type -->
+                        <div class="chatooly-input-group">
+                            <label class="chatooly-input-label" for="material-type">Material</label>
+                            <select class="chatooly-select" id="material-type">
+                                <option value="standard">Standard</option>
+                                <option value="emissive">Glowing</option>
+                                <option value="metal">Metallic</option>
+                                <option value="glass">Glass</option>
+                                <option value="neon">Neon</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3D Effects Section -->
+                <div class="chatooly-section-card" data-section="3d-effects">
+                    <h3 class="chatooly-section-header">🎭 3D Effects</h3>
+                    <div class="chatooly-section-content">
+                        <!-- 3D Depth -->
+                        <div class="chatooly-slider-group">
+                            <div class="chatooly-slider-label">
+                                <span>3D Depth</span>
+                                <span class="chatooly-slider-value" id="depth-value">0.1</span>
+                            </div>
+                            <input type="range" class="chatooly-slider" id="depth" min="0" max="2" step="0.1" value="0.5">
+                        </div>
+
+                        <!-- Perspective -->
+                        <div class="chatooly-slider-group">
+                            <div class="chatooly-slider-label">
+                                <span>Perspective</span>
+                                <span class="chatooly-slider-value" id="perspective-value">35</span>
+                            </div>
+                            <input type="range" class="chatooly-slider" id="perspective" min="0" max="90" step="5" value="45">
+                        </div>
+
+                        <!-- Rotation X -->
+                        <div class="chatooly-slider-group">
+                            <div class="chatooly-slider-label">
+                                <span>Rotation X</span>
+                                <span class="chatooly-slider-value" id="rotation-x-value">-5</span>
+                            </div>
+                            <input type="range" class="chatooly-slider" id="rotation-x" min="-180" max="180" step="5" value="0">
+                        </div>
+
+                        <!-- Rotation Y -->
+                        <div class="chatooly-slider-group">
+                            <div class="chatooly-slider-label">
+                                <span>Rotation Y</span>
+                                <span class="chatooly-slider-value" id="rotation-y-value">0</span>
+                            </div>
+                            <input type="range" class="chatooly-slider" id="rotation-y" min="-180" max="180" step="5" value="0">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Animation & Camera Section -->
+                <div class="chatooly-section-card" data-section="animation-camera">
+                    <h3 class="chatooly-section-header">🎬 Animation &amp; Camera</h3>
+                    <div class="chatooly-section-content">
+                        <!-- Auto Rotate -->
+                        <div class="chatooly-toggle-group">
+                            <button type="button" class="chatooly-toggle" id="auto-rotate" role="switch" aria-pressed="true">
+                                <span class="chatooly-toggle-slider"></span>
+                            </button>
+                            <label class="chatooly-toggle-label" for="auto-rotate">Auto Rotate</label>
+                        </div>
+
+                        <!-- Rotation Speed -->
+                        <div class="chatooly-slider-group">
+                            <div class="chatooly-slider-label">
+                                <span>Rotation Speed</span>
+                                <span class="chatooly-slider-value" id="rotation-speed-value">0.5</span>
+                            </div>
+                            <input type="range" class="chatooly-slider" id="rotation-speed" min="0" max="2" step="0.1" value="0.5">
+                        </div>
+
+                        <!-- Floating Animation -->
+                        <div class="chatooly-toggle-group">
+                            <button type="button" class="chatooly-toggle" id="floating-animation" role="switch" aria-pressed="false">
+                                <span class="chatooly-toggle-slider"></span>
+                            </button>
+                            <label class="chatooly-toggle-label" for="floating-animation">Floating Effect</label>
+                        </div>
+
+                        <!-- Camera Distance -->
+                        <div class="chatooly-slider-group">
+                            <div class="chatooly-slider-label">
+                                <span>Camera Distance</span>
+                                <span class="chatooly-slider-value" id="camera-distance-value">16</span>
+                            </div>
+                            <input type="range" class="chatooly-slider" id="camera-distance" min="5" max="30" step="0.5" value="15">
+                        </div>
+
+                        <!-- Lighting Intensity -->
+                        <div class="chatooly-slider-group">
+                            <div class="chatooly-slider-label">
+                                <span>Lighting</span>
+                                <span class="chatooly-slider-value" id="lighting-value">1</span>
+                            </div>
+                            <input type="range" class="chatooly-slider" id="lighting" min="0.3" max="2.0" step="0.1" value="1.0">
+                        </div>
+
+                        <!-- Lighting Preset -->
+                        <div class="chatooly-input-group">
+                            <label class="chatooly-input-label" for="lighting-preset">Lighting Preset</label>
+                            <select class="chatooly-select" id="lighting-preset">
+                                <option value="studio">Soft Studio</option>
+                                <option value="neon">Neon Rim</option>
+                                <option value="dramatic">Dramatic Spotlight</option>
+                                <option value="ambient">Ambient</option>
+                            </select>
+                        </div>
+
+                        <!-- Camera Movement -->
+                        <div class="chatooly-input-group">
+                            <label class="chatooly-input-label" for="camera-movement">Camera Movement</label>
+                            <select class="chatooly-select" id="camera-movement">
+                                <option value="none">None</option>
+                                <option value="orbit">Orbit</option>
+                                <option value="parallax">Parallax</option>
+                                <option value="dolly">Dolly</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- ========== BACKGROUND CONTROLS ========== -->
+                <div class="chatooly-section-card" data-section="background">
+                    <h3 class="chatooly-section-header">◼ Background</h3>
+                    <div class="chatooly-section-content">
+                        <!-- Transparent Background Toggle -->
+                        <div class="chatooly-toggle-group">
+                            <button type="button" class="chatooly-toggle" id="transparent-bg" role="switch" aria-pressed="false">
+                                <span class="chatooly-toggle-slider"></span>
+                            </button>
+                            <label class="chatooly-toggle-label" for="transparent-bg">Transparent Background</label>
+                        </div>
+
+                        <!-- Background Color Picker -->
+                        <div class="chatooly-color-group" id="bg-color-group">
+                            <label class="chatooly-color-label" for="bg-color">Background Color</label>
+                            <input type="color" class="chatooly-color-input" id="bg-color" value="#ffffff">
+                        </div>
+
+                        <!-- Background Image Upload -->
+                        <div style="position: relative;">
+                            <div class="chatooly-upload-area" style="height: 80px;">
+                                <div class="chatooly-upload-icon">
+                                    <svg viewBox="0 0 11 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M7.94444 0L11 3V11.4048C10.9998 11.5627 10.9358 11.7141 10.822 11.8257C10.7083 11.9373 10.554 12 10.3932 12H0.606833C0.446342 11.9989 0.292733 11.9359 0.179189 11.8245C0.0656443 11.7131 0.00128006 11.5624 0 11.4048V0.5952C0 0.2664 0.271944 0 0.606833 0H7.94444ZM6.11111 6H7.94444L5.5 3.6L3.05556 6H4.88889V8.4H6.11111V6Z" fill="var(--fill-0, #454545)"></path>
+                                    </svg>
+                                </div>
+                                <div class="chatooly-upload-text">Background Image</div>
+                                <input type="file" class="chatooly-upload-input" id="bg-image" accept="image/*">
+                            </div>
+                            <button id="clear-bg-image" type="button" class="chatooly-btn" style="display: none; position: absolute; top: 8px; right: 8px; padding: 4px 8px; min-width: auto; z-index: 10;" title="Remove image">×</button>
+                        </div>
+
+                        <!-- Image Fit Dropdown -->
+                        <div class="chatooly-input-group" id="bg-fit-group" style="display: none;">
+                            <label class="chatooly-input-label" for="bg-fit">Image Fit</label>
+                            <select class="chatooly-select" id="bg-fit">
+                                <option value="cover">Fill Frame</option>
+                                <option value="contain">Fit in Frame</option>
+                                <option value="fill">Stretch to Fill</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <!-- ========== END BACKGROUND CONTROLS ========== -->
+
+                <!-- ========== END EDIT SECTION ========== -->
+            </div>
+        <div class="chatooly-controls-footer"><button class="chatooly-btn chatooly-btn-export">Export</button></div></div>
+        
+        <!-- Right Panel: Preview/Canvas Area -->
+        <div class="chatooly-preview-panel" style="display: flex; align-items: center; justify-content: center;">
+            <!-- ========== DO NOT EDIT: Required Export Container ========== -->
+            <div id="chatooly-container" style="position: relative; display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 100%; height: 100%; overflow: auto;">
+                <!-- ========== EDIT BELOW: Add Your Visual Output Here ========== -->
+                <!-- This content will be exported as PNG/Video -->
+                <!-- IMPORTANT: Your main canvas MUST have id="chatooly-canvas" -->
+                <!-- For animations: CDN automatically detects canvas animations and provides video export options -->
+                <canvas id="chatooly-canvas" width="1126" height="844" style="position: static; margin: 0px; width: 1024px; height: 768px; transform-origin: center center;"></canvas>
+                <!-- ========== END EDIT SECTION ========== -->
+            </div>
+        <div id="chatooly-resize-bar" class="chatooly-resize-bar">
+                <span class="chatooly-resize-bar-label">Canvas Size</span>
+                <div class="chatooly-resize-format">
+                    <div class="chatooly-resize-inputs">
+                        <label>W</label>
+                        <div class="chatooly-input-box">
+                            <input type="number" id="chatooly-bar-width" value="300" min="100" max="4000">
+                            <span>px</span>
+                        </div>
+
+                        <label>H</label>
+                        <div class="chatooly-input-box">
+                            <input type="number" id="chatooly-bar-height" value="150" min="100" max="4000">
+                            <span>px</span>
+                        </div>
+                    </div>
+
+                    <span class="chatooly-presets-label">Presets</span>
+
+                    <div class="chatooly-preset-buttons">
+                        
+                    <button class="chatooly-btn" data-preset="HD (16:9)" data-abbr="HD">
+                        <span class="chatooly-btn-full">HD (16:9)</span>
+                        <span class="chatooly-btn-abbr">HD</span>
+                    </button>
+                
+                    <button class="chatooly-btn" data-preset="SQUARE (1:1)" data-abbr="SQ">
+                        <span class="chatooly-btn-full">SQUARE (1:1)</span>
+                        <span class="chatooly-btn-abbr">SQ</span>
+                    </button>
+                
+                    <button class="chatooly-btn active" data-preset="4:3" data-abbr="4:3">
+                        <span class="chatooly-btn-full">4:3</span>
+                        <span class="chatooly-btn-abbr">4:3</span>
+                    </button>
+                
+                    <button class="chatooly-btn" data-preset="PORTRAIT (9:16)" data-abbr="PT">
+                        <span class="chatooly-btn-full">PORTRAIT (9:16)</span>
+                        <span class="chatooly-btn-abbr">PT</span>
+                    </button>
+                
+                    </div>
+                </div>
+            </div></div>
+    </div>
+    
+    <!-- ========== Three.js Library ========== -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <!-- ========== DO NOT EDIT: Chatooly CDN v2.0 Integration ========== -->
+    <!-- This script automatically provides: Dark theme styling + Static/Video export functionality -->
+    <!-- Video support: Detects p5.js, Three.js, Canvas animations and provides MediaRecorder API export -->
+    <script src="https://yaelren.github.io/chatooly-cdn/js/core.min.js"></script>
+    
+    <!-- ========== DO NOT EDIT: Chatooly Configuration ========== -->
+    <script src="js/chatooly-config.js"></script>
+
+    <!-- ========== DO NOT EDIT: UI Controls ========== -->
+    <script src="js/ui.js"></script>
+
+    <!-- ========== DO NOT EDIT: Your Tool Logic ========== -->
+    <script src="js/main.js"></script>
+
+    <!-- ========== Tool IPC (communication with parent shell) ========== -->
+    <script src="js/tool-ipc.js"></script>
+
+<div id="chatooly-export-modal" class="chatooly-modal-overlay">
+                <div class="chatooly-modal-container">
+                    <div class="chatooly-modal-content">
+                        <!-- Header -->
+                        <div class="chatooly-modal-header">
+                            <span>Export</span>
+                            <button class="chatooly-modal-close" aria-label="Close">
+                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M1 1L11 11M1 11L11 1" stroke="white" stroke-width="1.5" stroke-linecap="round"></path>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <!-- Body -->
+                        <div class="chatooly-modal-body">
+                            <div class="chatooly-export-section">
+                                <!-- Format Toggle -->
+                                <div class="chatooly-export-toggle">
+                                    <button class="chatooly-toggle-btn active" data-format="image">Image</button>
+                                    <button class="chatooly-toggle-btn" data-format="video">Video</button>
+                                </div>
+
+                                <!-- Image Options -->
+                                <div class="chatooly-export-options" data-type="image">
+                                    <div class="chatooly-export-field">
+                                        <label>Size</label>
+                                        <div class="chatooly-multiplier-buttons">
+                                            <button class="chatooly-multiplier-btn" data-multiplier="0.5">0.5X</button>
+                                            <button class="chatooly-multiplier-btn" data-multiplier="1">1X</button>
+                                            <button class="chatooly-multiplier-btn active" data-multiplier="2">2X</button>
+                                            <button class="chatooly-multiplier-btn" data-multiplier="3">3X</button>
+                                            <button class="chatooly-multiplier-btn" data-multiplier="4">4X</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Video Options -->
+                                <div class="chatooly-export-options" data-type="video" style="display: none;">
+                                    <div class="chatooly-export-row">
+                                        <div class="chatooly-input-group">
+                                            <label class="chatooly-input-label">Duration</label>
+                                            <input type="number" class="chatooly-input" value="5" id="anim-duration">
+                                        </div>
+                                        <div class="chatooly-input-group">
+                                            <label class="chatooly-input-label">FPS</label>
+                                            <input type="number" class="chatooly-input" value="30" id="anim-fps">
+                                        </div>
+                                    </div>
+
+                                    <div class="chatooly-input-group">
+                                        <label class="chatooly-input-label">Format</label>
+                                        <select class="chatooly-select" id="anim-format">
+                                            <option value="webm">WebM</option>
+                                            <option value="mp4">MP4</option>
+                                            <option value="png-sequence">PNG Sequence</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="chatooly-modal-footer">
+                            <button class="chatooly-modal-export-btn">
+                                Export Image
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div><div id="thunderbit-crx-side-bar" style="display:block;opacity:1;pointer-events:all;top:0;right:0;z-index:9007199254740991;position:fixed;pointer-events:none;user-select:none;"></div><button id="open-side-panel" style="width:0;height:0;opacity:0;user-select:none;pointer-events:all;position:absolute;bottom:0;right:0;padding:0;border:0;outline:none;"></button></body></html>

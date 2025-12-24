@@ -32,6 +32,10 @@ let motionPattern = 'sine'; // 'sine', 'infinity', 'random'
 let motionSpeed = 1.0;
 let motionIntensity = 1.0; // 0-1
 
+// Position offset variables
+let positionOffsetX = 0; // Pixel offset for X position
+let positionOffsetY = 0; // Pixel offset for Y position
+
 // p5.js setup function
 function setup() {
     // Clean up any existing canvas in the container (prevent duplicates)
@@ -273,6 +277,32 @@ function setupEventListeners() {
         });
     }
 
+    // Position X slider
+    const positionXSlider = document.getElementById('position-x-slider');
+    const positionXValue = document.getElementById('position-x-value');
+    if (positionXSlider) {
+        positionXSlider.addEventListener('input', (e) => {
+            positionOffsetX = parseInt(e.target.value);
+            if (positionXValue) {
+                positionXValue.textContent = positionOffsetX;
+            }
+            makeStrips();
+        });
+    }
+
+    // Position Y slider
+    const positionYSlider = document.getElementById('position-y-slider');
+    const positionYValue = document.getElementById('position-y-value');
+    if (positionYSlider) {
+        positionYSlider.addEventListener('input', (e) => {
+            positionOffsetY = parseInt(e.target.value);
+            if (positionYValue) {
+                positionYValue.textContent = positionOffsetY;
+            }
+            makeStrips();
+        });
+    }
+
     // File uploads
     document.getElementById('font-upload-input').addEventListener('change', handleFontFile);
     document.getElementById('image-upload-input').addEventListener('change', handleImageFile);
@@ -404,8 +434,8 @@ function makeStripsLinear() {
         let strip = page.get(0, y, page.width, stripHeight);
         strips.push({
             type: 'strip',
-            x: width / 2,
-            y: y + page.height / (2 * num) + (height / 2 - page.height / 2),
+            x: width / 2 + positionOffsetX,
+            y: y + page.height / (2 * num) + (height / 2 - page.height / 2) + positionOffsetY,
             img: strip,
             a: 0
         });
@@ -701,9 +731,9 @@ window.renderHighResolution = function(targetCanvas, scale) {
         if (stripHeight < 1) break;
         let strip = scaledPage.get(0, y, scaledPage.width, stripHeight);
 
-        const stripY = y + scaledPage.height / (2 * num) + (height / 2 - scaledPage.height / 2);
+        const stripY = y + scaledPage.height / (2 * num) + (height / 2 - scaledPage.height / 2) + positionOffsetY;
         ctx.save();
-        ctx.translate(width / 2, stripY);
+        ctx.translate(width / 2 + positionOffsetX, stripY);
         ctx.drawImage(strip.canvas, -scaledPage.width / 2, -stripHeight / 2);
         ctx.restore();
     }

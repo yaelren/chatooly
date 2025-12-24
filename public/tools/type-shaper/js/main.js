@@ -21,6 +21,8 @@ let textData = {
     fontFamily: 'Arial',
     lineHeight: 1.2,
     shapeColor: '#000000',
+    textOffsetX: 0,  // X position offset (-50% to +50% of canvas width)
+    textOffsetY: 0,  // Y position offset (-50% to +50% of canvas height)
     previousCanvasSize: { width: 0, height: 0 },
     isAnimating: false,
     animationSpeed: 1.0,
@@ -121,8 +123,11 @@ function getTextPoints(text, fontSize, spacing) {
 
     // Calculate total text height for proper vertical centering
     const totalTextHeight = fontSize + (lines.length - 1) * lineHeightPixels;
-    const startY = (canvas.height / 2) - (totalTextHeight / 2) + (fontSize / 2);
-    const centerX = canvas.width / 2;
+    // Apply position offsets (percentage of canvas dimensions)
+    const offsetX = (textData.textOffsetX / 100) * canvas.width;
+    const offsetY = (textData.textOffsetY / 100) * canvas.height;
+    const startY = (canvas.height / 2) - (totalTextHeight / 2) + (fontSize / 2) + offsetY;
+    const centerX = (canvas.width / 2) + offsetX;
 
     // Draw each line
     lines.forEach((line, index) => {
@@ -556,6 +561,40 @@ function setupEventListeners() {
         });
     }
 
+    // Text position X offset
+    const textOffsetXInput = document.getElementById('text-offset-x');
+    const textOffsetXValue = document.getElementById('text-offset-x-value');
+    if (textOffsetXInput) {
+        textOffsetXInput.addEventListener('input', (e) => {
+            textData.textOffsetX = parseInt(e.target.value);
+            if (textOffsetXValue) textOffsetXValue.textContent = textData.textOffsetX;
+            cachedPoints = null;
+            traceIndex = 0;
+            if (textData.isAnimating) {
+                render(textData.animationTime);
+            } else {
+                render();
+            }
+        });
+    }
+
+    // Text position Y offset
+    const textOffsetYInput = document.getElementById('text-offset-y');
+    const textOffsetYValue = document.getElementById('text-offset-y-value');
+    if (textOffsetYInput) {
+        textOffsetYInput.addEventListener('input', (e) => {
+            textData.textOffsetY = parseInt(e.target.value);
+            if (textOffsetYValue) textOffsetYValue.textContent = textData.textOffsetY;
+            cachedPoints = null;
+            traceIndex = 0;
+            if (textData.isAnimating) {
+                render(textData.animationTime);
+            } else {
+                render();
+            }
+        });
+    }
+
     // Fill mode (shapes vs image)
     const fillModeSelect = document.getElementById('fill-mode');
     const shapeTypeGroup = document.getElementById('shape-type-group');
@@ -963,8 +1002,11 @@ window.renderHighResolution = function(targetCanvas, scale) {
     const lines = textData.text.split('\n');
     const lineHeightPixels = textData.fontSize * textData.lineHeight;
     const totalTextHeight = textData.fontSize + (lines.length - 1) * lineHeightPixels;
-    const startY = (canvas.height / 2) - (totalTextHeight / 2) + (textData.fontSize / 2);
-    const centerX = canvas.width / 2;
+    // Apply position offsets (percentage of canvas dimensions)
+    const offsetX = (textData.textOffsetX / 100) * canvas.width;
+    const offsetY = (textData.textOffsetY / 100) * canvas.height;
+    const startY = (canvas.height / 2) - (totalTextHeight / 2) + (textData.fontSize / 2) + offsetY;
+    const centerX = (canvas.width / 2) + offsetX;
 
     lines.forEach((line, index) => {
         const y = startY + (index * lineHeightPixels);

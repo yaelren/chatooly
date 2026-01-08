@@ -1141,17 +1141,206 @@
             </div>
 
             <div class="chatooly-controls-content">
-                <!-- ========== 3D SHAPES (FIRST) ========== -->
-                <div class="chatooly-section-card" data-section="shapes">
-                    <span class="chatooly-section-header" role="button" tabindex="0" aria-expanded="true">3D SHAPES</span>
+                <!-- ========== SOURCE MODE ========== -->
+                <div class="chatooly-section-card" data-section="source">
+                    <span class="chatooly-section-header" role="button" tabindex="0" aria-expanded="true">SOURCE</span>
                     <div class="chatooly-section-content">
-                        <!-- Size & Spacing at top -->
+                        <div class="chatooly-input-group">
+                            <label class="chatooly-input-label">Source Mode</label>
+                            <select class="chatooly-select" id="source-mode">
+                                <option value="text" selected="">Text</option>
+                                <option value="shape">Shape</option>
+                                <option value="svg">Custom SVG</option>
+                            </select>
+                        </div>
+
+                        <!-- Shape Mode Controls -->
+                        <div id="shape-source-controls" style="display: none;">
+                            <div class="chatooly-input-group">
+                                <label class="chatooly-input-label">Shape Type</label>
+                                <select class="chatooly-select" id="spawn-shape-type">
+                                    <option value="circle" selected="">Circle</option>
+                                    <option value="square">Square</option>
+                                    <option value="triangle">Triangle</option>
+                                    <option value="star">Star</option>
+                                    <option value="heart">Heart</option>
+                                    <option value="hexagon">Hexagon</option>
+                                </select>
+                            </div>
+
+                            <div class="chatooly-slider-group">
+                                <div class="chatooly-slider-label">
+                                    <span>Shape Size</span>
+                                    <span class="chatooly-slider-value" id="spawn-shape-size-value">200</span>
+                                </div>
+                                <input type="range" class="chatooly-slider" id="spawn-shape-size" min="50" max="2000" value="200">
+                            </div>
+
+                            <div class="chatooly-input-group">
+                                <label class="chatooly-input-label">Fill Mode</label>
+                                <div class="chatooly-preset-grid" style="grid-template-columns: 1fr 1fr;">
+                                    <button class="chatooly-btn active" id="fill-mode-outline" data-mode="outline">Outline</button>
+                                    <button class="chatooly-btn" id="fill-mode-fill" data-mode="fill">Fill</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SVG Mode Controls -->
+                        <div id="svg-source-controls" style="display: none;">
+                            <div class="chatooly-upload-area" id="svg-upload-area" style="height: 80px;">
+                                <div class="chatooly-upload-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                    </svg>
+                                </div>
+                                <div class="chatooly-upload-text">Upload SVG File</div>
+                                <input type="file" class="chatooly-upload-input" id="svg-upload" accept=".svg">
+                            </div>
+
+                            <div id="svg-info" style="display: none; margin-top: 8px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: var(--chatooly-color-bg-secondary); border-radius: 4px;">
+                                    <span id="svg-name" style="font-size: 12px; color: var(--chatooly-color-text);"></span>
+                                    <button class="chatooly-btn" id="clear-svg" style="padding: 4px 8px; font-size: 11px;">Clear</button>
+                                </div>
+                            </div>
+
+                            <div class="chatooly-input-group" style="margin-top: 12px;">
+                                <label class="chatooly-input-label">Sample Mode</label>
+                                <select class="chatooly-select" id="svg-sample-mode">
+                                    <option value="outline" selected="">Outline Only</option>
+                                    <option value="fill">Fill Only</option>
+                                    <option value="both">Outline + Fill</option>
+                                </select>
+                            </div>
+
+                            <div class="chatooly-input-group">
+                                <label class="chatooly-input-label">Fit Mode</label>
+                                <select class="chatooly-select" id="svg-fit-mode">
+                                    <option value="contain" selected="">Contain</option>
+                                    <option value="cover">Cover</option>
+                                    <option value="stretch">Stretch</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Text Mode Controls (shown by default) -->
+                        <div id="text-source-controls">
+                            <div class="chatooly-input-group">
+                                <label class="chatooly-input-label">Text</label>
+                                <textarea class="chatooly-textarea" id="text-input" rows="2" placeholder="Enter your text here (press Enter for new line)">3D Type Shaper</textarea>
+                            </div>
+
+                            <div class="chatooly-input-group">
+                                <label class="chatooly-input-label">Font</label>
+                                <select class="chatooly-select" id="font-selector">
+                                    <option value="Arial" selected="">Arial</option>
+                                    <option value="Georgia">Georgia</option>
+                                    <option value="Times New Roman">Times New Roman</option>
+                                    <option value="Courier New">Courier New</option>
+                                    <option value="Verdana">Verdana</option>
+                                    <option value="Impact">Impact</option>
+                                    <option value="upload-custom">Upload Custom Font...</option>
+                                </select>
+                                <input type="file" id="custom-font-input" accept=".ttf,.otf,.woff,.woff2" style="display: none;">
+                            </div>
+
+                            <div class="chatooly-slider-group">
+                                <div class="chatooly-slider-label">
+                                    <span>Font Size</span>
+                                    <span class="chatooly-slider-value" id="font-size-value">200</span>
+                                </div>
+                                <input type="range" class="chatooly-slider" id="font-size" min="24" max="2000" value="200">
+                            </div>
+
+                            <!-- Leading + Kerning side by side -->
+                            <div style="display: flex; gap: 12px;">
+                                <div class="chatooly-slider-group" style="flex: 1;">
+                                    <div class="chatooly-slider-label">
+                                        <span>Leading</span>
+                                        <span class="chatooly-slider-value" id="leading-value">1.2</span>
+                                    </div>
+                                    <input type="range" class="chatooly-slider" id="leading" min="0.5" max="10" step="0.1" value="1.2">
+                                </div>
+                                <div class="chatooly-slider-group" style="flex: 1;">
+                                    <div class="chatooly-slider-label">
+                                        <span>Kerning</span>
+                                        <span class="chatooly-slider-value" id="letter-spacing-value">0</span>
+                                    </div>
+                                    <input type="range" class="chatooly-slider" id="letter-spacing" min="-50" max="200" step="1" value="0">
+                                </div>
+                            </div>
+
+                            <div class="chatooly-input-group">
+                                <label class="chatooly-input-label">Alignment</label>
+                                <div style="display: flex; gap: 4px;">
+                                    <button class="chatooly-btn text-align-btn" data-align="left" style="flex: 1; padding: 6px;" title="Left">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                                            <line x1="3" y1="12" x2="15" y2="12"></line>
+                                            <line x1="3" y1="18" x2="18" y2="18"></line>
+                                        </svg>
+                                    </button>
+                                    <button class="chatooly-btn text-align-btn active" data-align="center" style="flex: 1; padding: 6px;" title="Center">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                                            <line x1="6" y1="12" x2="18" y2="12"></line>
+                                            <line x1="4" y1="18" x2="20" y2="18"></line>
+                                        </svg>
+                                    </button>
+                                    <button class="chatooly-btn text-align-btn" data-align="right" style="flex: 1; padding: 6px;" title="Right">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                                            <line x1="9" y1="12" x2="21" y2="12"></line>
+                                            <line x1="6" y1="18" x2="21" y2="18"></line>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Position X and Y side by side -->
+                            <div style="display: flex; gap: 12px;">
+                                <div class="chatooly-slider-group" style="flex: 1;">
+                                    <div class="chatooly-slider-label">
+                                        <span>Position X</span>
+                                        <span class="chatooly-slider-value" id="text-offset-x-value">0</span>
+                                    </div>
+                                    <input type="range" class="chatooly-slider" id="text-offset-x" min="-50" max="50" step="1" value="0">
+                                </div>
+
+                                <div class="chatooly-slider-group" style="flex: 1;">
+                                    <div class="chatooly-slider-label">
+                                        <span>Position Y</span>
+                                        <span class="chatooly-slider-value" id="text-offset-y-value">0</span>
+                                    </div>
+                                    <input type="range" class="chatooly-slider" id="text-offset-y" min="-50" max="50" step="1" value="0">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== 3D OBJECTS ========== -->
+                <div class="chatooly-section-card" data-section="shapes">
+                    <span class="chatooly-section-header" role="button" tabindex="0" aria-expanded="true">3D OBJECTS</span>
+                    <div class="chatooly-section-content">
+                        <!-- Object Type first -->
+                        <div class="chatooly-input-group">
+                            <label class="chatooly-input-label">Object Type</label>
+                            <select class="chatooly-select" id="shape-type">
+                                <option value="sphere">Sphere</option>
+                                <option value="cube">Cube</option>
+                                <option value="glb">Custom GLB</option>
+                            </select>
+                        </div>
+
+                        <!-- Size & Spacing -->
                         <div class="chatooly-slider-group">
                             <div class="chatooly-slider-label">
-                                <span>Shape Size</span>
+                                <span>Object Size</span>
                                 <span class="chatooly-slider-value" id="shape-size-value">5</span>
                             </div>
-                            <input type="range" class="chatooly-slider" id="shape-size" min="2" max="200" value="5">
+                            <input type="range" class="chatooly-slider" id="shape-size" min="2" max="500" value="5">
                         </div>
 
                         <div class="chatooly-slider-group">
@@ -1159,16 +1348,7 @@
                                 <span>Spacing</span>
                                 <span class="chatooly-slider-value" id="spacing-value">1.0</span>
                             </div>
-                            <input type="range" class="chatooly-slider" id="spacing" min="0" max="2" step="0.1" value="1">
-                        </div>
-
-                        <div class="chatooly-input-group">
-                            <label class="chatooly-input-label">Shape Type</label>
-                            <select class="chatooly-select" id="shape-type">
-                                <option value="sphere">Sphere</option>
-                                <option value="cube">Cube</option>
-                                <option value="glb">Custom GLB</option>
-                            </select>
+                            <input type="range" class="chatooly-slider" id="spacing" min="0" max="10" step="0.1" value="1">
                         </div>
 
                         <!-- GLB Upload (only visible when shape-type is 'glb') -->
@@ -1352,117 +1532,99 @@
                     </div>
                 </div>
 
-                <!-- ========== TEXT SETTINGS ========== -->
-                <div class="chatooly-section-card" data-section="text">
-                    <span class="chatooly-section-header" role="button" tabindex="0" aria-expanded="true">TEXT</span>
+                <!-- ========== ANIMATION ========== -->
+                <div class="chatooly-section-card" data-section="animation">
+                    <span class="chatooly-section-header" role="button" tabindex="0" aria-expanded="true">ANIMATION</span>
                     <div class="chatooly-section-content">
+                        <!-- Animation Mode Toggle: Static / Animated -->
                         <div class="chatooly-input-group">
-                            <label class="chatooly-input-label">Text</label>
-                            <textarea class="chatooly-textarea" id="text-input" rows="2" placeholder="Enter your text here (press Enter for new line)">3D Type Shaper</textarea>
-                        </div>
-
-                        <div class="chatooly-input-group">
-                            <label class="chatooly-input-label">Font</label>
-                            <select class="chatooly-select" id="font-selector">
-                                <option value="Arial" selected="">Arial</option>
-                                <option value="Georgia">Georgia</option>
-                                <option value="Times New Roman">Times New Roman</option>
-                                <option value="Courier New">Courier New</option>
-                                <option value="Verdana">Verdana</option>
-                                <option value="Impact">Impact</option>
-                                <option value="upload-custom">Upload Custom Font...</option>
-                            </select>
-                            <input type="file" id="custom-font-input" accept=".ttf,.otf,.woff,.woff2" style="display: none;">
-                        </div>
-
-                        <div class="chatooly-slider-group">
-                            <div class="chatooly-slider-label">
-                                <span>Font Size</span>
-                                <span class="chatooly-slider-value" id="font-size-value">200</span>
+                            <label class="chatooly-input-label">Animation Mode</label>
+                            <div class="chatooly-preset-grid" style="grid-template-columns: 1fr 1fr;">
+                                <button class="chatooly-btn active" id="animation-mode-static" data-mode="static">Static</button>
+                                <button class="chatooly-btn" id="animation-mode-animated" data-mode="animated">Animated</button>
                             </div>
-                            <input type="range" class="chatooly-slider" id="font-size" min="24" max="1000" value="200">
                         </div>
 
-                        <div class="chatooly-slider-group">
-                            <div class="chatooly-slider-label">
-                                <span>Line Height</span>
-                                <span class="chatooly-slider-value" id="line-height-value">1.2</span>
+                        <!-- Animated Mode Controls (hidden by default) -->
+                        <div id="animated-mode-controls" style="display: none;">
+                            <div class="chatooly-input-group">
+                                <label class="chatooly-input-label">Animation Type</label>
+                                <select class="chatooly-select" id="animation-type">
+                                    <option value="rotate" selected="">Rotate</option>
+                                    <option value="tumble">Tumble</option>
+                                    <option value="lookAtMouse">Look at Mouse</option>
+                                </select>
                             </div>
-                            <input type="range" class="chatooly-slider" id="line-height" min="0.8" max="3" step="0.1" value="1.2">
-                        </div>
 
-                        <!-- Position X and Y side by side -->
-                        <div style="display: flex; gap: 12px;">
-                            <div class="chatooly-slider-group" style="flex: 1;">
-                                <div class="chatooly-slider-label">
-                                    <span>Position X</span>
-                                    <span class="chatooly-slider-value" id="text-offset-x-value">0</span>
+                            <div id="rotate-speed-group">
+                                <div class="chatooly-slider-group">
+                                    <div class="chatooly-slider-label">
+                                        <span>Rotate Speed</span>
+                                        <span class="chatooly-slider-value" id="rotate-speed-value">1.0</span>
+                                    </div>
+                                    <input type="range" class="chatooly-slider" id="rotate-speed" min="0.1" max="5" step="0.1" value="1">
                                 </div>
-                                <input type="range" class="chatooly-slider" id="text-offset-x" min="-50" max="50" step="1" value="0">
+
+                                <label class="chatooly-input-label" style="margin-top: 8px;">Rotation Direction</label>
+                                <div style="display: flex; gap: 8px;">
+                                    <div class="chatooly-slider-group" style="flex: 1;">
+                                        <div class="chatooly-slider-label">
+                                            <span>X</span>
+                                            <span class="chatooly-slider-value" id="rotation-axis-x-value">0</span>
+                                        </div>
+                                        <input type="range" class="chatooly-slider" id="rotation-axis-x" min="-1" max="1" step="0.1" value="0">
+                                    </div>
+                                    <div class="chatooly-slider-group" style="flex: 1;">
+                                        <div class="chatooly-slider-label">
+                                            <span>Y</span>
+                                            <span class="chatooly-slider-value" id="rotation-axis-y-value">1</span>
+                                        </div>
+                                        <input type="range" class="chatooly-slider" id="rotation-axis-y" min="-1" max="1" step="0.1" value="1">
+                                    </div>
+                                    <div class="chatooly-slider-group" style="flex: 1;">
+                                        <div class="chatooly-slider-label">
+                                            <span>Z</span>
+                                            <span class="chatooly-slider-value" id="rotation-axis-z-value">0</span>
+                                        </div>
+                                        <input type="range" class="chatooly-slider" id="rotation-axis-z" min="-1" max="1" step="0.1" value="0">
+                                    </div>
+                                </div>
                             </div>
 
-                            <div class="chatooly-slider-group" style="flex: 1;">
-                                <div class="chatooly-slider-label">
-                                    <span>Position Y</span>
-                                    <span class="chatooly-slider-value" id="text-offset-y-value">0</span>
+                            <div id="tumble-controls-group" style="display: none;">
+                                <div class="chatooly-slider-group">
+                                    <div class="chatooly-slider-label">
+                                        <span>Tumble Amount</span>
+                                        <span class="chatooly-slider-value" id="tumble-amount-value">5</span>
+                                    </div>
+                                    <input type="range" class="chatooly-slider" id="tumble-amount" min="1" max="10" step="1" value="5">
                                 </div>
-                                <input type="range" class="chatooly-slider" id="text-offset-y" min="-50" max="50" step="1" value="0">
+
+                                <div class="chatooly-slider-group">
+                                    <div class="chatooly-slider-label">
+                                        <span>Tumble Speed</span>
+                                        <span class="chatooly-slider-value" id="tumble-speed-value">1.0</span>
+                                    </div>
+                                    <input type="range" class="chatooly-slider" id="tumble-speed" min="0.1" max="5" step="0.1" value="1">
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- ========== ANIMATION ========== -->
-                <div class="chatooly-section-card" data-section="animation">
-                    <span class="chatooly-section-header" role="button" tabindex="0" aria-expanded="true">ANIMATION</span>
+                <!-- ========== HOVER EFFECTS ========== -->
+                <div class="chatooly-section-card" data-section="hover">
+                    <span class="chatooly-section-header" role="button" tabindex="0" aria-expanded="true">HOVER EFFECTS</span>
                     <div class="chatooly-section-content">
-                        <div class="chatooly-input-group">
-                            <label class="chatooly-input-label">Animation Type</label>
-                            <select class="chatooly-select" id="animation-type">
-                                <option value="none" selected="">None</option>
-                                <option value="rotate">Rotate</option>
-                                <option value="tumble">Tumble</option>
-                                <option value="lookAtMouse">Look at Mouse</option>
-                            </select>
-                        </div>
-
-                        <div id="rotate-speed-group" style="display: none;">
-                            <div class="chatooly-slider-group">
-                                <div class="chatooly-slider-label">
-                                    <span>Rotate Speed</span>
-                                    <span class="chatooly-slider-value" id="rotate-speed-value">1.0</span>
-                                </div>
-                                <input type="range" class="chatooly-slider" id="rotate-speed" min="0.1" max="5" step="0.1" value="1">
-                            </div>
-                        </div>
-
-                        <div id="tumble-controls-group" style="display: none;">
-                            <div class="chatooly-slider-group">
-                                <div class="chatooly-slider-label">
-                                    <span>Tumble Amount</span>
-                                    <span class="chatooly-slider-value" id="tumble-amount-value">5</span>
-                                </div>
-                                <input type="range" class="chatooly-slider" id="tumble-amount" min="1" max="10" step="1" value="5">
-                            </div>
-
-                            <div class="chatooly-slider-group">
-                                <div class="chatooly-slider-label">
-                                    <span>Tumble Speed</span>
-                                    <span class="chatooly-slider-value" id="tumble-speed-value">1.0</span>
-                                </div>
-                                <input type="range" class="chatooly-slider" id="tumble-speed" min="0.1" max="5" step="0.1" value="1">
-                            </div>
-                        </div>
-
-                        <!-- Hover Magnification -->
-                        <div class="chatooly-toggle-group" style="margin-top: 16px;">
-                            <button class="chatooly-toggle" id="hover-effect" role="switch" aria-pressed="true" aria-labelledby="toggle-hover">
+                        <!-- Enable Toggle -->
+                        <div class="chatooly-toggle-group">
+                            <button class="chatooly-toggle" id="hover-effect" role="switch" aria-pressed="false" aria-labelledby="toggle-hover">
                                 <span class="chatooly-toggle-slider"></span>
                             </button>
-                            <span class="chatooly-toggle-label" id="toggle-hover">Enable Hover Magnification</span>
+                            <span class="chatooly-toggle-label" id="toggle-hover">Enable Hover Effects</span>
                         </div>
 
-                        <div id="hover-controls-group" style="display: block;">
+                        <div id="hover-controls-group" style="display: none;">
                             <!-- Interaction Mode Toggle -->
                             <div class="chatooly-input-group">
                                 <label class="chatooly-input-label">Interaction Mode</label>
@@ -1474,13 +1636,6 @@
 
                             <!-- Auto Mode Controls (hidden by default) -->
                             <div id="auto-mode-controls" style="display: none;">
-                                <div class="chatooly-toggle-group">
-                                    <button class="chatooly-toggle" id="auto-debug" role="switch" aria-pressed="false" aria-labelledby="toggle-auto-debug">
-                                        <span class="chatooly-toggle-slider"></span>
-                                    </button>
-                                    <span class="chatooly-toggle-label" id="toggle-auto-debug">Show Debug Circle</span>
-                                </div>
-
                                 <div class="chatooly-input-group">
                                     <label class="chatooly-input-label">Pattern</label>
                                     <select class="chatooly-select" id="auto-pattern">
@@ -1509,6 +1664,7 @@
                                 </div>
                             </div>
 
+                            <!-- Shared Hover Radius -->
                             <div class="chatooly-slider-group" id="hover-effect-group">
                                 <div class="chatooly-slider-label">
                                     <span>Hover Radius</span>
@@ -1517,12 +1673,116 @@
                                 <input type="range" class="chatooly-slider" id="hover-radius" min="50" max="500" value="150">
                             </div>
 
-                            <div class="chatooly-slider-group" id="hover-intensity-group">
-                                <div class="chatooly-slider-label">
-                                    <span>Magnification Strength</span>
-                                    <span class="chatooly-slider-value" id="hover-intensity-value">21.4</span>
+                            <!-- MAGNIFICATION Card -->
+                            <div class="hover-effect-card" style="border: 1px solid var(--chatooly-color-border); border-radius: 6px; padding: 10px; margin-bottom: 10px;">
+                                <div class="chatooly-toggle-group">
+                                    <button class="chatooly-toggle active" id="hover-magnification-toggle" role="switch" aria-pressed="true">
+                                        <span class="chatooly-toggle-slider"></span>
+                                    </button>
+                                    <span class="chatooly-toggle-label">Magnification</span>
                                 </div>
-                                <input type="range" class="chatooly-slider" id="hover-intensity" min="-100" max="100" step="0.1" value="2">
+                                <div id="hover-magnification-controls">
+                                    <div class="chatooly-slider-group">
+                                        <div class="chatooly-slider-label">
+                                            <span>Intensity</span>
+                                            <span class="chatooly-slider-value" id="hover-intensity-value">2.0</span>
+                                        </div>
+                                        <input type="range" class="chatooly-slider" id="hover-intensity" min="0.5" max="3" step="0.1" value="2">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ROTATION Card -->
+                            <div class="hover-effect-card" style="border: 1px solid var(--chatooly-color-border); border-radius: 6px; padding: 10px; margin-bottom: 10px;">
+                                <div class="chatooly-toggle-group">
+                                    <button class="chatooly-toggle" id="hover-rotation-toggle" role="switch" aria-pressed="false">
+                                        <span class="chatooly-toggle-slider"></span>
+                                    </button>
+                                    <span class="chatooly-toggle-label">Rotation</span>
+                                </div>
+                                <div id="hover-rotation-controls" style="display: none;">
+                                    <div class="chatooly-preset-grid" style="grid-template-columns: 1fr 1fr;">
+                                        <button class="chatooly-btn active" id="hover-rot-continuous" data-mode="continuous">Continuous</button>
+                                        <button class="chatooly-btn" id="hover-rot-target" data-mode="target">Target</button>
+                                    </div>
+                                    <div id="hover-rot-continuous-controls">
+                                        <div class="chatooly-slider-group">
+                                            <div class="chatooly-slider-label">
+                                                <span>Speed</span>
+                                                <span class="chatooly-slider-value" id="hover-rot-speed-value">2.0</span>
+                                            </div>
+                                            <input type="range" class="chatooly-slider" id="hover-rot-speed" min="0.5" max="10" step="0.5" value="2">
+                                        </div>
+                                        <div class="chatooly-slider-label" style="margin-bottom: 4px;"><span>Axis</span></div>
+                                        <div style="display: flex; gap: 6px;">
+                                            <div class="chatooly-slider-group" style="flex: 1;">
+                                                <div class="chatooly-slider-label"><span>X</span><span class="chatooly-slider-value" id="hover-rot-axis-x-value">0</span></div>
+                                                <input type="range" class="chatooly-slider" id="hover-rot-axis-x" min="-1" max="1" step="0.1" value="0">
+                                            </div>
+                                            <div class="chatooly-slider-group" style="flex: 1;">
+                                                <div class="chatooly-slider-label"><span>Y</span><span class="chatooly-slider-value" id="hover-rot-axis-y-value">1</span></div>
+                                                <input type="range" class="chatooly-slider" id="hover-rot-axis-y" min="-1" max="1" step="0.1" value="1">
+                                            </div>
+                                            <div class="chatooly-slider-group" style="flex: 1;">
+                                                <div class="chatooly-slider-label"><span>Z</span><span class="chatooly-slider-value" id="hover-rot-axis-z-value">0</span></div>
+                                                <input type="range" class="chatooly-slider" id="hover-rot-axis-z" min="-1" max="1" step="0.1" value="0">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="hover-rot-target-controls" style="display: none;">
+                                        <div class="chatooly-slider-label" style="margin-bottom: 4px;"><span>Target Angle</span></div>
+                                        <div style="display: flex; gap: 6px;">
+                                            <div class="chatooly-slider-group" style="flex: 1;">
+                                                <div class="chatooly-slider-label"><span>X</span><span class="chatooly-slider-value" id="hover-rot-target-x-value">0</span></div>
+                                                <input type="range" class="chatooly-slider" id="hover-rot-target-x" min="-180" max="180" step="5" value="0">
+                                            </div>
+                                            <div class="chatooly-slider-group" style="flex: 1;">
+                                                <div class="chatooly-slider-label"><span>Y</span><span class="chatooly-slider-value" id="hover-rot-target-y-value">180</span></div>
+                                                <input type="range" class="chatooly-slider" id="hover-rot-target-y" min="-180" max="180" step="5" value="180">
+                                            </div>
+                                            <div class="chatooly-slider-group" style="flex: 1;">
+                                                <div class="chatooly-slider-label"><span>Z</span><span class="chatooly-slider-value" id="hover-rot-target-z-value">0</span></div>
+                                                <input type="range" class="chatooly-slider" id="hover-rot-target-z" min="-180" max="180" step="5" value="0">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- GRADIENT CROSSFADE Card (only for gradient material) -->
+                            <div id="hover-crossfade-section" class="hover-effect-card" style="border: 1px solid var(--chatooly-color-border); border-radius: 6px; padding: 10px; margin-bottom: 10px; display: none;">
+                                <div class="chatooly-toggle-group">
+                                    <button class="chatooly-toggle" id="hover-crossfade-toggle" role="switch" aria-pressed="false">
+                                        <span class="chatooly-toggle-slider"></span>
+                                    </button>
+                                    <span class="chatooly-toggle-label">Gradient Crossfade</span>
+                                </div>
+                                <div id="hover-crossfade-controls" style="display: none;">
+                                    <div class="chatooly-input-group">
+                                        <label class="chatooly-input-label">Hover Gradient Colors</label>
+                                        <div id="hover-gradient-stops-container">
+                                            <div class="gradient-stop" data-index="0" style="display: flex; gap: 8px; margin-bottom: 8px; align-items: center;">
+                                                <input type="color" class="chatooly-color-input hover-gradient-stop-color" value="#ffffff" style="width: 40px;">
+                                                <input type="range" class="chatooly-slider hover-gradient-stop-position" min="0" max="100" value="0" style="flex: 1;">
+                                                <span class="hover-gradient-stop-value" style="width: 30px; font-size: 12px;">0%</span>
+                                            </div>
+                                            <div class="gradient-stop" data-index="1" style="display: flex; gap: 8px; margin-bottom: 8px; align-items: center;">
+                                                <input type="color" class="chatooly-color-input hover-gradient-stop-color" value="#ffcc00" style="width: 40px;">
+                                                <input type="range" class="chatooly-slider hover-gradient-stop-position" min="0" max="100" value="50" style="flex: 1;">
+                                                <span class="hover-gradient-stop-value" style="width: 30px; font-size: 12px;">50%</span>
+                                            </div>
+                                            <div class="gradient-stop" data-index="2" style="display: flex; gap: 8px; margin-bottom: 8px; align-items: center;">
+                                                <input type="color" class="chatooly-color-input hover-gradient-stop-color" value="#ff6600" style="width: 40px;">
+                                                <input type="range" class="chatooly-slider hover-gradient-stop-position" min="0" max="100" value="100" style="flex: 1;">
+                                                <span class="hover-gradient-stop-value" style="width: 30px; font-size: 12px;">100%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Hover Gradient Preview -->
+                                    <div style="margin: 12px 0; text-align: center;">
+                                        <canvas id="hover-gradient-preview" width="80" height="80" style="border-radius: 50%; border: 2px solid var(--chatooly-color-border);"></canvas>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1650,6 +1910,10 @@
 
     <!-- ========== MatCap Generator (for gradient shader materials) ========== -->
     <script src="js/matcap-generator.js"></script>
+
+    <!-- ========== SVG and Shape Point Generation ========== -->
+    <script src="js/svg/ParametricShapes.js"></script>
+    <script src="js/svg/SVGPointSampler.js"></script>
 
     <!-- ========== DO NOT EDIT: Your Tool Logic ========== -->
     <script src="js/main.js"></script>

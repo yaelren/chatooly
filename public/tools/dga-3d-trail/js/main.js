@@ -29,8 +29,8 @@ setCanvasDimensions();
 
 // ========== SETTINGS ==========
 const settings = {
-    // Trail settings
-    density: 20,
+    // Trail settings (distance-based spawning)
+    spacing: 20,          // pixels between particles
     size: 1.0,           // Single size value (used when randomSize and sizeBySpeed are OFF)
     sizeMin: 0.5,
     sizeMax: 1.5,
@@ -53,6 +53,14 @@ const settings = {
     fixedAngleY: 0,
     fixedAngleZ: 0,
 
+    // Look at Mouse animation settings
+    lookAtMouseEnabled: false,
+    lookAtMouseStrength: 0.1,
+    lookAtMaxAngleLeft: 72,
+    lookAtMaxAngleRight: 72,
+    lookAtMaxAngleUp: 45,
+    lookAtMaxAngleDown: 45,
+
     // Physics
     gravityEnabled: false,
     gravityStrength: 9.8,
@@ -60,7 +68,7 @@ const settings = {
     spinSpeed: 1.0,
     tumbleEnabled: false,
     tumbleSpeed: 1.0,
-    bounceEnabled: true,  // Bounce is always on when gravity is enabled
+    bounceEnabled: true,  // Bounce floor only applies when gravity is enabled
     bounceHeight: -3,
     bounceAmount: 0.6,
 
@@ -70,8 +78,15 @@ const settings = {
     cameraZ: 10,
     cameraFOV: 65,
 
-    // Material settings (MatCap style)
-    materialEnabled: false,
+    // Custom cursor settings
+    cursorEnabled: false,
+    cursorImage: null,      // Base64 data URL of uploaded image
+    cursorSize: 32,
+
+    // Material settings (MatCap style) - always enabled, solid by default
+    materialEnabled: true,
+    materialType: 'solid',  // 'solid', 'gradient', or 'matcapUpload'
+    solidColor: '#4a90d9',  // Color for solid material type
     shaderMode: 'reflective',  // 'reflective' or 'toon' - shared across all gradients
 
     // Gradient sets - always at least 1
@@ -89,8 +104,9 @@ const settings = {
     activeGradientIndex: 0,  // Currently editing/selected gradient
 
     // Multi-gradient settings (only used when gradientSets.length >= 2)
-    multiGradientMode: 'random',  // 'random' | 'time'
+    multiGradientMode: 'random',  // 'random' | 'lerp' (fade between) | 'time' | 'age'
     gradientCycleSpeed: 1.0,
+    lerpSteps: 8,  // Steps between gradients for fade mode
 
     // Lighting (shared)
     lightColor: '#ffffff',
@@ -117,6 +133,7 @@ let isModelLoaded = false;
 let matcapGenerator = null;
 let customMaterial = null;
 let originalMaterial = null;  // Store original for toggling back
+let uploadedMatcapTexture = null;  // For custom uploaded matcap images
 
 // ========== GRADIENT LERPING SYSTEM (for time-based transitions) ==========
 let gradientTextures = [];  // Pre-generated textures for all gradients
@@ -130,8 +147,19 @@ let gradientTransitionTime = 0;  // Time tracking for smooth transitions
 let gradientPools = [];  // Array of { pool: ParticlePool, material: Material, mesh: InstancedMesh }
 let useMultiGradientPools = false;
 
+// ========== LERP MODE SYSTEM ==========
+// For sequential lerp mode, we pre-generate intermediate gradient materials
+let lerpPools = [];  // Array of { pool, material, mesh } for lerp sequence
+let lerpIndex = 0;   // Current index in lerp sequence
+let useLerpPools = false;
+
+// ========== AGE-BASED FADING SYSTEM ==========
+let ageFadingMaterial = null;  // Special material with age-based blending shader
+let ageFadingAgeBuffer = null; // Float32Array for age ratios
+let useAgeFading = false;
+
 // ========== DEFAULT MODEL ==========
-const DEFAULT_MODEL_PATH = 'assets/musa.glb';
+// No default model - user must upload their own GLB
 
 // ========== MOUSE STATE ==========
 let isMouseDown = false;
@@ -139,8 +167,11 @@ let lastMousePos = { x: 0, y: 0 };
 let currentMousePos = { x: 0, y: 0 };
 let currentMouseWorldPos = null;  // World position for face mouse mode (initialized in init())
 let mouseSpeed = 0;
-let lastSpawnTime = 0;
 let lastMoveDirection = { x: 0, y: 0 };
+let accumulatedDistance = 0;  // For distance-based spawning
+
+// ========== CUSTOM CURSOR ==========
+let cursorElement = null;
 
 // ========== PARTICLE POOL CLASS ==========
 class ParticlePool {
@@ -263,7 +294,22 @@ class Particle {
                 );
                 break;
             case 'mouse':
-                // Will be updated each frame to face mouse position
+                // Calculate rotation toward mouse at spawn time (frozen orientation)
+                // Mirror the direction so object faces the direction of movement
+                if (currentMouseWorldPos) {
+                    const toMouse = currentMouseWorldPos.clone().sub(this.position);
+                    const distance = toMouse.length();
+
+                    if (distance > 0.01) {
+                        toMouse.normalize();
+                        // Invert X to mirror the rotation (face direction of movement)
+                        const rotY = Math.atan2(-toMouse.x, 0.5) * 1.2;
+                        const rotX = Math.atan2(toMouse.y, 1) * 0.8;
+                        const rotZ = -toMouse.x * 0.2;
+
+                        this.rotation.set(rotX, rotY, rotZ);
+                    }
+                }
                 break;
             case 'billboard':
             default:
@@ -328,8 +374,8 @@ function init() {
     directionalLight2.position.set(-5, -5, 5);
     scene.add(directionalLight2);
 
-    // Create invisible plane for raycasting
-    const planeGeometry = new THREE.PlaneGeometry(100, 100);
+    // Create invisible plane for raycasting (very large to cover all canvas sizes)
+    const planeGeometry = new THREE.PlaneGeometry(10000, 10000);
     const planeMaterial = new THREE.MeshBasicMaterial({
         visible: false,
         side: THREE.DoubleSide
@@ -357,13 +403,13 @@ function init() {
     // Initialize material system
     initMaterialSystem();
 
+    // Initialize custom cursor system
+    initCursorSystem();
+
     // Start animation loop
     animate();
 
-    // Load default model
-    loadDefaultModel();
-
-    console.log('3D Trail: Initialization complete.');
+    console.log('3D Trail: Initialization complete. Upload a GLB model to start.');
 }
 
 // ========== EVENT LISTENERS ==========
@@ -373,6 +419,9 @@ function setupEventListeners() {
     canvas.addEventListener('mousemove', onMouseMove);
     canvas.addEventListener('mouseup', onMouseUp);
     canvas.addEventListener('mouseleave', onMouseLeave);
+
+    // Cursor visibility events
+    canvas.addEventListener('mouseenter', onCanvasEnter);
 
     // Touch events for mobile
     canvas.addEventListener('touchstart', onTouchStart, { passive: false });
@@ -389,7 +438,7 @@ function onMouseDown(e) {
     updateMousePosition(e);
     lastMousePos.x = currentMousePos.x;
     lastMousePos.y = currentMousePos.y;
-    lastSpawnTime = performance.now();
+    accumulatedDistance = 0;  // Reset distance accumulator on mouse down
 }
 
 function onMouseMove(e) {
@@ -400,12 +449,21 @@ function onMouseMove(e) {
     // Calculate mouse speed and direction
     const dx = currentMousePos.x - prevX;
     const dy = currentMousePos.y - prevY;
-    mouseSpeed = Math.sqrt(dx * dx + dy * dy);
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    mouseSpeed = distance;
 
-    if (mouseSpeed > 0.1) {
-        lastMoveDirection.x = dx / mouseSpeed;
-        lastMoveDirection.y = dy / mouseSpeed;
+    if (distance > 0.1) {
+        lastMoveDirection.x = dx / distance;
+        lastMoveDirection.y = dy / distance;
     }
+
+    // Accumulate distance for distance-based spawning
+    if (isMouseDown) {
+        accumulatedDistance += distance;
+    }
+
+    // Update custom cursor position
+    updateCursorPosition(e);
 }
 
 function onMouseUp() {
@@ -414,6 +472,19 @@ function onMouseUp() {
 
 function onMouseLeave() {
     isMouseDown = false;
+    // Hide custom cursor when leaving canvas
+    if (cursorElement) {
+        canvas.style.cursor = 'default';
+        cursorElement.style.display = 'none';
+    }
+}
+
+function onCanvasEnter() {
+    // Show custom cursor when entering canvas
+    if (settings.cursorEnabled && cursorElement && settings.cursorImage) {
+        canvas.style.cursor = 'none';
+        cursorElement.style.display = 'block';
+    }
 }
 
 function onTouchStart(e) {
@@ -423,7 +494,7 @@ function onTouchStart(e) {
         updateMousePositionFromTouch(e.touches[0]);
         lastMousePos.x = currentMousePos.x;
         lastMousePos.y = currentMousePos.y;
-        lastSpawnTime = performance.now();
+        accumulatedDistance = 0;  // Reset distance accumulator on touch start
     }
 }
 
@@ -436,11 +507,17 @@ function onTouchMove(e) {
 
         const dx = currentMousePos.x - prevX;
         const dy = currentMousePos.y - prevY;
-        mouseSpeed = Math.sqrt(dx * dx + dy * dy);
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        mouseSpeed = distance;
 
-        if (mouseSpeed > 0.1) {
-            lastMoveDirection.x = dx / mouseSpeed;
-            lastMoveDirection.y = dy / mouseSpeed;
+        if (distance > 0.1) {
+            lastMoveDirection.x = dx / distance;
+            lastMoveDirection.y = dy / distance;
+        }
+
+        // Accumulate distance for distance-based spawning
+        if (isMouseDown) {
+            accumulatedDistance += distance;
         }
     }
 }
@@ -502,10 +579,28 @@ function onCanvasResized(e) {
 // ========== WORLD POSITION FROM MOUSE ==========
 function getWorldPosition() {
     raycaster.setFromCamera(pointer, camera);
+    
+    // Use mathematical ray-plane intersection for unbounded world position
+    // This ensures particles can spawn anywhere the mouse points, with no limits
+    const ray = raycaster.ray;
+    
+    // Calculate intersection with z=0 plane (infinite plane, no bounds)
+    if (Math.abs(ray.direction.z) > 0.0001) {
+        const t = -ray.origin.z / ray.direction.z;
+        if (t > 0) {
+            const worldPos = new THREE.Vector3();
+            worldPos.copy(ray.origin).addScaledVector(ray.direction, t);
+            return worldPos;
+        }
+    }
+    
+    // Edge case: ray is nearly parallel to z=0 plane
+    // Fall back to raycast against the large plane (kept for edge cases)
     const intersects = raycaster.intersectObject(pointerPlane);
     if (intersects.length > 0) {
         return intersects[0].point.clone();
     }
+    
     return null;
 }
 
@@ -563,6 +658,9 @@ async function loadGLBFromURL(url, modelName = 'model') {
                 isModelLoaded = true;
                 console.log('3D Trail: Model "' + modelName + '" loaded successfully!');
 
+                // Apply material after model loads
+                applyCurrentMaterial();
+
                 resolve({ geometry: loadedGeometry, material: loadedMaterial, name: modelName });
             },
             (progress) => {
@@ -578,25 +676,6 @@ async function loadGLBFromURL(url, modelName = 'model') {
     });
 }
 
-async function loadDefaultModel() {
-    try {
-        console.log('3D Trail: Loading default model...');
-        await loadGLBFromURL(DEFAULT_MODEL_PATH, 'musa.glb');
-
-        // Update UI to show default model is loaded
-        const modelInfo = document.getElementById('model-info');
-        const modelName = document.getElementById('model-name');
-        if (modelInfo && modelName) {
-            modelName.textContent = 'musa.glb (default)';
-            modelInfo.style.display = 'block';
-        }
-
-        console.log('3D Trail: Default model loaded successfully!');
-    } catch (error) {
-        console.warn('3D Trail: Could not load default model:', error.message);
-        console.log('3D Trail: Upload a GLB model to start creating trails.');
-    }
-}
 
 async function loadGLBModel(file) {
     return new Promise((resolve, reject) => {
@@ -669,6 +748,9 @@ async function loadGLBModel(file) {
                 isModelLoaded = true;
                 console.log('3D Trail: Model loaded successfully, ready to create trails!');
 
+                // Apply current material settings to new model
+                applyCurrentMaterial();
+
                 resolve({ geometry: loadedGeometry, material: loadedMaterial });
             },
             // Progress callback
@@ -702,8 +784,9 @@ function clearModel() {
 function trySpawnParticle(currentTime) {
     if (!isMouseDown || !isModelLoaded) return;
 
-    const spawnInterval = 1000 / settings.density;
-    if (currentTime - lastSpawnTime < spawnInterval) return;
+    // Distance-based spawning: spawn when accumulated distance exceeds spacing
+    if (accumulatedDistance < settings.spacing) return;
+    accumulatedDistance -= settings.spacing;  // Preserve remainder for smooth spawning
 
     const worldPos = getWorldPosition();
     if (!worldPos) return;
@@ -725,8 +808,27 @@ function trySpawnParticle(currentTime) {
     // Create particle - choose pool based on gradient mode
     const moveDir = new THREE.Vector2(lastMoveDirection.x, lastMoveDirection.y);
 
+    // Use lerp pools for sequential lerp mode
+    if (useLerpPools && settings.gradientSets.length >= 2 && settings.multiGradientMode === 'lerp') {
+        const { pool } = lerpPools[lerpIndex];
+
+        const index = pool.acquire();
+        if (index === null) return;
+
+        const particle = new Particle(index, worldPos, moveDir);
+        particle.initialScale = scale;
+        particle.scale.set(scale, scale, scale);
+        particle.lifespan = settings.lifespan;
+        particle.poolIndex = lerpIndex;
+        particle.isLerpPool = true;
+
+        pool.particles.set(index, particle);
+
+        // Advance to next lerp index (cycle through sequence)
+        lerpIndex = (lerpIndex + 1) % lerpPools.length;
+    }
     // Use multi-gradient pools for random per-particle gradient assignment
-    if (useMultiGradientPools && settings.gradientSets.length >= 2 && settings.multiGradientMode === 'random') {
+    else if (useMultiGradientPools && settings.gradientSets.length >= 2 && settings.multiGradientMode === 'random') {
         // Randomly select a gradient pool
         const poolIndex = Math.floor(Math.random() * gradientPools.length);
         const { pool } = gradientPools[poolIndex];
@@ -754,8 +856,6 @@ function trySpawnParticle(currentTime) {
 
         particlePool.particles.set(index, particle);
     }
-
-    lastSpawnTime = currentTime;
 }
 
 // ========== PARTICLE UPDATE ==========
@@ -822,8 +922,8 @@ function updateParticles(delta) {
         // Update position
         particle.position.add(particle.velocity.clone().multiplyScalar(delta * 60));
 
-        // Apply bounce
-        if (settings.bounceEnabled && particle.position.y <= settings.bounceHeight) {
+        // Apply bounce - ONLY when gravity is enabled (no floor without gravity)
+        if (settings.gravityEnabled && settings.bounceEnabled && particle.position.y <= settings.bounceHeight) {
             particle.position.y = settings.bounceHeight;
             particle.velocity.y = Math.abs(particle.velocity.y) * settings.bounceAmount;
         }
@@ -833,8 +933,8 @@ function updateParticles(delta) {
         particle.spinOffset.y += particle.angularVelocity.y * delta;
         particle.spinOffset.z += particle.angularVelocity.z * delta;
 
-        // Update rotation based on facing mode
-        if (settings.facingMode === 'none' || settings.facingMode === 'random' || settings.facingMode === 'fixed') {
+        // Update rotation based on facing mode (apply spin/tumble for non-billboard modes)
+        if (settings.facingMode === 'none' || settings.facingMode === 'random' || settings.facingMode === 'fixed' || settings.facingMode === 'mouse') {
             particle.rotation.x += particle.angularVelocity.x * delta;
             particle.rotation.y += particle.angularVelocity.y * delta;
             particle.rotation.z += particle.angularVelocity.z * delta;
@@ -852,29 +952,32 @@ function updateParticles(delta) {
             );
         }
 
-        // Face mouse
-        if (settings.facingMode === 'mouse' && currentMouseWorldPos) {
+        // Look at Mouse Animation (independent of facingMode, stackable effect)
+        if (settings.lookAtMouseEnabled && currentMouseWorldPos) {
             const toMouse = currentMouseWorldPos.clone().sub(particle.position);
             const distance = toMouse.length();
 
             if (distance > 0.01) {
                 toMouse.normalize();
-                const targetRotY = Math.atan2(toMouse.x, 0.5) * 1.2 + particle.spinOffset.y;
-                const targetRotX = Math.atan2(-toMouse.y, 1) * 0.8 + particle.spinOffset.x;
-                const targetRotZ = toMouse.x * 0.2 + particle.spinOffset.z;
+                const targetRotY = Math.atan2(toMouse.x, 0.5) * 1.2;
+                const targetRotX = Math.atan2(-toMouse.y, 1) * 0.8;
+                const targetRotZ = toMouse.x * 0.2;
 
-                const maxAngleY = Math.PI / 2.5;
-                const maxAngleX = Math.PI / 4;
-                const maxRoll = Math.PI / 10;
+                // Use configurable limits for look at animation
+                const maxAngleLeft = THREE.MathUtils.degToRad(settings.lookAtMaxAngleLeft);
+                const maxAngleRight = THREE.MathUtils.degToRad(settings.lookAtMaxAngleRight);
+                const maxAngleUp = THREE.MathUtils.degToRad(settings.lookAtMaxAngleUp);
+                const maxAngleDown = THREE.MathUtils.degToRad(settings.lookAtMaxAngleDown);
 
-                const clampedRotX = Math.max(-maxAngleX, Math.min(maxAngleX, targetRotX - particle.spinOffset.x)) + particle.spinOffset.x;
-                const clampedRotY = Math.max(-maxAngleY, Math.min(maxAngleY, targetRotY - particle.spinOffset.y)) + particle.spinOffset.y;
-                const clampedRotZ = Math.max(-maxRoll, Math.min(maxRoll, targetRotZ - particle.spinOffset.z)) + particle.spinOffset.z;
+                // Clamp target rotation
+                const clampedRotX = Math.max(-maxAngleDown, Math.min(maxAngleUp, targetRotX));
+                const clampedRotY = Math.max(-maxAngleLeft, Math.min(maxAngleRight, targetRotY));
 
-                const lagFactor = 0.1 + (lifeRatio * 0.15);
-                particle.rotation.x += (clampedRotX - particle.rotation.x) * lagFactor;
-                particle.rotation.y += (clampedRotY - particle.rotation.y) * lagFactor;
-                particle.rotation.z += (clampedRotZ - particle.rotation.z) * lagFactor;
+                // Smoothly interpolate toward target
+                const strength = settings.lookAtMouseStrength;
+                particle.rotation.x += (clampedRotX - particle.rotation.x) * strength;
+                particle.rotation.y += (clampedRotY - particle.rotation.y) * strength;
+                particle.rotation.z += (targetRotZ - particle.rotation.z) * strength;
             }
         }
 
@@ -933,6 +1036,209 @@ function updateParticles(delta) {
             particlesToRemove.forEach(index => pool.release(index));
             pool.finishUpdate();
         });
+    }
+
+    // Update lerp pools
+    if (useLerpPools) {
+        lerpPools.forEach(({ pool }) => {
+            if (pool.particles.size === 0) return;
+
+            const particlesToRemove = [];
+
+            pool.particles.forEach((particle, index) => {
+                if (updateSingleParticle(particle, index, pool)) {
+                    particlesToRemove.push(index);
+                }
+            });
+
+            particlesToRemove.forEach(index => pool.release(index));
+            pool.finishUpdate();
+        });
+    }
+}
+
+// ========== CUSTOM CURSOR SYSTEM ==========
+function initCursorSystem() {
+    cursorElement = document.createElement('div');
+    cursorElement.id = 'custom-cursor';
+    cursorElement.style.cssText = `
+        position: fixed;
+        pointer-events: none;
+        display: none;
+        z-index: 1000;
+        transform: translate(-50%, -50%);
+    `;
+    document.body.appendChild(cursorElement);
+}
+
+function updateCursorPosition(e) {
+    if (!settings.cursorEnabled || !cursorElement || !settings.cursorImage) return;
+
+    cursorElement.style.left = e.clientX + 'px';
+    cursorElement.style.top = e.clientY + 'px';
+}
+
+function updateCursorAppearance() {
+    if (!cursorElement) return;
+
+    if (settings.cursorEnabled && settings.cursorImage) {
+        cursorElement.innerHTML = '';
+        const img = document.createElement('img');
+        img.src = settings.cursorImage;
+        img.style.width = settings.cursorSize + 'px';
+        img.style.height = settings.cursorSize + 'px';
+        img.style.objectFit = 'contain';
+        cursorElement.appendChild(img);
+
+        // Update cursor visibility if mouse is over canvas
+        const canvasRect = canvas.getBoundingClientRect();
+        const mouseX = parseInt(cursorElement.style.left) || 0;
+        const mouseY = parseInt(cursorElement.style.top) || 0;
+
+        if (mouseX >= canvasRect.left && mouseX <= canvasRect.right &&
+            mouseY >= canvasRect.top && mouseY <= canvasRect.bottom) {
+            canvas.style.cursor = 'none';
+            cursorElement.style.display = 'block';
+        }
+    } else {
+        canvas.style.cursor = 'default';
+        cursorElement.style.display = 'none';
+        cursorElement.innerHTML = '';
+    }
+}
+
+// ========== CUSTOM MATCAP UPLOAD ==========
+function handleMatcapUpload(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+                // Dispose old texture if exists
+                if (uploadedMatcapTexture) {
+                    uploadedMatcapTexture.dispose();
+                }
+
+                // Create new texture from uploaded image
+                uploadedMatcapTexture = new THREE.Texture(img);
+                uploadedMatcapTexture.needsUpdate = true;
+
+                console.log('3D Trail: Custom matcap uploaded successfully');
+
+                // If matcapUpload mode is active, update the material
+                if (settings.materialEnabled && settings.materialType === 'matcapUpload') {
+                    applyUploadedMatcap();
+                }
+
+                resolve(uploadedMatcapTexture);
+            };
+            img.onerror = () => {
+                reject(new Error('Failed to load image'));
+            };
+            img.src = event.target.result;
+        };
+        reader.onerror = () => {
+            reject(new Error('Failed to read file'));
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+function applyUploadedMatcap() {
+    if (!uploadedMatcapTexture || !particlePool?.instancedMesh) return;
+
+    // Create a simple matcap material with the uploaded texture
+    // No shader modifications - display the matcap as-is for vibrant colors
+    const material = new THREE.MeshMatcapMaterial({
+        matcap: uploadedMatcapTexture
+    });
+
+    // Dispose old custom material if exists
+    if (customMaterial) {
+        if (customMaterial.matcap && customMaterial.matcap !== uploadedMatcapTexture) {
+            customMaterial.matcap.dispose();
+        }
+        customMaterial.dispose();
+    }
+
+    customMaterial = material;
+    particlePool.instancedMesh.material = material;
+    console.log('3D Trail: Uploaded matcap applied');
+}
+
+function applySolidColor() {
+    if (!particlePool?.instancedMesh) return;
+
+    // Create a simple solid color material
+    const material = new THREE.MeshStandardMaterial({
+        color: new THREE.Color(settings.solidColor),
+        metalness: 0.3,
+        roughness: 0.7,
+        side: THREE.DoubleSide
+    });
+
+    // Dispose old custom material if exists
+    if (customMaterial) {
+        if (customMaterial.matcap) {
+            customMaterial.matcap.dispose();
+        }
+        customMaterial.dispose();
+    }
+
+    customMaterial = material;
+    particlePool.instancedMesh.material = material;
+    console.log('3D Trail: Solid color applied');
+}
+
+function clearUploadedMatcap() {
+    if (uploadedMatcapTexture) {
+        uploadedMatcapTexture.dispose();
+        uploadedMatcapTexture = null;
+    }
+
+    // If we're in matcapUpload mode, switch back to solid
+    if (settings.materialType === 'matcapUpload') {
+        settings.materialType = 'solid';
+        applyCurrentMaterial();
+    }
+}
+
+// Apply the current material based on materialType setting
+function applyCurrentMaterial() {
+    if (!particlePool?.instancedMesh) return;
+
+    // Store original material for reference (first time only)
+    if (!originalMaterial) {
+        originalMaterial = particlePool.instancedMesh.material;
+    }
+
+    // Clean up existing multi-gradient systems
+    cleanupMultiGradientPools();
+    cleanupLerpPools();
+    cleanupAgeFading();
+
+    // Apply material based on type
+    if (settings.materialType === 'solid') {
+        applySolidColor();
+    } else if (settings.materialType === 'matcapUpload' && uploadedMatcapTexture) {
+        applyUploadedMatcap();
+    } else {
+        // Gradient mode
+        customMaterial = createCustomMaterial();
+        if (customMaterial) {
+            particlePool.instancedMesh.material = customMaterial;
+        }
+
+        // Initialize multi-gradient pools based on mode
+        if (settings.gradientSets.length >= 2) {
+            if (settings.multiGradientMode === 'random') {
+                initMultiGradientPools();
+            } else if (settings.multiGradientMode === 'lerp') {
+                initLerpPools();
+            } else if (settings.multiGradientMode === 'age') {
+                initAgeFading();
+            }
+        }
     }
 }
 
@@ -1239,15 +1545,32 @@ function toggleMaterialMode(enabled) {
         if (!originalMaterial) {
             originalMaterial = particlePool.instancedMesh.material;
         }
-        customMaterial = createCustomMaterial();
-        if (customMaterial) {
-            particlePool.instancedMesh.material = customMaterial;
-            console.log('3D Trail: Custom MatCap material applied');
-        }
 
-        // Initialize multi-gradient pools if we have multiple gradients and random mode
-        if (settings.gradientSets.length >= 2 && settings.multiGradientMode === 'random') {
-            initMultiGradientPools();
+        // Choose material based on materialType
+        if (settings.materialType === 'solid') {
+            applySolidColor();
+            console.log('3D Trail: Solid color material applied');
+        } else if (settings.materialType === 'matcapUpload' && uploadedMatcapTexture) {
+            applyUploadedMatcap();
+            console.log('3D Trail: Uploaded MatCap material applied');
+        } else {
+            // Default to gradient
+            customMaterial = createCustomMaterial();
+            if (customMaterial) {
+                particlePool.instancedMesh.material = customMaterial;
+                console.log('3D Trail: Gradient material applied');
+            }
+
+            // Initialize multi-gradient pools based on mode
+            if (settings.gradientSets.length >= 2) {
+                if (settings.multiGradientMode === 'random') {
+                    initMultiGradientPools();
+                } else if (settings.multiGradientMode === 'lerp') {
+                    initLerpPools();
+                } else if (settings.multiGradientMode === 'age') {
+                    initAgeFading();
+                }
+            }
         }
     } else {
         // Restore original material
@@ -1255,15 +1578,17 @@ function toggleMaterialMode(enabled) {
             particlePool.instancedMesh.material = originalMaterial;
         }
         if (customMaterial) {
-            if (customMaterial.matcap) {
+            if (customMaterial.matcap && customMaterial.matcap !== uploadedMatcapTexture) {
                 customMaterial.matcap.dispose();
             }
             customMaterial.dispose();
             customMaterial = null;
         }
 
-        // Clean up multi-gradient pools
+        // Clean up all multi-gradient systems
         cleanupMultiGradientPools();
+        cleanupLerpPools();
+        cleanupAgeFading();
 
         console.log('3D Trail: Original material restored');
     }
@@ -1465,6 +1790,312 @@ function applyGradientSet(index) {
     updateMaterial();
 }
 
+// ========== LERP MODE SYSTEM ==========
+// Interpolate between two gradient stop arrays
+function interpolateGradientStops(stopsA, stopsB, ratio) {
+    // Create interpolated stops - use the same positions, blend colors
+    const result = [];
+    const numStops = Math.max(stopsA.length, stopsB.length);
+
+    for (let i = 0; i < numStops; i++) {
+        const stopA = stopsA[Math.min(i, stopsA.length - 1)];
+        const stopB = stopsB[Math.min(i, stopsB.length - 1)];
+
+        // Parse hex colors to RGB
+        const colorA = hexToRgb(stopA.color);
+        const colorB = hexToRgb(stopB.color);
+
+        // Interpolate colors
+        const r = Math.round(colorA.r + (colorB.r - colorA.r) * ratio);
+        const g = Math.round(colorA.g + (colorB.g - colorA.g) * ratio);
+        const b = Math.round(colorA.b + (colorB.b - colorA.b) * ratio);
+
+        // Interpolate positions
+        const position = stopA.position + (stopB.position - stopA.position) * ratio;
+
+        result.push({
+            color: rgbToHex(r, g, b),
+            position: Math.round(position)
+        });
+    }
+
+    return result;
+}
+
+function hexToRgb(hex) {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+    } : { r: 0, g: 0, b: 0 };
+}
+
+function rgbToHex(r, g, b) {
+    return '#' + [r, g, b].map(x => {
+        const hex = x.toString(16);
+        return hex.length === 1 ? '0' + hex : hex;
+    }).join('');
+}
+
+// Initialize lerp pools with interpolated gradients
+function initLerpPools() {
+    if (!loadedGeometry || !settings.materialEnabled || settings.gradientSets.length < 2) return;
+
+    // Clean up existing lerp pools
+    cleanupLerpPools();
+
+    const gradA = settings.gradientSets[0];
+    const gradB = settings.gradientSets[1];
+    const steps = settings.lerpSteps;
+
+    // Generate sequence: A -> intermediate steps -> B -> intermediate steps back -> (loop)
+    // Total sequence length: 2 * (steps + 1) = A + steps + B + steps
+    const sequence = [];
+
+    // Forward: A to B
+    for (let i = 0; i <= steps; i++) {
+        const ratio = i / (steps + 1);
+        sequence.push({
+            stops: interpolateGradientStops(gradA.stops, gradB.stops, ratio),
+            type: gradA.type  // Use first gradient's type
+        });
+    }
+
+    // Add B
+    sequence.push({
+        stops: gradB.stops,
+        type: gradB.type
+    });
+
+    // Backward: B to A (excluding endpoints to avoid duplicates)
+    for (let i = steps; i >= 1; i--) {
+        const ratio = i / (steps + 1);
+        sequence.push({
+            stops: interpolateGradientStops(gradA.stops, gradB.stops, ratio),
+            type: gradA.type
+        });
+    }
+
+    console.log('3D Trail: Lerp sequence length:', sequence.length);
+
+    // Create a pool for each step in the sequence
+    const poolSize = Math.ceil(1000 / sequence.length);
+    sequence.forEach((gradientData, index) => {
+        const texture = matcapGenerator.generate(
+            gradientData.stops,
+            gradientData.type,
+            settings.lightPosition
+        );
+
+        const material = new THREE.MeshMatcapMaterial({
+            matcap: texture,
+            side: THREE.DoubleSide,
+            flatShading: settings.shaderMode === 'toon'
+        });
+
+        // Add rim light shader modifications
+        material.onBeforeCompile = (shader) => {
+            shader.uniforms.rimColor = { value: new THREE.Color(settings.rimColor) };
+            shader.uniforms.rimIntensity = { value: settings.rimEnabled ? settings.rimIntensity : 0 };
+            shader.uniforms.lightColor = { value: new THREE.Color(settings.lightColor) };
+            shader.uniforms.lightIntensity = { value: settings.lightIntensity };
+            shader.uniforms.toonMode = { value: settings.shaderMode === 'toon' ? 1 : 0 };
+
+            shader.fragmentShader = shader.fragmentShader.replace(
+                '#include <common>',
+                `#include <common>
+                uniform vec3 rimColor;
+                uniform float rimIntensity;
+                uniform vec3 lightColor;
+                uniform float lightIntensity;
+                uniform int toonMode;`
+            );
+
+            shader.fragmentShader = shader.fragmentShader.replace(
+                '#include <opaque_fragment>',
+                `outgoingLight *= lightColor * lightIntensity;
+                if (toonMode == 1) {
+                    outgoingLight = floor(outgoingLight * 4.0) / 4.0;
+                }
+                vec3 rimViewDir = normalize(vViewPosition);
+                float rimFactor = 1.0 - max(0.0, dot(normalize(vNormal), -rimViewDir));
+                rimFactor = pow(rimFactor, 2.0);
+                outgoingLight += rimColor * rimFactor * rimIntensity;
+                #include <opaque_fragment>`
+            );
+
+            material.userData.shader = shader;
+        };
+
+        const pool = new ParticlePool(poolSize);
+        const mesh = pool.init(loadedGeometry, material);
+        scene.add(mesh);
+
+        lerpPools.push({
+            pool: pool,
+            material: material,
+            mesh: mesh,
+            index: index
+        });
+    });
+
+    lerpIndex = 0;
+    useLerpPools = lerpPools.length > 0;
+    console.log('3D Trail: Lerp pools initialized with', lerpPools.length, 'steps');
+}
+
+// Clean up lerp pools
+function cleanupLerpPools() {
+    lerpPools.forEach(({ pool, material, mesh }) => {
+        pool.clear();
+        scene.remove(mesh);
+        if (material.matcap) material.matcap.dispose();
+        material.dispose();
+    });
+    lerpPools = [];
+    useLerpPools = false;
+    lerpIndex = 0;
+}
+
+// ========== AGE-BASED FADING SYSTEM ==========
+// Create material with custom shader for age-based matcap blending
+function createAgeFadingMaterial() {
+    if (!matcapGenerator || settings.gradientSets.length < 2) return null;
+
+    // Generate textures for gradient A and B
+    const gradA = settings.gradientSets[0];
+    const gradB = settings.gradientSets[1];
+
+    const textureA = matcapGenerator.generate(gradA.stops, gradA.type, settings.lightPosition);
+    const textureB = matcapGenerator.generate(gradB.stops, gradB.type, settings.lightPosition);
+
+    // Create base matcap material
+    const material = new THREE.MeshMatcapMaterial({
+        matcap: textureA,
+        side: THREE.DoubleSide,
+        flatShading: settings.shaderMode === 'toon'
+    });
+
+    // Extend shader to support age-based blending
+    material.onBeforeCompile = (shader) => {
+        // Add second matcap texture uniform
+        shader.uniforms.matcap2 = { value: textureB };
+
+        // Add rim light uniforms
+        shader.uniforms.rimColor = { value: new THREE.Color(settings.rimColor) };
+        shader.uniforms.rimIntensity = { value: settings.rimEnabled ? settings.rimIntensity : 0 };
+        shader.uniforms.lightColor = { value: new THREE.Color(settings.lightColor) };
+        shader.uniforms.lightIntensity = { value: settings.lightIntensity };
+        shader.uniforms.toonMode = { value: settings.shaderMode === 'toon' ? 1 : 0 };
+
+        // Add instance age attribute varying
+        shader.vertexShader = shader.vertexShader.replace(
+            '#include <common>',
+            `#include <common>
+            attribute float instanceAge;
+            varying float vAgeRatio;`
+        );
+
+        // Pass age to fragment shader
+        shader.vertexShader = shader.vertexShader.replace(
+            '#include <begin_vertex>',
+            `#include <begin_vertex>
+            vAgeRatio = instanceAge;`
+        );
+
+        // Add uniforms and varying to fragment shader
+        shader.fragmentShader = shader.fragmentShader.replace(
+            '#include <common>',
+            `#include <common>
+            uniform sampler2D matcap2;
+            uniform vec3 rimColor;
+            uniform float rimIntensity;
+            uniform vec3 lightColor;
+            uniform float lightIntensity;
+            uniform int toonMode;
+            varying float vAgeRatio;`
+        );
+
+        // Blend matcaps based on age ratio
+        shader.fragmentShader = shader.fragmentShader.replace(
+            'vec4 matcapColor = texture2D( matcap, uv );',
+            `vec4 matcapColor1 = texture2D( matcap, uv );
+            vec4 matcapColor2 = texture2D( matcap2, uv );
+            vec4 matcapColor = mix(matcapColor1, matcapColor2, vAgeRatio);`
+        );
+
+        // Add rim light + toon effect
+        shader.fragmentShader = shader.fragmentShader.replace(
+            '#include <opaque_fragment>',
+            `outgoingLight *= lightColor * lightIntensity;
+            if (toonMode == 1) {
+                outgoingLight = floor(outgoingLight * 4.0) / 4.0;
+            }
+            vec3 rimViewDir = normalize(vViewPosition);
+            float rimFactor = 1.0 - max(0.0, dot(normalize(vNormal), -rimViewDir));
+            rimFactor = pow(rimFactor, 2.0);
+            outgoingLight += rimColor * rimFactor * rimIntensity;
+            #include <opaque_fragment>`
+        );
+
+        material.userData.shader = shader;
+        material.userData.textureB = textureB;
+    };
+
+    return material;
+}
+
+// Initialize age-based fading system
+function initAgeFading() {
+    if (!loadedGeometry || !particlePool?.instancedMesh || settings.gradientSets.length < 2) return;
+
+    // Create age attribute buffer
+    const maxCount = particlePool.maxCount;
+    ageFadingAgeBuffer = new Float32Array(maxCount);
+
+    // Add instance age attribute to geometry
+    const geometry = particlePool.instancedMesh.geometry;
+    geometry.setAttribute('instanceAge', new THREE.InstancedBufferAttribute(ageFadingAgeBuffer, 1));
+
+    // Create and apply the age fading material
+    ageFadingMaterial = createAgeFadingMaterial();
+    if (ageFadingMaterial) {
+        particlePool.instancedMesh.material = ageFadingMaterial;
+        useAgeFading = true;
+        console.log('3D Trail: Age-based fading initialized');
+    }
+}
+
+// Update age ratios for all particles
+function updateAgeFadingAgeRatios() {
+    if (!useAgeFading || !ageFadingAgeBuffer || !particlePool?.instancedMesh) return;
+
+    particlePool.particles.forEach((particle, index) => {
+        const ageRatio = Math.min(1, particle.age / particle.lifespan);
+        ageFadingAgeBuffer[index] = ageRatio;
+    });
+
+    // Mark attribute for update
+    const geometry = particlePool.instancedMesh.geometry;
+    const ageAttr = geometry.getAttribute('instanceAge');
+    if (ageAttr) {
+        ageAttr.needsUpdate = true;
+    }
+}
+
+// Clean up age fading system
+function cleanupAgeFading() {
+    if (ageFadingMaterial) {
+        if (ageFadingMaterial.matcap) ageFadingMaterial.matcap.dispose();
+        if (ageFadingMaterial.userData.textureB) ageFadingMaterial.userData.textureB.dispose();
+        ageFadingMaterial.dispose();
+        ageFadingMaterial = null;
+    }
+    ageFadingAgeBuffer = null;
+    useAgeFading = false;
+}
+
 // ========== ANIMATION LOOP ==========
 function animate() {
     requestAnimationFrame(animate);
@@ -1479,6 +2110,11 @@ function animate() {
 
     // Update all particles
     updateParticles(delta);
+
+    // Update age-based fading ratios
+    if (useAgeFading) {
+        updateAgeFadingAgeRatios();
+    }
 
     // Render
     renderer.render(scene, camera);
@@ -1576,6 +2212,14 @@ function clearCanvas() {
         });
     }
 
+    // Clear lerp pools
+    if (useLerpPools) {
+        lerpPools.forEach(({ pool }) => {
+            pool.clear();
+            pool.finishUpdate();
+        });
+    }
+
     // Render the empty scene
     if (renderer && scene && camera) {
         renderer.render(scene, camera);
@@ -1596,7 +2240,6 @@ document.addEventListener('DOMContentLoaded', () => {
 window.trailTool = {
     settings: settings,
     loadGLBModel: loadGLBModel,
-    loadDefaultModel: loadDefaultModel,
     clearModel: clearModel,
     isModelLoaded: () => isModelLoaded,
     updateMaterial: updateMaterial,
@@ -1613,7 +2256,23 @@ window.trailTool = {
     // Multi-gradient pool functions
     initMultiGradientPools: initMultiGradientPools,
     updateMultiGradientPoolMaterials: updateMultiGradientPoolMaterials,
-    cleanupMultiGradientPools: cleanupMultiGradientPools
+    cleanupMultiGradientPools: cleanupMultiGradientPools,
+    // Custom cursor functions
+    updateCursorAppearance: updateCursorAppearance,
+    // Custom matcap upload functions
+    handleMatcapUpload: handleMatcapUpload,
+    applyUploadedMatcap: applyUploadedMatcap,
+    clearUploadedMatcap: clearUploadedMatcap,
+    hasUploadedMatcap: () => uploadedMatcapTexture !== null,
+    // Material functions
+    applySolidColor: applySolidColor,
+    applyCurrentMaterial: applyCurrentMaterial,
+    // Lerp mode functions
+    initLerpPools: initLerpPools,
+    cleanupLerpPools: cleanupLerpPools,
+    // Age fading functions
+    initAgeFading: initAgeFading,
+    cleanupAgeFading: cleanupAgeFading
 };
 
 // ========== INITIALIZE ==========

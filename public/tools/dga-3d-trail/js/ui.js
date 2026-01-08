@@ -56,10 +56,20 @@ function initUIControls() {
     }
 
     // ========== PARTICLE APPEARANCE ==========
-    setupSlider('density', 'density', settings);
-    setupSlider('size', 'size', settings);
-    setupSlider('size-min', 'sizeMin', settings);
-    setupSlider('size-max', 'sizeMax', settings);
+
+    // Helper to clear canvas on setting change
+    const clearCanvas = () => {
+        if (window.trailTool?.clearCanvas) {
+            window.trailTool.clearCanvas();
+        }
+    };
+
+    // Spacing slider (distance-based spawning)
+    setupSlider('spacing', 'spacing', settings);
+    // Size sliders - clear canvas since size is set at spawn
+    setupSlider('size', 'size', settings, clearCanvas);
+    setupSlider('size-min', 'sizeMin', settings, clearCanvas);
+    setupSlider('size-max', 'sizeMax', settings, clearCanvas);
     setupSlider('lifespan', 'lifespan', settings);
     setupSlider('exit-duration', 'exitDuration', settings);
 
@@ -73,27 +83,42 @@ function initUIControls() {
         if (rangeGroup) rangeGroup.style.display = showRange ? 'block' : 'none';
     }
 
-    // Random Size toggle
+    // Random Size toggle (mutually exclusive with Size by Speed)
     const randomSizeToggle = document.getElementById('random-size');
+    const sizeBySpeedToggle = document.getElementById('size-by-speed');
+
     if (randomSizeToggle) {
         randomSizeToggle.addEventListener('click', () => {
             const isPressed = randomSizeToggle.getAttribute('aria-pressed') === 'true';
             const newState = !isPressed;
             randomSizeToggle.setAttribute('aria-pressed', newState);
             settings.randomSize = newState;
+
+            // Turn off size by speed if turning on random size
+            if (newState && sizeBySpeedToggle) {
+                sizeBySpeedToggle.setAttribute('aria-pressed', 'false');
+                settings.sizeBySpeed = false;
+            }
             updateSizeControlsVisibility();
+            clearCanvas();  // Clear since size mode changed
         });
     }
 
-    // Size by Speed toggle
-    const sizeBySpeedToggle = document.getElementById('size-by-speed');
+    // Size by Speed toggle (mutually exclusive with Random Size)
     if (sizeBySpeedToggle) {
         sizeBySpeedToggle.addEventListener('click', () => {
             const isPressed = sizeBySpeedToggle.getAttribute('aria-pressed') === 'true';
             const newState = !isPressed;
             sizeBySpeedToggle.setAttribute('aria-pressed', newState);
             settings.sizeBySpeed = newState;
+
+            // Turn off random size if turning on size by speed
+            if (newState && randomSizeToggle) {
+                randomSizeToggle.setAttribute('aria-pressed', 'false');
+                settings.randomSize = false;
+            }
             updateSizeControlsVisibility();
+            clearCanvas();  // Clear since size mode changed
         });
     }
 
@@ -133,12 +158,21 @@ function initUIControls() {
             if (fixedAngleControls) {
                 fixedAngleControls.style.display = e.target.value === 'fixed' ? 'block' : 'none';
             }
+            // Clear canvas when facing mode changes (since rotation is set at spawn)
+            clearCanvas();
         });
     }
 
-    setupSlider('angle-x', 'fixedAngleX', settings);
-    setupSlider('angle-y', 'fixedAngleY', settings);
-    setupSlider('angle-z', 'fixedAngleZ', settings);
+    // Fixed angle sliders - clear canvas when changed
+    setupSlider('angle-x', 'fixedAngleX', settings, () => {
+        if (settings.facingMode === 'fixed') clearCanvas();
+    });
+    setupSlider('angle-y', 'fixedAngleY', settings, () => {
+        if (settings.facingMode === 'fixed') clearCanvas();
+    });
+    setupSlider('angle-z', 'fixedAngleZ', settings, () => {
+        if (settings.facingMode === 'fixed') clearCanvas();
+    });
 
     // ========== PHYSICS ==========
     setupToggle('gravity-enabled', 'gravityEnabled', settings, 'gravity-controls-group');
@@ -149,8 +183,16 @@ function initUIControls() {
     setupToggle('tumble-enabled', 'tumbleEnabled', settings, 'tumble-speed-group');
     setupSlider('tumble-speed', 'tumbleSpeed', settings);
 
+    // ========== LOOK AT MOUSE ANIMATION ==========
+    setupToggle('look-at-mouse-enabled', 'lookAtMouseEnabled', settings, 'look-at-mouse-controls');
+    setupSlider('look-at-mouse-strength', 'lookAtMouseStrength', settings);
+    setupSlider('look-at-max-left', 'lookAtMaxAngleLeft', settings);
+    setupSlider('look-at-max-right', 'lookAtMaxAngleRight', settings);
+    setupSlider('look-at-max-up', 'lookAtMaxAngleUp', settings);
+    setupSlider('look-at-max-down', 'lookAtMaxAngleDown', settings);
+
     // ========== CAMERA CONTROLS ==========
-    // Camera position sliders
+    // Camera position sliders (X and Y only, Z is controlled via FOV zoom)
     setupSlider('camera-x', 'cameraX', settings, (value) => {
         if (window.trailTool?.setCameraPosition) {
             window.trailTool.setCameraPosition(value, undefined, undefined);
@@ -159,11 +201,6 @@ function initUIControls() {
     setupSlider('camera-y', 'cameraY', settings, (value) => {
         if (window.trailTool?.setCameraPosition) {
             window.trailTool.setCameraPosition(undefined, value, undefined);
-        }
-    });
-    setupSlider('camera-z', 'cameraZ', settings, (value) => {
-        if (window.trailTool?.setCameraPosition) {
-            window.trailTool.setCameraPosition(undefined, undefined, value);
         }
     });
     setupSlider('camera-fov', 'cameraFOV', settings, (value) => {
@@ -182,7 +219,6 @@ function initUIControls() {
                 const newSettings = window.trailTool.settings;
                 updateSliderUI('camera-x', newSettings.cameraX);
                 updateSliderUI('camera-y', newSettings.cameraY);
-                updateSliderUI('camera-z', newSettings.cameraZ);
             }
         });
     });
@@ -194,6 +230,54 @@ function initUIControls() {
         if (slider) slider.value = value;
         if (valueDisplay) valueDisplay.textContent = value;
     }
+
+    // ========== CUSTOM CURSOR ==========
+    setupToggle('cursor-enabled', 'cursorEnabled', settings, 'cursor-controls-group', () => {
+        if (window.trailTool?.updateCursorAppearance) {
+            window.trailTool.updateCursorAppearance();
+        }
+    });
+
+    // Cursor image upload
+    const cursorUpload = document.getElementById('cursor-upload');
+    const cursorPreviewContainer = document.getElementById('cursor-preview-container');
+    const cursorPreviewImg = document.getElementById('cursor-preview-img');
+    const clearCursor = document.getElementById('clear-cursor');
+
+    if (cursorUpload) {
+        cursorUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                settings.cursorImage = event.target.result;
+                if (cursorPreviewImg) cursorPreviewImg.src = event.target.result;
+                if (cursorPreviewContainer) cursorPreviewContainer.style.display = 'block';
+                if (window.trailTool?.updateCursorAppearance) {
+                    window.trailTool.updateCursorAppearance();
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    if (clearCursor) {
+        clearCursor.addEventListener('click', () => {
+            settings.cursorImage = null;
+            if (cursorPreviewContainer) cursorPreviewContainer.style.display = 'none';
+            if (cursorUpload) cursorUpload.value = '';
+            if (window.trailTool?.updateCursorAppearance) {
+                window.trailTool.updateCursorAppearance();
+            }
+        });
+    }
+
+    setupSlider('cursor-size', 'cursorSize', settings, () => {
+        if (window.trailTool?.updateCursorAppearance) {
+            window.trailTool.updateCursorAppearance();
+        }
+    });
 
     // ========== BACKGROUND (handled in main.js but UI toggle here) ==========
     const transparentToggle = document.getElementById('transparent-bg');
@@ -210,24 +294,97 @@ function initUIControls() {
         });
     }
 
-    // ========== MATERIAL (MATCAP) CONTROLS ==========
-    const materialToggle = document.getElementById('material-enabled');
-    if (materialToggle) {
-        materialToggle.addEventListener('click', () => {
-            const isPressed = materialToggle.getAttribute('aria-pressed') === 'true';
-            const newState = !isPressed;
-            materialToggle.setAttribute('aria-pressed', newState);
+    // ========== MATERIAL CONTROLS (always enabled) ==========
+    // Material type selector (solid, gradient, custom matcap)
+    const materialType = document.getElementById('material-type');
+    const solidColorGroup = document.getElementById('solid-color-group');
+    const matcapUploadGroup = document.getElementById('matcap-upload-group');
+    const gradientControlsSection = document.getElementById('gradient-controls-section');
 
-            const controlsGroup = document.getElementById('material-controls-group');
-            if (controlsGroup) controlsGroup.style.display = newState ? 'block' : 'none';
+    if (materialType) {
+        materialType.addEventListener('change', (e) => {
+            settings.materialType = e.target.value;
+            const isSolid = e.target.value === 'solid';
+            const isGradient = e.target.value === 'gradient';
+            const isMatcap = e.target.value === 'matcapUpload';
 
-            if (window.trailTool?.toggleMaterialMode) {
-                window.trailTool.toggleMaterialMode(newState);
+            // Toggle visibility of controls
+            if (solidColorGroup) solidColorGroup.style.display = isSolid ? 'block' : 'none';
+            if (gradientControlsSection) gradientControlsSection.style.display = isGradient ? 'block' : 'none';
+            if (matcapUploadGroup) matcapUploadGroup.style.display = isMatcap ? 'block' : 'none';
+
+            // Apply the new material type
+            if (window.trailTool?.applyCurrentMaterial) {
+                window.trailTool.applyCurrentMaterial();
+            }
+        });
+    }
+
+    // Solid color picker
+    const solidColorInput = document.getElementById('solid-color');
+    if (solidColorInput) {
+        solidColorInput.addEventListener('input', (e) => {
+            settings.solidColor = e.target.value;
+            if (settings.materialType === 'solid' && window.trailTool?.applySolidColor) {
+                window.trailTool.applySolidColor();
+            }
+        });
+    }
+
+    // Custom matcap upload
+    const matcapUpload = document.getElementById('matcap-upload');
+    const matcapPreviewContainer = document.getElementById('matcap-preview-container');
+    const matcapPreview = document.getElementById('matcap-preview');
+    const clearMatcap = document.getElementById('clear-matcap');
+
+    if (matcapUpload) {
+        matcapUpload.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            try {
+                if (window.trailTool?.handleMatcapUpload) {
+                    await window.trailTool.handleMatcapUpload(file);
+
+                    // Show preview
+                    if (matcapPreview && matcapPreviewContainer) {
+                        const img = new Image();
+                        img.onload = () => {
+                            const ctx = matcapPreview.getContext('2d');
+                            ctx.clearRect(0, 0, 80, 80);
+                            ctx.drawImage(img, 0, 0, 80, 80);
+                            matcapPreviewContainer.style.display = 'block';
+                        };
+                        img.src = URL.createObjectURL(file);
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load matcap:', error);
+                alert('Failed to load matcap image: ' + error.message);
+            }
+        });
+    }
+
+    if (clearMatcap) {
+        clearMatcap.addEventListener('click', () => {
+            if (window.trailTool?.clearUploadedMatcap) {
+                window.trailTool.clearUploadedMatcap();
             }
 
-            // Update preview when enabling
-            if (newState) {
-                setTimeout(updateMaterialPreview, 100);
+            // Clear preview
+            if (matcapPreview) {
+                const ctx = matcapPreview.getContext('2d');
+                ctx.clearRect(0, 0, 80, 80);
+            }
+            if (matcapPreviewContainer) matcapPreviewContainer.style.display = 'none';
+            if (matcapUpload) matcapUpload.value = '';
+
+            // Switch back to gradient mode
+            if (materialType) {
+                materialType.value = 'gradient';
+                settings.materialType = 'gradient';
+                if (matcapUploadGroup) matcapUploadGroup.style.display = 'none';
+                if (gradientControlsSection) gradientControlsSection.style.display = 'block';
             }
         });
     }
@@ -237,7 +394,7 @@ function initUIControls() {
 
     // Update material preview for a specific gradient
     function updateMaterialPreview(gradientIndex = null) {
-        if (!settings.materialEnabled) return;
+        // Material is always enabled, no check needed
 
         // Update the specific gradient's preview canvas
         const idx = gradientIndex !== null ? gradientIndex : settings.activeGradientIndex;
@@ -290,7 +447,16 @@ function initUIControls() {
         // Show/hide multi-gradient section based on gradient count
         const multiSection = document.getElementById('multi-gradient-section');
         if (multiSection) {
-            multiSection.style.display = settings.gradientSets.length >= 2 ? 'block' : 'none';
+            const wasHidden = multiSection.style.display === 'none';
+            const shouldShow = settings.gradientSets.length >= 2;
+            multiSection.style.display = shouldShow ? 'block' : 'none';
+            
+            // If multi-gradient section just became visible, reinitialize material for lerp mode
+            if (wasHidden && shouldShow && settings.materialType === 'gradient') {
+                if (window.trailTool?.applyCurrentMaterial) {
+                    window.trailTool.applyCurrentMaterial();
+                }
+            }
         }
 
         // Update previews after DOM is ready
@@ -416,10 +582,9 @@ function initUIControls() {
 
                 rebuildGradientsListUI();
 
-                // Reinitialize pools when gradients are removed
-                if (settings.materialEnabled && window.trailTool?.toggleMaterialMode) {
-                    window.trailTool.toggleMaterialMode(false);
-                    window.trailTool.toggleMaterialMode(true);
+                // Reinitialize material when gradients are removed
+                if (window.trailTool?.applyCurrentMaterial) {
+                    window.trailTool.applyCurrentMaterial();
                 }
             });
         }
@@ -488,10 +653,9 @@ function initUIControls() {
             settings.activeGradientIndex = expandedGradientIndex;
             rebuildGradientsListUI();
 
-            // Reinitialize pools when gradients are added (for random mode)
-            if (settings.materialEnabled && settings.multiGradientMode === 'random' && window.trailTool?.toggleMaterialMode) {
-                window.trailTool.toggleMaterialMode(false);
-                window.trailTool.toggleMaterialMode(true);
+            // Reinitialize material when gradients are added
+            if (settings.multiGradientMode === 'random' && window.trailTool?.applyCurrentMaterial) {
+                window.trailTool.applyCurrentMaterial();
             }
         });
     }
@@ -553,9 +717,8 @@ function initUIControls() {
         shaderMode.addEventListener('change', (e) => {
             settings.shaderMode = e.target.value;
             // Need to recreate material for flatShading change
-            if (settings.materialEnabled && window.trailTool?.toggleMaterialMode) {
-                window.trailTool.toggleMaterialMode(false);
-                window.trailTool.toggleMaterialMode(true);
+            if (window.trailTool?.applyCurrentMaterial) {
+                window.trailTool.applyCurrentMaterial();
             }
         });
     }
@@ -567,20 +730,33 @@ function initUIControls() {
         multiGradientMode.addEventListener('change', (e) => {
             settings.multiGradientMode = e.target.value;
             const cycleSpeedGroup = document.getElementById('cycle-speed-group');
+            const lerpStepsGroup = document.getElementById('lerp-steps-group');
+
+            // Show/hide relevant controls based on mode
             if (cycleSpeedGroup) {
                 cycleSpeedGroup.style.display = e.target.value === 'time' ? 'block' : 'none';
             }
+            if (lerpStepsGroup) {
+                lerpStepsGroup.style.display = e.target.value === 'lerp' ? 'block' : 'none';
+            }
 
-            // Reinitialize multi-gradient pools when mode changes
-            if (settings.materialEnabled && window.trailTool?.toggleMaterialMode) {
-                window.trailTool.toggleMaterialMode(false);
-                window.trailTool.toggleMaterialMode(true);
+            // Reinitialize material when mode changes
+            if (window.trailTool?.applyCurrentMaterial) {
+                window.trailTool.applyCurrentMaterial();
             }
         });
     }
 
     // Gradient cycle speed slider
     setupSlider('gradient-cycle-speed', 'gradientCycleSpeed', settings);
+
+    // Lerp steps slider
+    setupSlider('lerp-steps', 'lerpSteps', settings, () => {
+        // Reinitialize lerp pools when steps change
+        if (settings.multiGradientMode === 'lerp' && window.trailTool?.applyCurrentMaterial) {
+            window.trailTool.applyCurrentMaterial();
+        }
+    });
 }
 
 // ========== HELPER FUNCTIONS ==========

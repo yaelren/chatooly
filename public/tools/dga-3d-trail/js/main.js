@@ -55,11 +55,11 @@ const settings = {
 
     // Look at Mouse animation settings
     lookAtMouseEnabled: false,
-    lookAtMouseStrength: 0.1,
-    lookAtMaxAngleLeft: 72,
-    lookAtMaxAngleRight: 72,
-    lookAtMaxAngleUp: 45,
-    lookAtMaxAngleDown: 45,
+    lookAtMouseStrength: 0.5,
+    lookAtMaxAngleLeft: 360,
+    lookAtMaxAngleRight: 360,
+    lookAtMaxAngleUp: 360,
+    lookAtMaxAngleDown: 360,
 
     // Physics
     gravityEnabled: false,
@@ -264,59 +264,50 @@ class Particle {
         this.spawnTime = clock ? clock.getElapsedTime() : 0;  // For float phase offset
         this.phaseOffset = Math.random() * Math.PI * 2;  // Random phase for organic feel
 
-        // Set initial angular velocity based on settings
-        if (settings.tumbleEnabled) {
-            this.angularVelocity.set(
-                (Math.random() - 0.5) * 4 * settings.tumbleSpeed,
-                (Math.random() - 0.5) * 4 * settings.tumbleSpeed,
-                (Math.random() - 0.5) * 4 * settings.tumbleSpeed
-            );
-        }
-        if (settings.spinEnabled) {
-            this.angularVelocity.y += settings.spinSpeed;
-        }
+        // Store random factors for tumble variation (unique per particle, used dynamically)
+        this.randomTumbleFactor = new THREE.Vector3(
+            (Math.random() - 0.5) * 4,
+            (Math.random() - 0.5) * 4,
+            (Math.random() - 0.5) * 4
+        );
 
-        // Set initial rotation based on facing mode
-        this.setInitialRotation();
+        // Store base rotation for this particle (for random/mouse facing modes)
+        this.baseRotation = new THREE.Euler(0, 0, 0);
+        this.setBaseRotation();
     }
 
-    setInitialRotation() {
+    setBaseRotation() {
+        // Store base rotation at spawn time - used for random/mouse modes
+        // Fixed mode reads current settings dynamically in update loop
         switch (settings.facingMode) {
             case 'random':
-                this.rotation.set(
+                this.baseRotation.set(
                     Math.random() * Math.PI * 2,
                     Math.random() * Math.PI * 2,
                     Math.random() * Math.PI * 2
                 );
                 break;
-            case 'fixed':
-                this.rotation.set(
-                    THREE.MathUtils.degToRad(settings.fixedAngleX),
-                    THREE.MathUtils.degToRad(settings.fixedAngleY),
-                    THREE.MathUtils.degToRad(settings.fixedAngleZ)
-                );
-                break;
             case 'mouse':
                 // Calculate rotation toward mouse at spawn time (frozen orientation)
-                // Mirror the direction so object faces the direction of movement
                 if (currentMouseWorldPos) {
                     const toMouse = currentMouseWorldPos.clone().sub(this.position);
                     const distance = toMouse.length();
 
                     if (distance > 0.01) {
                         toMouse.normalize();
-                        // Invert X to mirror the rotation (face direction of movement)
                         const rotY = Math.atan2(-toMouse.x, 0.5) * 1.2;
                         const rotX = Math.atan2(toMouse.y, 1) * 0.8;
                         const rotZ = -toMouse.x * 0.2;
 
-                        this.rotation.set(rotX, rotY, rotZ);
+                        this.baseRotation.set(rotX, rotY, rotZ);
                     }
                 }
                 break;
+            case 'fixed':
             case 'billboard':
             default:
-                // Will be updated each frame to face camera
+                // Fixed uses current settings dynamically, billboard is calculated each frame
+                this.baseRotation.set(0, 0, 0);
                 break;
         }
     }
@@ -900,6 +891,8 @@ function updateParticles(delta) {
         const lifeRatio = particle.age / particle.lifespan;
 
         // Apply float (space-like wiggle)
+        // Float adds movement to position - when disabled, the accumulated drift stays
+        // (this is intentional - float creates organic movement, not a reversible offset)
         if (settings.floatEnabled) {
             const time = clock.getElapsedTime();
             const phase = particle.spawnTime + particle.phaseOffset;
@@ -949,28 +942,71 @@ function updateParticles(delta) {
             particle.velocity.y = Math.abs(particle.velocity.y) * settings.bounceAmount;
         }
 
-        // Accumulate spin/tumble offset
-        particle.spinOffset.x += particle.angularVelocity.x * delta;
-        particle.spinOffset.y += particle.angularVelocity.y * delta;
-        particle.spinOffset.z += particle.angularVelocity.z * delta;
+        // Calculate dynamic angular velocity from CURRENT settings (not spawn-time)
+        // This allows spin/tumble toggles to affect existing particles
+        let angularVelX = 0, angularVelY = 0, angularVelZ = 0;
 
-        // Update rotation based on facing mode (apply spin/tumble for non-billboard modes)
-        if (settings.facingMode === 'none' || settings.facingMode === 'random' || settings.facingMode === 'fixed' || settings.facingMode === 'mouse') {
-            particle.rotation.x += particle.angularVelocity.x * delta;
-            particle.rotation.y += particle.angularVelocity.y * delta;
-            particle.rotation.z += particle.angularVelocity.z * delta;
+        if (settings.tumbleEnabled) {
+            angularVelX = settings.tumbleSpeed * particle.randomTumbleFactor.x;
+            angularVelY = settings.tumbleSpeed * particle.randomTumbleFactor.y;
+            angularVelZ = settings.tumbleSpeed * particle.randomTumbleFactor.z;
         }
 
-        // Billboard facing
-        if (settings.facingMode === 'billboard') {
-            const lookDir = cameraPosition.clone().sub(particle.position).normalize();
-            const rotY = Math.atan2(lookDir.x, lookDir.z);
-            const rotX = Math.atan2(-lookDir.y, Math.sqrt(lookDir.x * lookDir.x + lookDir.z * lookDir.z));
-            particle.rotation.set(
-                rotX + particle.spinOffset.x,
-                rotY + particle.spinOffset.y,
-                particle.spinOffset.z
-            );
+        if (settings.spinEnabled) {
+            angularVelY += settings.spinSpeed;
+        }
+
+        // When spin/tumble are enabled, accumulate offset
+        // When disabled, smoothly decay offset back to zero so particles return to base orientation
+        const spinTumbleActive = settings.spinEnabled || settings.tumbleEnabled;
+        if (spinTumbleActive) {
+            particle.spinOffset.x += angularVelX * delta;
+            particle.spinOffset.y += angularVelY * delta;
+            particle.spinOffset.z += angularVelZ * delta;
+        } else {
+            // Decay spinOffset back to zero when spin/tumble disabled
+            const decayRate = 3.0; // How fast to return to base orientation
+            particle.spinOffset.x *= Math.max(0, 1 - decayRate * delta);
+            particle.spinOffset.y *= Math.max(0, 1 - decayRate * delta);
+            particle.spinOffset.z *= Math.max(0, 1 - decayRate * delta);
+            // Snap to zero when close enough
+            if (Math.abs(particle.spinOffset.x) < 0.001) particle.spinOffset.x = 0;
+            if (Math.abs(particle.spinOffset.y) < 0.001) particle.spinOffset.y = 0;
+            if (Math.abs(particle.spinOffset.z) < 0.001) particle.spinOffset.z = 0;
+        }
+
+        // Update rotation based on CURRENT facing mode (not spawn-time)
+        // This allows facing mode changes to affect existing particles
+        switch (settings.facingMode) {
+            case 'fixed':
+                // Use current fixed angle settings + accumulated spin offset
+                particle.rotation.set(
+                    THREE.MathUtils.degToRad(settings.fixedAngleX) + particle.spinOffset.x,
+                    THREE.MathUtils.degToRad(settings.fixedAngleY) + particle.spinOffset.y,
+                    THREE.MathUtils.degToRad(settings.fixedAngleZ) + particle.spinOffset.z
+                );
+                break;
+            case 'random':
+            case 'mouse':
+            case 'none':
+                // Use stored base rotation + accumulated spin offset
+                particle.rotation.set(
+                    particle.baseRotation.x + particle.spinOffset.x,
+                    particle.baseRotation.y + particle.spinOffset.y,
+                    particle.baseRotation.z + particle.spinOffset.z
+                );
+                break;
+            case 'billboard':
+                // Billboard: calculate facing direction each frame + spin offset
+                const lookDir = cameraPosition.clone().sub(particle.position).normalize();
+                const rotY = Math.atan2(lookDir.x, lookDir.z);
+                const rotX = Math.atan2(-lookDir.y, Math.sqrt(lookDir.x * lookDir.x + lookDir.z * lookDir.z));
+                particle.rotation.set(
+                    rotX + particle.spinOffset.x,
+                    rotY + particle.spinOffset.y,
+                    particle.spinOffset.z
+                );
+                break;
         }
 
         // Look at Mouse Animation (independent of facingMode, stackable effect)
@@ -979,25 +1015,42 @@ function updateParticles(delta) {
             const distance = toMouse.length();
 
             if (distance > 0.01) {
-                toMouse.normalize();
-                const targetRotY = Math.atan2(toMouse.x, 0.5) * 1.2;
-                const targetRotX = Math.atan2(-toMouse.y, 1) * 0.8;
-                const targetRotZ = toMouse.x * 0.2;
+                // Calculate ideal rotation angles to face the mouse
+                // Yaw (Y-axis): horizontal rotation based on X/Z position
+                const idealYaw = Math.atan2(toMouse.x, toMouse.z);
+                // Pitch (X-axis): vertical rotation based on Y and horizontal distance
+                const horizontalDist = Math.sqrt(toMouse.x * toMouse.x + toMouse.z * toMouse.z);
+                const idealPitch = Math.atan2(-toMouse.y, horizontalDist);
 
-                // Use configurable limits for look at animation
-                const maxAngleLeft = THREE.MathUtils.degToRad(settings.lookAtMaxAngleLeft);
-                const maxAngleRight = THREE.MathUtils.degToRad(settings.lookAtMaxAngleRight);
-                const maxAngleUp = THREE.MathUtils.degToRad(settings.lookAtMaxAngleUp);
-                const maxAngleDown = THREE.MathUtils.degToRad(settings.lookAtMaxAngleDown);
+                // Get limits in radians
+                const maxLeft = THREE.MathUtils.degToRad(settings.lookAtMaxAngleLeft);
+                const maxRight = THREE.MathUtils.degToRad(settings.lookAtMaxAngleRight);
+                const maxUp = THREE.MathUtils.degToRad(settings.lookAtMaxAngleUp);
+                const maxDown = THREE.MathUtils.degToRad(settings.lookAtMaxAngleDown);
 
-                // Clamp target rotation
-                const clampedRotX = Math.max(-maxAngleDown, Math.min(maxAngleUp, targetRotX));
-                const clampedRotY = Math.max(-maxAngleLeft, Math.min(maxAngleRight, targetRotY));
+                // Clamp yaw based on direction (positive = right, negative = left)
+                let targetRotY;
+                if (idealYaw >= 0) {
+                    targetRotY = Math.min(idealYaw, maxRight);
+                } else {
+                    targetRotY = Math.max(idealYaw, -maxLeft);
+                }
+
+                // Clamp pitch based on direction (positive = down, negative = up)
+                let targetRotX;
+                if (idealPitch >= 0) {
+                    targetRotX = Math.min(idealPitch, maxDown);
+                } else {
+                    targetRotX = Math.max(idealPitch, -maxUp);
+                }
+
+                // Optional roll (tilt) - proportional to horizontal offset, clamped
+                const targetRotZ = THREE.MathUtils.clamp(toMouse.x * 0.2, -0.5, 0.5);
 
                 // Smoothly interpolate toward target
                 const strength = settings.lookAtMouseStrength;
-                particle.rotation.x += (clampedRotX - particle.rotation.x) * strength;
-                particle.rotation.y += (clampedRotY - particle.rotation.y) * strength;
+                particle.rotation.x += (targetRotX - particle.rotation.x) * strength;
+                particle.rotation.y += (targetRotY - particle.rotation.y) * strength;
                 particle.rotation.z += (targetRotZ - particle.rotation.z) * strength;
             }
         }

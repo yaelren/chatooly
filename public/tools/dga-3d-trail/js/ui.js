@@ -158,21 +158,14 @@ function initUIControls() {
             if (fixedAngleControls) {
                 fixedAngleControls.style.display = e.target.value === 'fixed' ? 'block' : 'none';
             }
-            // Clear canvas when facing mode changes (since rotation is set at spawn)
-            clearCanvas();
+            // No clearCanvas() - facing mode now affects existing particles dynamically
         });
     }
 
-    // Fixed angle sliders - clear canvas when changed
-    setupSlider('angle-x', 'fixedAngleX', settings, () => {
-        if (settings.facingMode === 'fixed') clearCanvas();
-    });
-    setupSlider('angle-y', 'fixedAngleY', settings, () => {
-        if (settings.facingMode === 'fixed') clearCanvas();
-    });
-    setupSlider('angle-z', 'fixedAngleZ', settings, () => {
-        if (settings.facingMode === 'fixed') clearCanvas();
-    });
+    // Fixed angle sliders - no clearCanvas() needed, affects existing particles dynamically
+    setupSlider('angle-x', 'fixedAngleX', settings);
+    setupSlider('angle-y', 'fixedAngleY', settings);
+    setupSlider('angle-z', 'fixedAngleZ', settings);
 
     // ========== PHYSICS ==========
     setupToggle('gravity-enabled', 'gravityEnabled', settings, 'gravity-controls-group');

@@ -2510,6 +2510,283 @@ window.trailTool = {
     updateAgeFadingMaterial: updateAgeFadingMaterial
 };
 
+// ========== PRESET MANAGEMENT ==========
+const PRESET_STORAGE_KEY = '3d-trail-presets';
+
+function getPresetData() {
+    // Clone settings object, excluding non-serializable/runtime items
+    const preset = JSON.parse(JSON.stringify(settings));
+    // Remove runtime-only properties (cursorImage is large binary data)
+    delete preset.cursorImage;
+    return preset;
+}
+
+function savePreset(name) {
+    const preset = {
+        name: name,
+        timestamp: Date.now(),
+        tool: '3DTrail',
+        version: '1.0',
+        settings: getPresetData()
+    };
+
+    // Save to localStorage
+    const presets = JSON.parse(localStorage.getItem(PRESET_STORAGE_KEY) || '{}');
+    presets[name] = preset;
+    localStorage.setItem(PRESET_STORAGE_KEY, JSON.stringify(presets));
+
+    // Also download as JSON file
+    const blob = new Blob([JSON.stringify(preset, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${name.replace(/[^a-z0-9]/gi, '_')}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    updatePresetDropdown();
+}
+
+function loadPreset(preset) {
+    // Apply settings from preset (preserve cursorImage if it exists)
+    const currentCursor = settings.cursorImage;
+    Object.assign(settings, preset.settings);
+    if (currentCursor && !preset.settings.cursorImage) {
+        settings.cursorImage = currentCursor;
+    }
+
+    // Sync all UI controls to match loaded values
+    syncUIToSettings();
+
+    // Update material if needed
+    if (typeof updateMaterial === 'function') {
+        updateMaterial();
+    }
+}
+
+function loadPresetFromStorage(name) {
+    const presets = JSON.parse(localStorage.getItem(PRESET_STORAGE_KEY) || '{}');
+    if (presets[name]) {
+        loadPreset(presets[name]);
+    }
+}
+
+function deletePreset(name) {
+    const presets = JSON.parse(localStorage.getItem(PRESET_STORAGE_KEY) || '{}');
+    delete presets[name];
+    localStorage.setItem(PRESET_STORAGE_KEY, JSON.stringify(presets));
+    updatePresetDropdown();
+}
+
+function updatePresetDropdown() {
+    const select = document.getElementById('preset-select');
+    if (!select) return;
+
+    const presets = JSON.parse(localStorage.getItem(PRESET_STORAGE_KEY) || '{}');
+
+    select.innerHTML = '<option value="">-- Select Preset --</option>';
+    Object.keys(presets).sort().forEach(name => {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        select.appendChild(option);
+    });
+}
+
+function syncUIToSettings() {
+    // Helper to set value and dispatch input event
+    const setSlider = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.value = value;
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+    };
+
+    const setSelect = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.value = value;
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    };
+
+    const setToggle = (id, enabled) => {
+        const el = document.getElementById(id);
+        if (el) {
+            const isPressed = el.getAttribute('aria-pressed') === 'true';
+            if (isPressed !== enabled) {
+                el.click();
+            }
+        }
+    };
+
+    const setColor = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.value = value;
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+    };
+
+    // Trail/particle settings
+    setSlider('spacing', settings.spacing);
+    setSlider('size', settings.size);
+    setSlider('size-min', settings.sizeMin);
+    setSlider('size-max', settings.sizeMax);
+    setToggle('random-size', settings.randomSize);
+    setToggle('size-by-speed', settings.sizeBySpeed);
+    setSlider('lifespan', settings.lifespan);
+    setSlider('exit-duration', settings.exitDuration);
+    setSelect('disappear-mode', settings.disappearMode);
+
+    // Facing mode
+    setSelect('facing-mode', settings.facingMode);
+    setSlider('angle-x', settings.fixedAngleX);
+    setSlider('angle-y', settings.fixedAngleY);
+    setSlider('angle-z', settings.fixedAngleZ);
+
+    // Material settings
+    setSelect('material-type', settings.materialType);
+    setColor('solid-color', settings.solidColor);
+    setSelect('shader-mode', settings.shaderMode);
+    setSelect('multi-gradient-mode', settings.multiGradientMode);
+    setSlider('gradient-cycle-speed', settings.gradientCycleSpeed);
+    setSlider('lerp-steps', settings.lerpSteps);
+
+    // Lighting
+    setSlider('light-position', settings.lightPosition);
+    setSlider('light-intensity', settings.lightIntensity);
+    setColor('light-color', settings.lightColor);
+    setToggle('rim-enabled', settings.rimEnabled);
+    setColor('rim-color', settings.rimColor);
+    setSlider('rim-intensity', settings.rimIntensity);
+
+    // Movement
+    setToggle('float-enabled', settings.floatEnabled);
+    setSelect('float-style', settings.floatStyle);
+    setSlider('float-amplitude', settings.floatAmplitude);
+    setToggle('follow-enabled', settings.followEnabled);
+    setSlider('follow-strength', settings.followStrength);
+
+    // Physics
+    setToggle('gravity-enabled', settings.gravityEnabled);
+    setSlider('gravity-strength', settings.gravityStrength);
+    setToggle('bounce-enabled', settings.bounceEnabled);
+    setSlider('bounce-amount', settings.bounceAmount);
+    setToggle('spin-enabled', settings.spinEnabled);
+    setSlider('spin-speed', settings.spinSpeed);
+    setToggle('tumble-enabled', settings.tumbleEnabled);
+    setSlider('tumble-speed', settings.tumbleSpeed);
+
+    // Look at mouse
+    setToggle('look-at-mouse-enabled', settings.lookAtMouseEnabled);
+    setSlider('look-at-mouse-strength', settings.lookAtMouseStrength);
+    setSlider('look-at-max-left', settings.lookAtMaxAngleLeft);
+    setSlider('look-at-max-right', settings.lookAtMaxAngleRight);
+    setSlider('look-at-max-up', settings.lookAtMaxAngleUp);
+    setSlider('look-at-max-down', settings.lookAtMaxAngleDown);
+
+    // Custom cursor
+    setToggle('cursor-enabled', settings.cursorEnabled);
+    setSlider('cursor-size', settings.cursorSize);
+
+    // Camera
+    setSlider('camera-x', settings.cameraX);
+    setSlider('camera-y', settings.cameraY);
+    setSlider('camera-fov', settings.cameraFOV);
+
+    // Update gradient UI if gradients exist
+    if (settings.gradientSets && settings.gradientSets[0]) {
+        const event = new CustomEvent('preset-gradient-loaded', {
+            detail: settings.gradientSets[0]
+        });
+        document.dispatchEvent(event);
+    }
+
+    // Update slider value displays
+    document.querySelectorAll('.chatooly-slider').forEach(slider => {
+        const valueSpan = document.querySelector(`#${slider.id}-value`);
+        if (valueSpan) {
+            valueSpan.textContent = slider.value;
+        }
+    });
+}
+
+function initPresetUI() {
+    // Save preset button
+    const saveBtn = document.getElementById('save-preset-btn');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', () => {
+            const name = prompt('Enter preset name:');
+            if (!name || !name.trim()) {
+                return;
+            }
+            savePreset(name.trim());
+        });
+    }
+
+    // Preset select dropdown
+    const presetSelect = document.getElementById('preset-select');
+    if (presetSelect) {
+        presetSelect.addEventListener('change', (e) => {
+            const deleteBtn = document.getElementById('delete-preset-btn');
+            if (e.target.value) {
+                loadPresetFromStorage(e.target.value);
+                if (deleteBtn) deleteBtn.style.display = 'block';
+            } else {
+                if (deleteBtn) deleteBtn.style.display = 'none';
+            }
+        });
+    }
+
+    // Upload preset from file
+    const presetUpload = document.getElementById('preset-upload');
+    if (presetUpload) {
+        presetUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const preset = JSON.parse(event.target.result);
+                        if (preset.settings) {
+                            loadPreset(preset);
+                        } else {
+                            alert('Invalid preset file format');
+                        }
+                    } catch (err) {
+                        alert('Invalid preset file: ' + err.message);
+                    }
+                };
+                reader.readAsText(file);
+                e.target.value = ''; // Reset input
+            }
+        });
+    }
+
+    // Delete preset button
+    const deleteBtn = document.getElementById('delete-preset-btn');
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', () => {
+            const select = document.getElementById('preset-select');
+            const name = select?.value;
+            if (name && confirm(`Delete preset "${name}"?`)) {
+                deletePreset(name);
+                deleteBtn.style.display = 'none';
+            }
+        });
+    }
+
+    // Initialize dropdown with saved presets
+    updatePresetDropdown();
+}
+
+// Initialize preset UI when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    initPresetUI();
+});
+
 // ========== INITIALIZE ==========
 // Wait for Three.js module to load
 if (window.THREE) {

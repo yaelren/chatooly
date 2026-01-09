@@ -170,6 +170,9 @@ let mouseSpeed = 0;
 let lastMoveDirection = { x: 0, y: 0 };
 let accumulatedDistance = 0;  // For distance-based spawning
 
+// ========== CANVAS SIZE TRACKING ==========
+let previousCanvasSize = { width: canvas.width, height: canvas.height };
+
 // ========== CUSTOM CURSOR ==========
 let cursorElement = null;
 
@@ -566,12 +569,30 @@ function fallbackMouseMapping(e) {
 }
 
 function onCanvasResized(e) {
+    const oldWidth = previousCanvasSize.width;
+    const oldHeight = previousCanvasSize.height;
     const newWidth = e.detail.canvas.width;
     const newHeight = e.detail.canvas.height;
 
     renderer.setSize(newWidth, newHeight);
     camera.aspect = newWidth / newHeight;
     camera.updateProjectionMatrix();
+
+    // Scale mouse position to new canvas dimensions to prevent offset
+    if (oldWidth > 0 && oldHeight > 0) {
+        const scaleX = newWidth / oldWidth;
+        const scaleY = newHeight / oldHeight;
+        currentMousePos.x *= scaleX;
+        currentMousePos.y *= scaleY;
+
+        // Recalculate normalized device coordinates
+        pointer.x = (currentMousePos.x / newWidth) * 2 - 1;
+        pointer.y = -(currentMousePos.y / newHeight) * 2 + 1;
+    }
+
+    // Update tracked canvas size
+    previousCanvasSize.width = newWidth;
+    previousCanvasSize.height = newHeight;
 
     updateBackground();
 }
@@ -1500,19 +1521,20 @@ function regenerateGradientTextures() {
 }
 
 function updateMaterial() {
-    if (!settings.materialEnabled || !particlePool?.instancedMesh || !matcapGenerator) return;
+    if (!settings.materialEnabled || !matcapGenerator) return;
 
-    // Get current gradient from gradientSets
-    const currentGradient = settings.gradientSets[settings.activeGradientIndex] || settings.gradientSets[0];
+    // Update main custom material if it exists
+    if (customMaterial && particlePool?.instancedMesh) {
+        // Get current gradient from gradientSets
+        const currentGradient = settings.gradientSets[settings.activeGradientIndex] || settings.gradientSets[0];
 
-    // Regenerate matcap texture
-    const texture = matcapGenerator.generate(
-        currentGradient.stops,
-        currentGradient.type,
-        settings.lightPosition
-    );
+        // Regenerate matcap texture
+        const texture = matcapGenerator.generate(
+            currentGradient.stops,
+            currentGradient.type,
+            settings.lightPosition
+        );
 
-    if (customMaterial) {
         // Update matcap texture
         if (customMaterial.matcap) {
             customMaterial.matcap.dispose();
@@ -1532,8 +1554,11 @@ function updateMaterial() {
         }
     }
 
-    // Also update multi-gradient pool materials when lighting changes
+    // ALWAYS update multi-gradient pool materials when lighting changes
+    // These are independent of the main particlePool
     updateMultiGradientPoolMaterials();
+    updateLerpPoolMaterials();
+    updateAgeFadingMaterial();
 }
 
 function toggleMaterialMode(enabled) {
@@ -1615,13 +1640,23 @@ function createMaterialForGradient(gradientIndex) {
         flatShading: settings.shaderMode === 'toon'
     });
 
+    // Pre-create uniform objects so we can update them before shader compiles
+    material.userData.uniforms = {
+        rimColor: { value: new THREE.Color(settings.rimColor) },
+        rimIntensity: { value: settings.rimEnabled ? settings.rimIntensity : 0 },
+        lightColor: { value: new THREE.Color(settings.lightColor) },
+        lightIntensity: { value: settings.lightIntensity },
+        toonMode: { value: settings.shaderMode === 'toon' ? 1 : 0 }
+    };
+
     // Extend with rim light via onBeforeCompile
     material.onBeforeCompile = (shader) => {
-        shader.uniforms.rimColor = { value: new THREE.Color(settings.rimColor) };
-        shader.uniforms.rimIntensity = { value: settings.rimEnabled ? settings.rimIntensity : 0 };
-        shader.uniforms.lightColor = { value: new THREE.Color(settings.lightColor) };
-        shader.uniforms.lightIntensity = { value: settings.lightIntensity };
-        shader.uniforms.toonMode = { value: settings.shaderMode === 'toon' ? 1 : 0 };
+        // Use pre-created uniforms so updates work before and after compilation
+        shader.uniforms.rimColor = material.userData.uniforms.rimColor;
+        shader.uniforms.rimIntensity = material.userData.uniforms.rimIntensity;
+        shader.uniforms.lightColor = material.userData.uniforms.lightColor;
+        shader.uniforms.lightIntensity = material.userData.uniforms.lightIntensity;
+        shader.uniforms.toonMode = material.userData.uniforms.toonMode;
 
         shader.fragmentShader = shader.fragmentShader.replace(
             '#include <common>',
@@ -1712,8 +1747,9 @@ function updateMultiGradientPoolMaterials() {
         material.flatShading = settings.shaderMode === 'toon';
         material.needsUpdate = true;
 
-        if (material.userData.shader) {
-            const uniforms = material.userData.shader.uniforms;
+        // Update uniforms - try compiled shader first, fall back to userData.uniforms
+        const uniforms = material.userData.shader?.uniforms || material.userData.uniforms;
+        if (uniforms) {
             uniforms.rimColor.value.set(settings.rimColor);
             uniforms.rimIntensity.value = settings.rimEnabled ? settings.rimIntensity : 0;
             uniforms.lightColor.value.set(settings.lightColor);
@@ -1721,6 +1757,74 @@ function updateMultiGradientPoolMaterials() {
             uniforms.toonMode.value = settings.shaderMode === 'toon' ? 1 : 0;
         }
     });
+}
+
+// Update lerp pool materials (when lighting/shader settings change)
+function updateLerpPoolMaterials() {
+    if (!useLerpPools || !matcapGenerator) return;
+
+    lerpPools.forEach(({ material, gradientData }) => {
+        // Regenerate texture with current light position
+        if (gradientData) {
+            const texture = matcapGenerator.generate(
+                gradientData.stops,
+                gradientData.type,
+                settings.lightPosition
+            );
+            if (material.matcap) material.matcap.dispose();
+            material.matcap = texture;
+            material.flatShading = settings.shaderMode === 'toon';
+            material.needsUpdate = true;
+        }
+
+        // Update uniforms - try compiled shader first, fall back to userData.uniforms
+        const uniforms = material.userData.shader?.uniforms || material.userData.uniforms;
+        if (uniforms) {
+            uniforms.rimColor.value.set(settings.rimColor);
+            uniforms.rimIntensity.value = settings.rimEnabled ? settings.rimIntensity : 0;
+            uniforms.lightColor.value.set(settings.lightColor);
+            uniforms.lightIntensity.value = settings.lightIntensity;
+            uniforms.toonMode.value = settings.shaderMode === 'toon' ? 1 : 0;
+        }
+    });
+}
+
+// Update age fading material (when lighting/shader settings change)
+function updateAgeFadingMaterial() {
+    if (!useAgeFading || !ageFadingMaterial || !matcapGenerator) return;
+
+    // Regenerate both textures with current light position
+    const gradA = settings.gradientSets[0];
+    const gradB = settings.gradientSets[1];
+
+    if (gradA && gradB) {
+        const textureA = matcapGenerator.generate(gradA.stops, gradA.type, settings.lightPosition);
+        const textureB = matcapGenerator.generate(gradB.stops, gradB.type, settings.lightPosition);
+
+        // Update main matcap texture
+        if (ageFadingMaterial.matcap) ageFadingMaterial.matcap.dispose();
+        ageFadingMaterial.matcap = textureA;
+        ageFadingMaterial.flatShading = settings.shaderMode === 'toon';
+        ageFadingMaterial.needsUpdate = true;
+
+        // Update uniforms - try compiled shader first, fall back to userData.uniforms
+        const uniforms = ageFadingMaterial.userData.shader?.uniforms || ageFadingMaterial.userData.uniforms;
+        if (uniforms) {
+            // Dispose old textureB and update
+            if (ageFadingMaterial.userData.textureB) {
+                ageFadingMaterial.userData.textureB.dispose();
+            }
+            ageFadingMaterial.userData.textureB = textureB;
+            uniforms.matcap2.value = textureB;
+
+            // Update other uniforms
+            uniforms.rimColor.value.set(settings.rimColor);
+            uniforms.rimIntensity.value = settings.rimEnabled ? settings.rimIntensity : 0;
+            uniforms.lightColor.value.set(settings.lightColor);
+            uniforms.lightIntensity.value = settings.lightIntensity;
+            uniforms.toonMode.value = settings.shaderMode === 'toon' ? 1 : 0;
+        }
+    }
 }
 
 function updateMultiGradient(delta) {
@@ -1894,13 +1998,23 @@ function initLerpPools() {
             flatShading: settings.shaderMode === 'toon'
         });
 
+        // Pre-create uniform objects so we can update them before shader compiles
+        material.userData.uniforms = {
+            rimColor: { value: new THREE.Color(settings.rimColor) },
+            rimIntensity: { value: settings.rimEnabled ? settings.rimIntensity : 0 },
+            lightColor: { value: new THREE.Color(settings.lightColor) },
+            lightIntensity: { value: settings.lightIntensity },
+            toonMode: { value: settings.shaderMode === 'toon' ? 1 : 0 }
+        };
+
         // Add rim light shader modifications
         material.onBeforeCompile = (shader) => {
-            shader.uniforms.rimColor = { value: new THREE.Color(settings.rimColor) };
-            shader.uniforms.rimIntensity = { value: settings.rimEnabled ? settings.rimIntensity : 0 };
-            shader.uniforms.lightColor = { value: new THREE.Color(settings.lightColor) };
-            shader.uniforms.lightIntensity = { value: settings.lightIntensity };
-            shader.uniforms.toonMode = { value: settings.shaderMode === 'toon' ? 1 : 0 };
+            // Use pre-created uniforms so updates work before and after compilation
+            shader.uniforms.rimColor = material.userData.uniforms.rimColor;
+            shader.uniforms.rimIntensity = material.userData.uniforms.rimIntensity;
+            shader.uniforms.lightColor = material.userData.uniforms.lightColor;
+            shader.uniforms.lightIntensity = material.userData.uniforms.lightIntensity;
+            shader.uniforms.toonMode = material.userData.uniforms.toonMode;
 
             shader.fragmentShader = shader.fragmentShader.replace(
                 '#include <common>',
@@ -1936,7 +2050,8 @@ function initLerpPools() {
             pool: pool,
             material: material,
             mesh: mesh,
-            index: index
+            index: index,
+            gradientData: gradientData  // Store for texture regeneration
         });
     });
 
@@ -1977,17 +2092,26 @@ function createAgeFadingMaterial() {
         flatShading: settings.shaderMode === 'toon'
     });
 
+    // Pre-create uniform objects so we can update them before shader compiles
+    material.userData.uniforms = {
+        matcap2: { value: textureB },
+        rimColor: { value: new THREE.Color(settings.rimColor) },
+        rimIntensity: { value: settings.rimEnabled ? settings.rimIntensity : 0 },
+        lightColor: { value: new THREE.Color(settings.lightColor) },
+        lightIntensity: { value: settings.lightIntensity },
+        toonMode: { value: settings.shaderMode === 'toon' ? 1 : 0 }
+    };
+    material.userData.textureB = textureB;
+
     // Extend shader to support age-based blending
     material.onBeforeCompile = (shader) => {
-        // Add second matcap texture uniform
-        shader.uniforms.matcap2 = { value: textureB };
-
-        // Add rim light uniforms
-        shader.uniforms.rimColor = { value: new THREE.Color(settings.rimColor) };
-        shader.uniforms.rimIntensity = { value: settings.rimEnabled ? settings.rimIntensity : 0 };
-        shader.uniforms.lightColor = { value: new THREE.Color(settings.lightColor) };
-        shader.uniforms.lightIntensity = { value: settings.lightIntensity };
-        shader.uniforms.toonMode = { value: settings.shaderMode === 'toon' ? 1 : 0 };
+        // Use pre-created uniforms so updates work before and after compilation
+        shader.uniforms.matcap2 = material.userData.uniforms.matcap2;
+        shader.uniforms.rimColor = material.userData.uniforms.rimColor;
+        shader.uniforms.rimIntensity = material.userData.uniforms.rimIntensity;
+        shader.uniforms.lightColor = material.userData.uniforms.lightColor;
+        shader.uniforms.lightIntensity = material.userData.uniforms.lightIntensity;
+        shader.uniforms.toonMode = material.userData.uniforms.toonMode;
 
         // Add instance age attribute varying
         shader.vertexShader = shader.vertexShader.replace(
@@ -2040,7 +2164,6 @@ function createAgeFadingMaterial() {
         );
 
         material.userData.shader = shader;
-        material.userData.textureB = textureB;
     };
 
     return material;
@@ -2270,9 +2393,11 @@ window.trailTool = {
     // Lerp mode functions
     initLerpPools: initLerpPools,
     cleanupLerpPools: cleanupLerpPools,
+    updateLerpPoolMaterials: updateLerpPoolMaterials,
     // Age fading functions
     initAgeFading: initAgeFading,
-    cleanupAgeFading: cleanupAgeFading
+    cleanupAgeFading: cleanupAgeFading,
+    updateAgeFadingMaterial: updateAgeFadingMaterial
 };
 
 // ========== INITIALIZE ==========

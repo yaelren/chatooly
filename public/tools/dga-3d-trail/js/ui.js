@@ -301,6 +301,13 @@ function initUIControls() {
     const matcapUploadGroup = document.getElementById('matcap-upload-group');
     const gradientControlsSection = document.getElementById('gradient-controls-section');
 
+    // Lighting controls section (only visible for gradient mode)
+    const lightingControlsSection = document.getElementById('lighting-controls-section');
+
+    // Set initial visibility based on current material type (default is 'solid')
+    const isInitialGradient = settings.materialType === 'gradient';
+    if (lightingControlsSection) lightingControlsSection.style.display = isInitialGradient ? 'block' : 'none';
+
     if (materialType) {
         materialType.addEventListener('change', (e) => {
             settings.materialType = e.target.value;
@@ -312,6 +319,9 @@ function initUIControls() {
             if (solidColorGroup) solidColorGroup.style.display = isSolid ? 'block' : 'none';
             if (gradientControlsSection) gradientControlsSection.style.display = isGradient ? 'block' : 'none';
             if (matcapUploadGroup) matcapUploadGroup.style.display = isMatcap ? 'block' : 'none';
+
+            // Show lighting controls only for gradient mode
+            if (lightingControlsSection) lightingControlsSection.style.display = isGradient ? 'block' : 'none';
 
             // Apply the new material type
             if (window.trailTool?.applyCurrentMaterial) {
@@ -414,8 +424,9 @@ function initUIControls() {
         // Also update header strip preview
         updateGradientStripPreview(idx);
 
-        // Update the actual material if this is the active gradient
-        if (idx === settings.activeGradientIndex && window.trailTool?.updateMaterial) {
+        // ALWAYS update the actual material for gradient mode
+        // Lighting/rim settings affect ALL materials, not just the active gradient
+        if (settings.materialType === 'gradient' && window.trailTool?.updateMaterial) {
             window.trailTool.updateMaterial();
         }
     }
@@ -679,11 +690,15 @@ function initUIControls() {
         lightPosSlider.addEventListener('input', updateMaterialPreview);
     }
 
-    // Light intensity slider
-    setupSlider('light-intensity', 'lightIntensity', settings);
+    // Light intensity slider - handle directly to ensure immediate updates
     const lightIntSlider = document.getElementById('light-intensity');
+    const lightIntValue = document.getElementById('light-intensity-value');
     if (lightIntSlider) {
-        lightIntSlider.addEventListener('input', updateMaterialPreview);
+        lightIntSlider.addEventListener('input', (e) => {
+            settings.lightIntensity = parseFloat(e.target.value);
+            if (lightIntValue) lightIntValue.textContent = settings.lightIntensity.toFixed(1);
+            updateMaterialPreview();
+        });
     }
 
     // Rim light toggle
@@ -695,11 +710,15 @@ function initUIControls() {
         });
     }
 
-    // Rim intensity slider
-    setupSlider('rim-intensity', 'rimIntensity', settings);
+    // Rim intensity slider - handle directly to ensure immediate updates
     const rimIntSlider = document.getElementById('rim-intensity');
+    const rimIntValue = document.getElementById('rim-intensity-value');
     if (rimIntSlider) {
-        rimIntSlider.addEventListener('input', updateMaterialPreview);
+        rimIntSlider.addEventListener('input', (e) => {
+            settings.rimIntensity = parseFloat(e.target.value);
+            if (rimIntValue) rimIntValue.textContent = settings.rimIntensity.toFixed(1);
+            updateMaterialPreview();
+        });
     }
 
     // Rim color picker

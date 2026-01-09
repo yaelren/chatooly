@@ -733,13 +733,25 @@ function initUIControls() {
     // Shader mode dropdown
     const shaderMode = document.getElementById('shader-mode');
     if (shaderMode) {
+        // Function to toggle lighting controls visibility based on shader mode
+        const updateLightingControlsVisibility = () => {
+            if (lightingControlsSection) {
+                // Hide lighting controls when flat mode is selected
+                lightingControlsSection.style.display = settings.shaderMode === 'flat' ? 'none' : 'block';
+            }
+        };
+
         shaderMode.addEventListener('change', (e) => {
             settings.shaderMode = e.target.value;
+            updateLightingControlsVisibility();
             // Need to recreate material for flatShading change
             if (window.trailTool?.applyCurrentMaterial) {
                 window.trailTool.applyCurrentMaterial();
             }
         });
+
+        // Set initial visibility based on default shader mode
+        updateLightingControlsVisibility();
     }
 
     // ========== MULTI-GRADIENT MODE CONTROLS ==========

@@ -554,9 +554,7 @@ class TrailManager {
             this.solidCopies.pop();
         }
 
-        // Each copy lerps toward its target position along the path
-        const lerpFactor = 1 - Math.exp(-this.solidLerpSpeed * delta);
-
+        // Position each copy at exact distance along the recorded path
         for (let i = 0; i < this.solidCopies.length; i++) {
             const copy = this.solidCopies[i];
 
@@ -565,14 +563,10 @@ class TrailManager {
             const pathPos = this.getPositionAlongPath(targetDistance);
 
             if (pathPos) {
-                // Smooth lerp position
-                copy.x += (pathPos.x - copy.x) * lerpFactor;
-                copy.y += (pathPos.y - copy.y) * lerpFactor;
-
-                // Smooth lerp rotation (handle angle wrapping)
-                const rotDiff = pathPos.rotation - copy.rotation;
-                const normalizedRotDiff = Math.atan2(Math.sin(rotDiff), Math.cos(rotDiff));
-                copy.rotation += normalizedRotDiff * lerpFactor;
+                // Snap to exact position for consistent spacing
+                copy.x = pathPos.x;
+                copy.y = pathPos.y;
+                copy.rotation = pathPos.rotation;
             }
         }
 

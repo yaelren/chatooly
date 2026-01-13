@@ -124,6 +124,24 @@ class ChatoolyHub {
                 slug: 'liquid-typography',
                 author: 'Studio Video',
                 category: 'text'
+            },
+            {
+                name: '*DGA*: 3D Trail',
+                slug: 'dga-3d-trail',
+                author: 'Yael Renous - Studio Video',
+                category: '3d'
+            },
+            {
+                name: '*DGA*: 3D Type Shaper',
+                slug: 'dga-3d-type-shaper',
+                author: 'Yael Renous - Studio Video',
+                category: 'generators'
+            },
+            {
+                name: '*DGA*: MatCap Tool',
+                slug: 'dga-matcap-tool',
+                author: 'Yael Renous - Studio Video',
+                category: '3d'
             }
         ];
 

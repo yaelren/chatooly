@@ -544,6 +544,82 @@ function setupBackgroundListeners() {
 
 // ================= UI EVENT HANDLERS =================
 function setupUI() {
+    // Presets
+    document.getElementById('save-preset-btn').addEventListener('click', () => {
+        const data = JSON.stringify(state, null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'matcap_preset.json';
+        a.click();
+        URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('load-preset-btn').addEventListener('click', () => {
+        document.getElementById('preset-upload').click();
+    });
+
+    document.getElementById('preset-upload').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const loaded = JSON.parse(event.target.result);
+                // Merge safely
+                Object.assign(state, loaded);
+                
+                // Update UI from state
+                updateStopsUI();
+                
+                // Update simple inputs
+                const setVal = (id, val) => { const el = document.getElementById(id); if(el) el.value = val; };
+                const setTxt = (id, val) => { const el = document.getElementById(id); if(el) el.innerText = val; };
+                
+                setVal('gradient-angle', state.gradientAngle); setTxt('angle-val', state.gradientAngle + '°');
+                if(state.gradientType === 'radial') document.getElementById('angle-control').style.display = 'none';
+                else document.getElementById('angle-control').style.display = 'block';
+
+                setVal('light-x', state.lightPos.x);
+                setVal('light-y', state.lightPos.y);
+                setVal('anim-speed', state.animSpeed); setTxt('anim-speed-val', state.animSpeed);
+                setVal('shader-mode', state.shaderMode);
+                setVal('rim-color', state.rimLightColor);
+                setVal('rim-intensity', state.rimLightIntensity); setTxt('rim-int-val', Math.round(state.rimLightIntensity * 100));
+                setVal('rim-power', state.rimLightPower); setTxt('rim-pow-val', Math.round(state.rimLightPower * 100));
+                setVal('chrom-ab', state.chromaticAberration); setTxt('chrom-val', state.chromaticAberration);
+                setVal('blur-str', state.blurStrength); setTxt('blur-val', state.blurStrength);
+                setVal('grain-str', state.noiseStrength); setTxt('grain-val', Math.round(state.noiseStrength * 100));
+                
+                // Toggles
+                const setToggle = (id, val) => { const el = document.getElementById(id); if(el) el.setAttribute('aria-pressed', val); };
+                setToggle('anim-toggle', !state.isAnimating); // Logic inverted in UI listener but visual is pressed=true
+                // Actually wait, UI logic: isPressed -> !isAnimating. 
+                // If state.isAnimating is true, button should be UNPRESSED? 
+                // Let's check original logic:
+                // btn.setAttribute('aria-pressed', !isPressed); state.isAnimating = !isPressed;
+                // So pressed=true => animating=true.
+                setToggle('anim-toggle', state.isAnimating);
+                document.getElementById('anim-speed-group').style.display = state.isAnimating ? 'block' : 'none';
+
+                setToggle('export-loop', state.exportLoop);
+                setToggle('export-hq', state.exportHQ);
+                
+                // Camera
+                updateCamera();
+                
+                // Re-render
+                renderMatCap();
+                
+            } catch (err) {
+                console.error('Invalid preset', err);
+                alert('Error loading preset');
+            }
+        };
+        reader.readAsText(file);
+    });
+
     // Custom MatCap Upload
     document.getElementById('custom-matcap-upload').addEventListener('change', (e) => {
         const file = e.target.files[0];
@@ -774,52 +850,65 @@ function setupUI() {
 
     document.getElementById('dl-anim').addEventListener('click', async () => {
         const btn = document.getElementById('dl-anim');
-        if (state.isExportingVideo) return; // Prevent double click
+        if (state.isExportingVideo) return; 
 
         // 1. Setup
-        const originalAnimState = state.isAnimating; // This might be true or false.
-        
-        // Prepare for recording:
-        // We want to start exactly at 0.
-        // We pause animation temporarily to sync the stream to frame 0.
+        const originalAnimState = state.isAnimating;
         state.isExportingVideo = true;
-        state.isAnimating = false; // Pause time advancement
-        
-        if (state.exportLoop) {
-            animTime = 0;
-        }
-        
-        // Force render frame 0 (or current time)
-        renderMatCap(animTime);
         
         btn.innerText = 'Rec...';
         btn.classList.add('btn-danger');
         btn.classList.remove('btn-outline');
 
-        // 2. Stream Setup
-        // ... (stream creation logic) ...
-        // Bitrate: 50 Mbps for HQ, 5 Mbps for Low
+        // Parameters
         const bitrate = state.exportHQ ? 50000000 : 5000000;
-        const fps = 30; // Consistent FPS
-        
-        const stream = matcapCanvas.captureStream(fps);
+        const fps = 30;
+        const totalDurationSec = state.exportLoop 
+            ? (1.0 / Math.max(0.1, state.animSpeed)) 
+            : 5.0;
+        const totalFrames = Math.ceil(totalDurationSec * fps);
+        const timeStep = 1.0 / fps; // in seconds
 
-        // Detect supported mime type
+        // 2. Stream Setup & Manual Driver
+        // We render once to set size
+        renderMatCap(0);
+
+        let currentFrame = 0;
+        let recordingTime = 0;
+        if (state.exportLoop) recordingTime = 0; 
+        else recordingTime = animTime;
+
+        // Force render first frame
+        renderMatCap(recordingTime);
+
+        // Stream
+        // Use 0 FPS if supported for manual control, otherwise 30
+        let stream;
+        let useManualFrame = false;
+        
+        try {
+            // Try capturing with 0 FPS (manual control)
+            stream = matcapCanvas.captureStream(0);
+            if (stream.getVideoTracks().length > 0 && stream.getVideoTracks()[0].requestFrame) {
+                useManualFrame = true;
+            } else {
+                // Fallback if 0 FPS yields no tracks or requestFrame not supported
+                stream = matcapCanvas.captureStream(fps);
+            }
+        } catch (e) {
+            stream = matcapCanvas.captureStream(fps);
+        }
+
         let mimeType = 'video/webm';
         if (MediaRecorder.isTypeSupported('video/mp4; codecs=h264')) mimeType = 'video/mp4; codecs=h264';
         else if (MediaRecorder.isTypeSupported('video/mp4')) mimeType = 'video/mp4';
         else if (MediaRecorder.isTypeSupported('video/webm; codecs=vp9')) mimeType = 'video/webm; codecs=vp9';
         
-        const recorder = new MediaRecorder(stream, { 
-            mimeType: mimeType,
-            videoBitsPerSecond: bitrate
-        });
-        
+        const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: bitrate });
         const chunks = [];
         recorder.ondataavailable = (e) => { if(e.data.size > 0) chunks.push(e.data); };
         
         recorder.onstop = () => {
-             // ... (export logic) ...
             const blob = new Blob(chunks, { type: mimeType });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -829,40 +918,52 @@ function setupUI() {
             a.download = `matcap_${state.exportHQ ? 'hq' : 'lq'}_${state.exportLoop ? 'loop' : 'seq'}.${ext}`;
             document.body.appendChild(a);
             a.click();
-            
-            setTimeout(() => {
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-            }, 100);
+            setTimeout(() => { document.body.removeChild(a); window.URL.revokeObjectURL(url); }, 100);
 
             // Cleanup
             state.isExportingVideo = false;
-            state.isAnimating = originalAnimState; // Restore original state
+            state.isAnimating = originalAnimState;
             btn.innerText = 'Texture Video';
             btn.classList.remove('btn-danger');
             btn.classList.add('btn-outline');
-            
-            // Reset size
             renderMatCap(animTime);
         };
 
-        // 3. Start Recording with Preroll
-        // Wait a small amount to ensure frame 0 is fully pushed to stream
-        setTimeout(() => {
-            recorder.start();
-            state.isAnimating = true; // Start moving time NOW
+        recorder.start();
+
+        // 3. Driver Loop
+        // Use recursive setTimeout for better timing control than setInterval
+        const frameInterval = 1000 / fps;
+        let nextFrameTime = performance.now();
+        
+        const processFrame = async () => {
+            if (currentFrame >= totalFrames) {
+                recorder.stop();
+                return;
+            }
+
+            // Update & Render
+            recordingTime += timeStep * state.animSpeed;
+            renderMatCap(recordingTime);
             
-            let durationMs = 5000; // Default 5s if not looping
+            // Wait for paint to ensure frame is ready for capture
+            await new Promise(resolve => requestAnimationFrame(resolve));
             
-            if (state.exportLoop) {
-                 const durationSec = (1.0 / Math.max(0.1, state.animSpeed));
-                 durationMs = durationSec * 1000;
+            // Capture
+            if (useManualFrame) {
+                stream.getVideoTracks()[0].requestFrame();
             }
             
-            setTimeout(() => {
-                recorder.stop();
-            }, durationMs);
-        }, 100); // 100ms preroll wait
+            currentFrame++;
+            
+            // Schedule next frame to match wall-clock 30fps
+            nextFrameTime += frameInterval;
+            const delay = Math.max(0, nextFrameTime - performance.now());
+            setTimeout(processFrame, delay);
+        };
+
+        // Start loop
+        processFrame();
     });
 
     // 3D Scene Video Export
@@ -873,38 +974,53 @@ function setupUI() {
         // 1. Setup
         const originalAnimState = state.isAnimating;
         state.isExportingVideo = true;
-        state.isAnimating = false; // Pause initially
-        
-        // Reset time for perfect loop alignment
-        if (state.exportLoop) {
-            animTime = 0;
-        }
         
         btn.innerText = 'Rec...';
         btn.classList.add('btn-danger');
         btn.classList.remove('btn-outline');
 
+        // Parameters
+        const bitrate = state.exportHQ ? 50000000 : 5000000;
+        const fps = 30;
+        const totalDurationSec = state.exportLoop 
+            ? (1.0 / Math.max(0.1, state.animSpeed)) 
+            : 5.0;
+        const totalFrames = Math.ceil(totalDurationSec * fps);
+        const timeStep = 1.0 / fps;
+
+        let currentFrame = 0;
+        let recordingTime = 0;
+        if (state.exportLoop) recordingTime = 0;
+        else recordingTime = animTime;
+
         // Force a render to ensure fresh state at time 0
-        renderMatCap(animTime);
+        renderMatCap(recordingTime);
         renderer.render(scene, camera);
 
-        // 2. Stream Setup
-        const bitrate = state.exportHQ ? 50000000 : 5000000; // 50Mbps vs 5Mbps
-        const fps = 30;
-
-        // Use the main 3D canvas
-        const stream = canvas.captureStream(fps);
+        // Stream
+        // Use 0 FPS if supported for manual control, otherwise 30
+        let stream;
+        let useManualFrame = false;
         
+        try {
+            // Try capturing with 0 FPS (manual control)
+            stream = canvas.captureStream(0);
+            if (stream.getVideoTracks().length > 0 && stream.getVideoTracks()[0].requestFrame) {
+                useManualFrame = true;
+            } else {
+                // Fallback if 0 FPS yields no tracks or requestFrame not supported
+                stream = canvas.captureStream(fps);
+            }
+        } catch (e) {
+            stream = canvas.captureStream(fps);
+        }
+
         let mimeType = 'video/webm';
         if (MediaRecorder.isTypeSupported('video/mp4; codecs=h264')) mimeType = 'video/mp4; codecs=h264';
         else if (MediaRecorder.isTypeSupported('video/mp4')) mimeType = 'video/mp4';
         else if (MediaRecorder.isTypeSupported('video/webm; codecs=vp9')) mimeType = 'video/webm; codecs=vp9';
 
-        const recorder = new MediaRecorder(stream, { 
-            mimeType: mimeType,
-            videoBitsPerSecond: bitrate
-        });
-        
+        const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: bitrate });
         const chunks = [];
         recorder.ondataavailable = (e) => { if(e.data.size > 0) chunks.push(e.data); };
         
@@ -918,11 +1034,7 @@ function setupUI() {
             a.download = `scene_${state.exportHQ ? 'hq' : 'lq'}_${state.exportLoop ? 'loop' : 'seq'}.${ext}`;
             document.body.appendChild(a);
             a.click();
-            
-            setTimeout(() => {
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-            }, 100);
+            setTimeout(() => { document.body.removeChild(a); window.URL.revokeObjectURL(url); }, 100);
 
             // Cleanup
             state.isExportingVideo = false;
@@ -932,21 +1044,52 @@ function setupUI() {
             btn.classList.add('btn-outline');
         };
 
-        // 3. Start Recording with Preroll
-        setTimeout(() => {
-            recorder.start();
-            state.isAnimating = true; // Start time NOW
+        recorder.start();
+
+        // 3. Driver Loop
+        // Use recursive logic with RAF to ensure paint synchronization
+        
+        const processFrame = async () => {
+            if (currentFrame >= totalFrames) {
+                recorder.stop();
+                return;
+            }
+
+            // 1. Update State & Render
+            recordingTime += timeStep * state.animSpeed;
+            renderMatCap(recordingTime);
+            // Only render scene if we are exporting scene
+            // Check context or passed flag. We are inside dl-anim handler here (Texture Video)
+            // Wait, I am editing the first block which is dl-anim (Texture).
+            // dl-scene-video is further down.
+            // Texture video doesn't need renderer.render(scene).
             
-            let durationMs = 5000;
-            if (state.exportLoop) {
-                 const durationSec = (1.0 / Math.max(0.1, state.animSpeed));
-                 durationMs = durationSec * 1000;
+            // 2. Wait for browser composition
+            await new Promise(resolve => requestAnimationFrame(resolve));
+            
+            // 3. Capture
+            if (useManualFrame) {
+                stream.getVideoTracks()[0].requestFrame();
             }
             
-            setTimeout(() => {
-                recorder.stop();
-            }, durationMs);
-        }, 100);
+            currentFrame++;
+            
+            // 4. Timing Control
+            const now = performance.now();
+            const targetTime = nextFrameTime + frameInterval;
+            let delay = targetTime - now;
+            if (delay < 0) delay = 0;
+            nextFrameTime = targetTime;
+
+            setTimeout(processFrame, delay);
+        };
+
+        // Initialize Timing
+        const frameInterval = 1000 / fps;
+        let nextFrameTime = performance.now();
+        
+        // Start
+        processFrame();
     });
 }
 

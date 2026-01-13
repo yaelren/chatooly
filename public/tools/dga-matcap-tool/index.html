@@ -12,8 +12,8 @@
     <script type="importmap">
         {
             "imports": {
-                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
             }
         }
     </script>
@@ -679,10 +679,30 @@
                 <div class="chatooly-section-card" data-section="downloads">
                     <h3 class="chatooly-section-header">📥 Downloads</h3>
                     <div class="chatooly-section-content">
+                        <div class="chatooly-input-group" style="margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
+                            <label class="chatooly-input-label">Video Export Settings</label>
+                            <div class="chatooly-toggle-group" style="margin-bottom: 4px;">
+                                <button type="button" class="chatooly-toggle" id="export-loop" role="switch" aria-pressed="true">
+                                    <span class="chatooly-toggle-slider"></span>
+                                </button>
+                                <label class="chatooly-toggle-label" for="export-loop">Perfect Loop</label>
+                            </div>
+                            <div class="chatooly-toggle-group">
+                                <button type="button" class="chatooly-toggle" id="export-hq" role="switch" aria-pressed="true">
+                                    <span class="chatooly-toggle-slider"></span>
+                                </button>
+                                <label class="chatooly-toggle-label" for="export-hq">High Quality (1024px)</label>
+                            </div>
+                        </div>
+
                         <button id="dl-model" class="chatooly-btn" style="margin-bottom: 5px;">Download Model (GLB)</button>
-                        <div style="display: flex; gap: 5px;">
-                            <button id="dl-matcap" class="chatooly-btn btn-outline">MatCap Map</button>
-                            <button id="dl-bump" class="chatooly-btn btn-outline">Bump Map</button>
+                        <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                            <button id="dl-matcap" class="chatooly-btn btn-outline" style="flex: 1;">MatCap Map</button>
+                            <button id="dl-bump" class="chatooly-btn btn-outline" style="flex: 1;">Bump Map</button>
+                        </div>
+                        <div style="display: flex; gap: 5px; margin-top: 5px;">
+                            <button id="dl-anim" class="chatooly-btn btn-outline" style="flex: 1;">Texture Video</button>
+                            <button id="dl-scene-video" class="chatooly-btn btn-outline" style="flex: 1;">3D Video</button>
                         </div>
                     </div>
                 </div>
@@ -744,7 +764,7 @@
                 <!-- IMPORTANT: Your main canvas MUST have id="chatooly-canvas" -->
                 <!-- For animations: CDN automatically detects canvas animations and provides video export options -->
                 <!-- Default to Portrait (9:16) -->
-                <canvas id="chatooly-canvas" width="1620" height="2880" data-engine="three.js r160" style="touch-action: none; position: static; margin: 0px; width: 481.5px; height: 856px; transform-origin: center center;"></canvas>
+                <canvas id="chatooly-canvas" width="1620" height="2880" data-engine="three.js r160" style="touch-action: none; position: static; margin: 0px; width: 480.375px; height: 854px; transform-origin: center center;"></canvas>
                 <!-- ========== END EDIT SECTION ========== -->
             </div>
         <div id="chatooly-resize-bar" class="chatooly-resize-bar">

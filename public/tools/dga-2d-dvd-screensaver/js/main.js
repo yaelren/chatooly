@@ -427,7 +427,10 @@ class BoundsManager {
 // ========== TRAIL MANAGER CLASS ==========
 class TrailManager {
     constructor() {
-        this.solidCopies = [];  // For solid trail: {x, y, rotation, scale, age}
+        this.solidCopies = [];  // For solid trail: {x, y, rotation, scale, age, targetX, targetY, targetRotation}
+        this.solidLerpSpeed = 8.0;  // How fast copies lerp to their target position
+        this.pathHistory = [];  // Store the actual path the object traveled
+        this.maxPathPoints = 500;  // Maximum path points to store
     }
 
     initGhostCanvas() {
@@ -469,40 +472,132 @@ class TrailManager {
         mainCtx.drawImage(trailCanvas, 0, 0, canvas.cssWidth, canvas.cssHeight);
     }
 
-    spawnSolidCopy(position, rotation, scale) {
-        if (this.solidCopies.length >= settings.solidTrailMaxCopies) {
-            this.solidCopies.shift();
-        }
-        this.solidCopies.push({
+    // Record position to path history (called every frame)
+    recordPath(position, rotation) {
+        this.pathHistory.push({
             x: position.x,
             y: position.y,
-            rotation: rotation,
-            scale: scale,
-            age: 0
+            rotation: rotation
         });
+
+        // Trim old path points
+        if (this.pathHistory.length > this.maxPathPoints) {
+            this.pathHistory.shift();
+        }
+    }
+
+    // Find position along the recorded path at a given distance behind the current position
+    getPositionAlongPath(distanceBehind) {
+        if (this.pathHistory.length < 2) {
+            return this.pathHistory.length > 0 ? this.pathHistory[this.pathHistory.length - 1] : null;
+        }
+
+        let accumulatedDist = 0;
+
+        // Walk backwards through path history
+        for (let i = this.pathHistory.length - 1; i > 0; i--) {
+            const curr = this.pathHistory[i];
+            const prev = this.pathHistory[i - 1];
+
+            const dx = curr.x - prev.x;
+            const dy = curr.y - prev.y;
+            const segmentDist = Math.sqrt(dx * dx + dy * dy);
+
+            if (accumulatedDist + segmentDist >= distanceBehind) {
+                // Interpolate within this segment
+                const remaining = distanceBehind - accumulatedDist;
+                const t = segmentDist > 0 ? remaining / segmentDist : 0;
+
+                return {
+                    x: curr.x - dx * t,
+                    y: curr.y - dy * t,
+                    rotation: curr.rotation + (prev.rotation - curr.rotation) * t
+                };
+            }
+
+            accumulatedDist += segmentDist;
+        }
+
+        // If we've run out of path, return the oldest point
+        return this.pathHistory[0];
+    }
+
+    // Initialize all solid copies at once (called when trail is enabled)
+    initSolidCopies(position, rotation) {
+        this.solidCopies = [];
+        for (let i = 0; i < settings.solidTrailMaxCopies; i++) {
+            this.solidCopies.push({
+                x: position.x,
+                y: position.y,
+                rotation: rotation,
+                scale: 1.0,
+                age: 0
+            });
+        }
     }
 
     updateSolid(delta) {
-        // Age copies and remove expired ones
+        // Ensure we have the right number of copies
+        while (this.solidCopies.length < settings.solidTrailMaxCopies) {
+            const lastCopy = this.solidCopies.length > 0
+                ? this.solidCopies[this.solidCopies.length - 1]
+                : (this.pathHistory.length > 0 ? this.pathHistory[this.pathHistory.length - 1] : { x: 0, y: 0, rotation: 0 });
+            this.solidCopies.push({
+                x: lastCopy.x,
+                y: lastCopy.y,
+                rotation: lastCopy.rotation,
+                scale: 1.0,
+                age: 0
+            });
+        }
+        while (this.solidCopies.length > settings.solidTrailMaxCopies) {
+            this.solidCopies.pop();
+        }
+
+        // Each copy lerps toward its target position along the path
+        const lerpFactor = 1 - Math.exp(-this.solidLerpSpeed * delta);
+
+        for (let i = 0; i < this.solidCopies.length; i++) {
+            const copy = this.solidCopies[i];
+
+            // Get target position along the recorded path
+            const targetDistance = (i + 1) * settings.solidTrailSpacing;
+            const pathPos = this.getPositionAlongPath(targetDistance);
+
+            if (pathPos) {
+                // Smooth lerp position
+                copy.x += (pathPos.x - copy.x) * lerpFactor;
+                copy.y += (pathPos.y - copy.y) * lerpFactor;
+
+                // Smooth lerp rotation (handle angle wrapping)
+                const rotDiff = pathPos.rotation - copy.rotation;
+                const normalizedRotDiff = Math.atan2(Math.sin(rotDiff), Math.cos(rotDiff));
+                copy.rotation += normalizedRotDiff * lerpFactor;
+            }
+        }
+
+        // Age copies and remove expired ones (if lifespan is set)
         if (settings.solidTrailLifespan > 0) {
-            this.solidCopies = this.solidCopies.filter(copy => {
+            this.solidCopies.forEach(copy => {
                 copy.age += delta;
-                return copy.age < settings.solidTrailLifespan;
             });
         }
     }
 
     renderSolidToMain(mainCtx, mediaManager) {
         const aspectRatio = mediaManager.getAspectRatio();
-        this.solidCopies.forEach(copy => {
+        // Render back to front (last copy first, so closer copies are on top)
+        for (let i = this.solidCopies.length - 1; i >= 0; i--) {
+            const copy = this.solidCopies[i];
             const w = settings.objectSize * copy.scale;
             const h = (settings.objectSize / aspectRatio) * copy.scale;
             mediaManager.draw(mainCtx, copy.x - w / 2, copy.y - h / 2, w, h, copy.rotation);
-        });
+        }
     }
 
     clear() {
         this.solidCopies = [];
+        this.pathHistory = [];
         if (trailCtx) {
             const width = canvas.cssWidth || canvas.width;
             const height = canvas.cssHeight || canvas.height;
@@ -853,19 +948,6 @@ function updateObjects(delta, currentTime) {
             // hitRotationOffset is already applied via rotation
         }
 
-        // Update solid trail
-        if (settings.trailEnabled && settings.trailStyle === 'solid') {
-            const dx = object.position.x - object.lastTrailPosition.x;
-            const dy = object.position.y - object.lastTrailPosition.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            object.accumulatedDistance += distance;
-            object.lastTrailPosition = { x: object.position.x, y: object.position.y };
-
-            while (object.accumulatedDistance >= settings.solidTrailSpacing) {
-                object.accumulatedDistance -= settings.solidTrailSpacing;
-                trailManager.spawnSolidCopy(object.position, object.rotation, object.scale);
-            }
-        }
     });
 
     // Process splits
@@ -1032,8 +1114,14 @@ function animate(currentTime) {
         trailManager.updateGhost(objects, mediaManager);
     }
 
-    // Update solid trail aging
+    // Update solid trail (lerping along recorded path)
     if (settings.trailEnabled && settings.trailStyle === 'solid') {
+        if (objects.length > 0) {
+            const leadObj = objects[0];
+            const finalRotation = leadObj.rotation + leadObj.hitRotationOffset;
+            // Record the current position to the path history
+            trailManager.recordPath(leadObj.position, finalRotation);
+        }
         trailManager.updateSolid(delta);
     }
 

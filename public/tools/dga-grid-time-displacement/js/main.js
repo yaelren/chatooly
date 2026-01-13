@@ -399,6 +399,7 @@ async function bufferFrames() {
             // Create ImageBitmap from canvas (faster than from video element)
             const bitmap = await createImageBitmap(tempCanvas);
             frameBuffer.push(bitmap);
+
         } catch (err) {
             console.error(`Failed to create bitmap for frame ${i}:`, err);
             frameBuffer.push(null);
@@ -424,9 +425,6 @@ async function bufferFrames() {
         }
     }
 
-    // Debug: verify critical frames
-    console.log(`Buffer complete: frame0=${!!frameBuffer[0]}, frameLast=${!!frameBuffer[frameBuffer.length-1]}, total=${frameBuffer.length}`);
-
     isBuffering = false;
 }
 
@@ -449,7 +447,9 @@ function seekToFrame(frameIndex) {
     return new Promise((resolve) => {
         const time = frameIndex / frameRate;
 
-        if (Math.abs(sourceVideo.currentTime - time) < 0.001) {
+        // For frame 0, don't skip even if currentTime is already 0
+        // The video might not be truly ready to draw yet
+        if (frameIndex !== 0 && Math.abs(sourceVideo.currentTime - time) < 0.001) {
             resolve();
             return;
         }
@@ -511,10 +511,9 @@ function render() {
         Chatooly.backgroundManager.drawToCanvas(renderCtx, canvas.width, canvas.height);
     }
 
-    // Show buffering progress if loading
+    // Show buffering progress during frame extraction (includes initial load)
     if (isBuffering) {
         drawBufferingProgressToCtx(renderCtx);
-        // Copy offscreen to visible canvas
         ctx.drawImage(offscreenCanvas, 0, 0);
         return;
     }
@@ -522,28 +521,16 @@ function render() {
     // If no video loaded, show placeholder
     if (!settings.videoLoaded || frameBuffer.length === 0) {
         drawPlaceholderToCtx(renderCtx);
-        // Copy offscreen to visible canvas
         ctx.drawImage(offscreenCanvas, 0, 0);
         return;
     }
 
     // Draw grid cells with time displacement
-    if (window._debugLoopFrame) {
-        console.log(`Rendering loop frame: videoLoaded=${settings.videoLoaded}, bufferLen=${frameBuffer.length}, currentFrame=${currentFrame.toFixed(2)}`);
-    }
     drawDisplacedGridToCtx(renderCtx);
 
     // Draw grid lines if enabled
     if (settings.showGrid) {
         drawGridLinesToCtx(renderCtx);
-    }
-
-    // Debug: draw red border on loop frame to visually mark when loop happens
-    if (window._debugLoopFrame) {
-        renderCtx.strokeStyle = '#ff0000';
-        renderCtx.lineWidth = 10;
-        renderCtx.strokeRect(5, 5, canvas.width - 10, canvas.height - 10);
-        window._debugLoopFrame = false;  // Reset after drawing
     }
 
     // Copy completed frame to visible canvas in one atomic operation
@@ -556,6 +543,10 @@ window.render = render;
  * Draw buffering progress indicator
  */
 function drawBufferingProgressToCtx(targetCtx) {
+    // Ensure dark background for text visibility
+    targetCtx.fillStyle = '#000000';
+    targetCtx.fillRect(0, 0, canvas.width, canvas.height);
+
     targetCtx.fillStyle = '#ffffff';
     targetCtx.font = '24px monospace';
     targetCtx.textAlign = 'center';
@@ -584,6 +575,10 @@ function drawBufferingProgressToCtx(targetCtx) {
  * Draw placeholder when no video is loaded
  */
 function drawPlaceholderToCtx(targetCtx) {
+    // Ensure dark background for text visibility
+    targetCtx.fillStyle = '#000000';
+    targetCtx.fillRect(0, 0, canvas.width, canvas.height);
+
     targetCtx.fillStyle = '#333333';
     targetCtx.font = '32px monospace';
     targetCtx.textAlign = 'center';
@@ -624,10 +619,6 @@ function drawDisplacedGridToCtx(targetCtx) {
     const dstCellWidth = videoRect.width / gridCols;
     const dstCellHeight = videoRect.height / gridRows;
 
-    // Debug counter for cells drawn
-    let cellsDrawn = 0;
-    let cellsSkipped = 0;
-
     // Draw each cell - ImageBitmap allows direct drawImage (no temp canvas needed!)
     for (let row = 0; row < gridRows; row++) {
         for (let col = 0; col < gridCols; col++) {
@@ -648,41 +639,26 @@ function drawDisplacedGridToCtx(targetCtx) {
             const dx = videoRect.x + col * dstCellWidth;
             const dy = videoRect.y + row * dstCellHeight;
 
-            // Calculate target frame - clamp to valid range instead of wrapping
-            // This prevents the visual "flash" when cells jump from last frame to first
+            // Calculate target frame with proper wrapping
             const bufferLen = frameBuffer.length;
-            let targetFrame = rawTargetFrame;
-
-            // Clamp to valid range - cells wait at the end until currentFrame wraps
-            if (targetFrame >= bufferLen) {
-                targetFrame = bufferLen - 1;
-            } else if (targetFrame < 0) {
-                targetFrame = 0;
-            }
+            let targetFrame = rawTargetFrame % bufferLen;
+            if (targetFrame < 0) targetFrame += bufferLen;
 
             let bitmap = frameBuffer[targetFrame];
 
             // Fallback: if target frame missing, try adjacent frames
             if (!bitmap) {
-                console.warn(`Missing frame ${targetFrame} (raw=${rawTargetFrame}, current=${currentFrame.toFixed(2)}, bufferLen=${bufferLen}, totalFrames=${totalFrames})`);
-                bitmap = frameBuffer[Math.min(targetFrame + 1, bufferLen - 1)]
-                      || frameBuffer[Math.max(targetFrame - 1, 0)];
+                bitmap = frameBuffer[(targetFrame + 1) % bufferLen]
+                      || frameBuffer[(targetFrame - 1 + bufferLen) % bufferLen]
+                      || frameBuffer[0];
             }
 
             if (bitmap) {
                 targetCtx.drawImage(bitmap, sx, sy, srcCellWidth, srcCellHeight, dx, dy, dstCellWidth, dstCellHeight);
-                cellsDrawn++;
-            } else {
-                cellsSkipped++;
             }
         }
     }
 
-    // Debug: log if any cells were skipped
-    if (cellsSkipped > 0 || window._debugLoopFrame) {
-        console.log(`Render complete: ${cellsDrawn} drawn, ${cellsSkipped} skipped, currentFrame=${currentFrame.toFixed(2)}`);
-        // Note: don't reset _debugLoopFrame here - let render() handle it after drawing red border
-    }
 }
 
 /**
@@ -737,26 +713,9 @@ function animate(timestamp) {
     }
 
     // Advance frame if playing and video is loaded
-    if (settings.isPlaying && settings.videoLoaded && !isBuffering) {
-        // Advance by deltaTime worth of frames
+    if (settings.isPlaying && settings.videoLoaded && !isBuffering && frameBuffer.length > 0) {
         const framesToAdvance = (deltaTime / 1000) * frameRate;
-        const prevFrame = currentFrame;
-        currentFrame = (currentFrame + framesToAdvance) % totalFrames;
-
-        // Debug: log frames near the loop boundary
-        const floorPrev = Math.floor(prevFrame);
-        const floorCurr = Math.floor(currentFrame);
-
-        // Log when we cross the loop boundary
-        if (prevFrame > currentFrame) {
-            console.log(`Loop boundary crossed: ${prevFrame.toFixed(2)} -> ${currentFrame.toFixed(2)}, totalFrames=${totalFrames}, bufferLen=${frameBuffer.length}`);
-            window._debugLoopFrame = true;
-        }
-
-        // Log when floor(currentFrame) changes near the end
-        if (floorCurr !== floorPrev && floorCurr >= totalFrames - settings.maxFrameOffset - 5) {
-            console.log(`Near-boundary frame change: floor ${floorPrev} -> ${floorCurr}, maxOffset=${settings.maxFrameOffset}`);
-        }
+        currentFrame = (currentFrame + framesToAdvance) % frameBuffer.length;
     }
 
     // Render

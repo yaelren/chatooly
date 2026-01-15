@@ -88,7 +88,12 @@
                 if (file) {
                     try {
                         let result;
-                        if (file.type.startsWith('video/')) {
+                        // Check if video by MIME type or file extension (for MOV files)
+                        const isVideo = file.type.startsWith('video/') ||
+                                       file.name.toLowerCase().endsWith('.mov') ||
+                                       file.name.toLowerCase().endsWith('.webm') ||
+                                       file.name.toLowerCase().endsWith('.mp4');
+                        if (isVideo) {
                             result = await window.dvdScreensaver.mediaManager.loadVideo(file);
                         } else {
                             result = await window.dvdScreensaver.mediaManager.loadImage(file);

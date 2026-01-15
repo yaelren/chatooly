@@ -136,6 +136,10 @@ class MediaManager {
         // For animated GIFs - we'll treat them as videos
         this.gifCanvas = null;
         this.gifCtx = null;
+
+        // Video frame cache for performance (avoids multiple decodes per frame)
+        this.frameCache = null;
+        this.frameCacheCtx = null;
     }
 
     async loadImage(file) {
@@ -217,7 +221,9 @@ class MediaManager {
         if (this.mediaType === 'video') {
             // Only draw if video is playing
             if (!this.media.paused && !this.media.ended) {
-                targetCtx.drawImage(this.media, -width / 2, -height / 2, width, height);
+                // Use cached frame if available (much faster for multiple draws)
+                const source = this.frameCache || this.media;
+                targetCtx.drawImage(source, -width / 2, -height / 2, width, height);
             }
         } else {
             targetCtx.drawImage(this.media, -width / 2, -height / 2, width, height);
@@ -233,6 +239,24 @@ class MediaManager {
         return 1;
     }
 
+    updateFrameCache() {
+        if (this.mediaType !== 'video' || !this.isReady || !this.media) return;
+        if (this.media.paused || this.media.ended) return;
+
+        // Create or resize cache canvas if needed
+        if (!this.frameCache ||
+            this.frameCache.width !== this.naturalWidth ||
+            this.frameCache.height !== this.naturalHeight) {
+            this.frameCache = document.createElement('canvas');
+            this.frameCache.width = this.naturalWidth;
+            this.frameCache.height = this.naturalHeight;
+            this.frameCacheCtx = this.frameCache.getContext('2d');
+        }
+
+        // Draw current video frame to cache (single decode per frame)
+        this.frameCacheCtx.drawImage(this.media, 0, 0);
+    }
+
     dispose() {
         if (this.blobURL) {
             URL.revokeObjectURL(this.blobURL);
@@ -244,6 +268,8 @@ class MediaManager {
         }
         this.media = null;
         this.isReady = false;
+        this.frameCache = null;
+        this.frameCacheCtx = null;
     }
 }
 
@@ -954,6 +980,11 @@ function updateObjects(delta, currentTime) {
 function render() {
     const width = canvas.cssWidth || canvas.width;
     const height = canvas.cssHeight || canvas.height;
+
+    // Update video frame cache once per render (performance optimization)
+    if (mediaManager && mediaManager.mediaType === 'video') {
+        mediaManager.updateFrameCache();
+    }
 
     // Clear canvas
     ctx.clearRect(0, 0, width, height);

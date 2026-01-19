@@ -31,6 +31,17 @@ let totalFrames = 0;
 let isBuffering = false;
 let bufferProgress = 0;
 
+// Media source type: 'video' | 'sequence'
+let mediaType = 'video';
+
+// For PNG sequences: stores the original image dimensions
+let sequenceWidth = 0;
+let sequenceHeight = 0;
+
+// Transparent background state (tracked globally for render functions)
+// UI sets window.bgTransparent, we read from it
+window.bgTransparent = false;
+
 // Displacement map (2D array of values 0-1)
 let displacementMap = [];
 
@@ -375,6 +386,7 @@ window.loadVideo = loadVideo;
 
 /**
  * Extract all frames from video into buffer using ImageBitmap (GPU-accelerated)
+ * Preserves alpha channel for WebM and MOV ProRes 4444 videos
  */
 async function bufferFrames() {
     isBuffering = true;
@@ -383,16 +395,19 @@ async function bufferFrames() {
     clearFrameBuffer();
 
     // Create temporary canvas for frame capture (reuse for all frames)
+    // Enable alpha channel for transparency support
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = sourceVideo.videoWidth;
     tempCanvas.height = sourceVideo.videoHeight;
-    const tempCtx = tempCanvas.getContext('2d');
+    const tempCtx = tempCanvas.getContext('2d', { alpha: true });
 
     // Capture frames: seek -> draw to canvas -> create bitmap
     for (let i = 0; i < totalFrames; i++) {
         await seekToFrame(i);
 
-        // Draw current video frame to temp canvas
+        // Clear canvas to transparent before drawing
+        // This preserves alpha from video sources that support it (WebM, ProRes 4444)
+        tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
         tempCtx.drawImage(sourceVideo, 0, 0);
 
         try {
@@ -414,17 +429,9 @@ async function bufferFrames() {
     }
 
     // Validate frame buffer - fill any gaps with adjacent frames
-    const missingFrames = frameBuffer.filter(b => !b).length;
-    if (missingFrames > 0) {
-        console.warn(`${missingFrames} frames failed to buffer, filling gaps...`);
-        for (let i = 0; i < frameBuffer.length; i++) {
-            if (!frameBuffer[i]) {
-                frameBuffer[i] = frameBuffer[(i + 1) % totalFrames]
-                              || frameBuffer[(i - 1 + totalFrames) % totalFrames];
-            }
-        }
-    }
+    fillFrameBufferGaps();
 
+    mediaType = 'video';
     isBuffering = false;
 }
 
@@ -472,7 +479,7 @@ function seekToFrame(frameIndex) {
 }
 
 /**
- * Clear loaded video and release GPU memory
+ * Clear loaded video/sequence and release GPU memory
  */
 function clearVideo() {
     sourceVideo.src = '';
@@ -481,6 +488,10 @@ function clearVideo() {
     clearFrameBuffer();
 
     totalFrames = 0;
+    frameRate = 30;
+    mediaType = 'video';
+    sequenceWidth = 0;
+    sequenceHeight = 0;
     settings.videoLoaded = false;
     currentFrame = 0;
 
@@ -492,28 +503,174 @@ function clearVideo() {
 window.clearVideo = clearVideo;
 
 // ============================================
+// Media Type Detection
+// ============================================
+
+/**
+ * Detect whether user uploaded a video or PNG sequence
+ * @param {FileList} files - Files from input element
+ * @returns {Object|null} { type: 'video'|'sequence', files: File[] }
+ */
+function detectMediaType(files) {
+    if (!files || files.length === 0) return null;
+
+    // Single file - check if video or image
+    if (files.length === 1) {
+        const file = files[0];
+        const name = file.name.toLowerCase();
+
+        // Check for video types
+        if (file.type.startsWith('video/') || name.endsWith('.mov')) {
+            return { type: 'video', files: [file] };
+        }
+
+        // Single PNG is treated as single-frame sequence
+        if (file.type === 'image/png' || name.endsWith('.png')) {
+            return { type: 'sequence', files: [file] };
+        }
+    }
+
+    // Multiple files - filter for PNGs and sort naturally
+    const pngFiles = Array.from(files)
+        .filter(f => f.type === 'image/png' || f.name.toLowerCase().endsWith('.png'))
+        .sort((a, b) => naturalSort(a.name, b.name));
+
+    if (pngFiles.length > 0) {
+        return { type: 'sequence', files: pngFiles };
+    }
+
+    return null;
+}
+
+/**
+ * Natural sort for filenames (handles frame_001.png, frame_002.png, etc.)
+ */
+function naturalSort(a, b) {
+    return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+}
+
+window.detectMediaType = detectMediaType;
+
+// ============================================
+// PNG Sequence Loading
+// ============================================
+
+/**
+ * Load PNG sequence and buffer all frames
+ * @param {File[]} files - Array of PNG files in order
+ */
+async function loadPNGSequence(files) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            isBuffering = true;
+            clearFrameBuffer();
+
+            totalFrames = files.length;
+            frameRate = 30; // Default playback rate
+
+            // Load first image to get dimensions
+            const firstBitmap = await createImageBitmap(files[0]);
+            sequenceWidth = firstBitmap.width;
+            sequenceHeight = firstBitmap.height;
+
+            // Calculate letterbox dimensions using sequence dimensions
+            videoRect = calculateVideoRect(sequenceWidth, sequenceHeight);
+
+            // Update UI
+            document.getElementById('video-name').textContent =
+                `${files.length} PNG frame${files.length > 1 ? 's' : ''}`;
+            document.getElementById('video-duration').textContent =
+                `${(files.length / frameRate).toFixed(2)}s`;
+            document.getElementById('video-frames').textContent = totalFrames;
+            document.getElementById('video-info').style.display = 'block';
+            document.getElementById('video-upload-area').style.display = 'none';
+
+            // Store first bitmap
+            frameBuffer.push(firstBitmap);
+            bufferProgress = 1 / totalFrames;
+
+            // Buffer remaining frames
+            for (let i = 1; i < files.length; i++) {
+                try {
+                    const bitmap = await createImageBitmap(files[i]);
+                    frameBuffer.push(bitmap);
+                } catch (err) {
+                    console.error(`Failed to load frame ${i}:`, err);
+                    frameBuffer.push(null);
+                }
+
+                bufferProgress = (i + 1) / totalFrames;
+
+                // Yield to UI every 10 frames
+                if (i % 10 === 0) {
+                    await new Promise(r => setTimeout(r, 0));
+                }
+            }
+
+            // Fill gaps with adjacent frames
+            fillFrameBufferGaps();
+
+            mediaType = 'sequence';
+            settings.videoLoaded = true;
+            isBuffering = false;
+            resolve();
+
+        } catch (err) {
+            isBuffering = false;
+            reject(err);
+        }
+    });
+}
+
+/**
+ * Fill gaps in frame buffer with adjacent frames
+ */
+function fillFrameBufferGaps() {
+    const missingFrames = frameBuffer.filter(b => !b).length;
+    if (missingFrames > 0) {
+        console.warn(`${missingFrames} frames failed to buffer, filling gaps...`);
+        for (let i = 0; i < frameBuffer.length; i++) {
+            if (!frameBuffer[i]) {
+                frameBuffer[i] = frameBuffer[(i + 1) % totalFrames]
+                              || frameBuffer[(i - 1 + totalFrames) % totalFrames];
+            }
+        }
+    }
+}
+
+window.loadPNGSequence = loadPNGSequence;
+
+// ============================================
 // Rendering
 // ============================================
 
 /**
  * Main render function - uses double buffering to prevent tearing
+ * Supports transparent background when enabled
  */
 function render() {
     // Draw everything to offscreen canvas first
     const renderCtx = offscreenCtx;
 
-    // Always draw a black background first as base
-    renderCtx.fillStyle = '#000000';
-    renderCtx.fillRect(0, 0, canvas.width, canvas.height);
+    // Check if transparent mode is enabled
+    if (window.bgTransparent) {
+        // Clear to transparent
+        renderCtx.clearRect(0, 0, canvas.width, canvas.height);
+    } else {
+        // Draw solid black background as base
+        renderCtx.fillStyle = '#000000';
+        renderCtx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw custom background on top if available
-    if (window.Chatooly && window.Chatooly.backgroundManager) {
-        Chatooly.backgroundManager.drawToCanvas(renderCtx, canvas.width, canvas.height);
+        // Draw custom background on top if available
+        if (window.Chatooly && window.Chatooly.backgroundManager) {
+            Chatooly.backgroundManager.drawToCanvas(renderCtx, canvas.width, canvas.height);
+        }
     }
 
     // Show buffering progress during frame extraction (includes initial load)
     if (isBuffering) {
         drawBufferingProgressToCtx(renderCtx);
+        if (window.bgTransparent) ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(offscreenCanvas, 0, 0);
         return;
     }
@@ -521,6 +678,7 @@ function render() {
     // If no video loaded, show placeholder
     if (!settings.videoLoaded || frameBuffer.length === 0) {
         drawPlaceholderToCtx(renderCtx);
+        if (window.bgTransparent) ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(offscreenCanvas, 0, 0);
         return;
     }
@@ -534,6 +692,10 @@ function render() {
     }
 
     // Copy completed frame to visible canvas in one atomic operation
+    // Clear main canvas first when transparent to prevent ghosting
+    if (window.bgTransparent) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
     ctx.drawImage(offscreenCanvas, 0, 0);
 }
 
@@ -600,13 +762,13 @@ function drawDisplacedGridToCtx(targetCtx) {
         return;
     }
 
-    // Source video dimensions
-    const srcWidth = sourceVideo.videoWidth;
-    const srcHeight = sourceVideo.videoHeight;
+    // Source dimensions - use sequence dimensions for PNG sequences, video dimensions for videos
+    const srcWidth = mediaType === 'sequence' ? sequenceWidth : sourceVideo.videoWidth;
+    const srcHeight = mediaType === 'sequence' ? sequenceHeight : sourceVideo.videoHeight;
 
-    // Safety check - ensure video dimensions are valid
+    // Safety check - ensure dimensions are valid
     if (!srcWidth || !srcHeight) {
-        console.warn(`drawDisplacedGrid: invalid video dimensions (${srcWidth}x${srcHeight}), readyState=${sourceVideo.readyState}`);
+        console.warn(`drawDisplacedGrid: invalid dimensions (${srcWidth}x${srcHeight})`);
         if (window._debugLoopFrame) window._debugLoopFrame = false;
         return;
     }
@@ -767,6 +929,7 @@ window.restartPlayback = restartPlayback;
 
 /**
  * Render at high resolution for export
+ * Supports transparent background export when enabled
  */
 window.renderHighResolution = function(targetCanvas, scale) {
     const exportCtx = targetCanvas.getContext('2d');
@@ -774,9 +937,15 @@ window.renderHighResolution = function(targetCanvas, scale) {
     targetCanvas.width = canvas.width * scale;
     targetCanvas.height = canvas.height * scale;
 
-    // Draw background
-    if (window.Chatooly && window.Chatooly.backgroundManager) {
-        Chatooly.backgroundManager.drawToCanvas(exportCtx, canvas.width, canvas.height);
+    // Check if transparent mode is enabled
+    if (window.bgTransparent) {
+        // Clear to transparent for PNG export with alpha
+        exportCtx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
+    } else {
+        // Draw background
+        if (window.Chatooly && window.Chatooly.backgroundManager) {
+            Chatooly.backgroundManager.drawToCanvas(exportCtx, canvas.width, canvas.height);
+        }
     }
 
     exportCtx.scale(scale, scale);
@@ -794,8 +963,9 @@ window.renderHighResolution = function(targetCanvas, scale) {
     // Draw the current frame state using ImageBitmap (optimized)
     const { gridCols, gridRows, maxFrameOffset } = settings;
 
-    const srcWidth = sourceVideo.videoWidth;
-    const srcHeight = sourceVideo.videoHeight;
+    // Source dimensions - use sequence dimensions for PNG sequences, video dimensions for videos
+    const srcWidth = mediaType === 'sequence' ? sequenceWidth : sourceVideo.videoWidth;
+    const srcHeight = mediaType === 'sequence' ? sequenceHeight : sourceVideo.videoHeight;
     const srcCellWidth = srcWidth / gridCols;
     const srcCellHeight = srcHeight / gridRows;
 

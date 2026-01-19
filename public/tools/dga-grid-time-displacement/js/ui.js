@@ -120,6 +120,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('clear-video').addEventListener('click', () => {
         window.clearVideo();
+        document.getElementById('video-fit-group').style.display = 'none';
+    });
+
+    // Video fit mode dropdown
+    setupSelect('video-fit', 'videoFit', () => {
+        // Recalculate video rect when fit mode changes
+        if (window.recalculateVideoRect) {
+            window.recalculateVideoRect();
+        }
+        if (window.render) window.render();
     });
 
     // ============================================

@@ -92,19 +92,29 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ============================================
-    // Video Upload Controls
+    // Video/Sequence Upload Controls
     // ============================================
 
     document.getElementById('video-upload').addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+
+        const detected = window.detectMediaType(files);
+        if (!detected) {
+            alert('Please upload video files (MP4, WebM, MOV) or PNG image sequence.');
+            return;
+        }
 
         try {
-            await window.loadVideo(file);
+            if (detected.type === 'video') {
+                await window.loadVideo(detected.files[0]);
+            } else if (detected.type === 'sequence') {
+                await window.loadPNGSequence(detected.files);
+            }
             window.updateDisplacementMap();
         } catch (error) {
-            console.error('Failed to load video:', error);
-            alert('Failed to load video. Please try a different file.');
+            console.error('Failed to load media:', error);
+            alert('Failed to load media. Please try a different file.');
         }
     });
 
@@ -223,6 +233,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================
 
     setupToggle('transparent-bg', null, (value) => {
+        // Track locally for render functions
+        window.bgTransparent = value;
+
         if (window.Chatooly && window.Chatooly.backgroundManager) {
             Chatooly.backgroundManager.setTransparent(value);
         }

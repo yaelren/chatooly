@@ -118,7 +118,10 @@ const settings = {
     isPlaying: true,
 
     // Video loaded state
-    videoLoaded: false
+    videoLoaded: false,
+
+    // Video fit mode: 'contain' | 'cover' | 'stretch'
+    videoFit: 'contain'
 };
 
 // Expose settings globally for ui.js
@@ -330,8 +333,10 @@ window.regenerateNoise = regenerateNoise;
 // ============================================
 
 /**
- * Calculate video dimensions to cover canvas (fill/crop mode)
- * Video fills the entire canvas, cropping edges if aspect ratios differ
+ * Calculate video dimensions based on fit mode
+ * - contain: Video fits entirely inside canvas, letterboxed (no cropping)
+ * - cover: Video fills entire canvas, cropping edges if needed
+ * - stretch: Video stretches to exactly match canvas (may distort)
  */
 function calculateVideoRect(videoWidth, videoHeight) {
     const canvasAspect = canvas.width / canvas.height;
@@ -339,18 +344,42 @@ function calculateVideoRect(videoWidth, videoHeight) {
 
     let width, height, x, y;
 
-    if (videoAspect > canvasAspect) {
-        // Video is wider than canvas - fit to height, crop sides
-        height = canvas.height;
-        width = canvas.height * videoAspect;
-        x = (canvas.width - width) / 2;
-        y = 0;
-    } else {
-        // Video is taller than canvas - fit to width, crop top/bottom
+    if (settings.videoFit === 'stretch') {
+        // Stretch: fill entire canvas, ignore aspect ratio
         width = canvas.width;
-        height = canvas.width / videoAspect;
+        height = canvas.height;
         x = 0;
-        y = (canvas.height - height) / 2;
+        y = 0;
+    } else if (settings.videoFit === 'cover') {
+        // Cover: fill canvas, crop overflow
+        if (videoAspect > canvasAspect) {
+            // Video is wider - fit to height, crop sides
+            height = canvas.height;
+            width = canvas.height * videoAspect;
+            x = (canvas.width - width) / 2;
+            y = 0;
+        } else {
+            // Video is taller - fit to width, crop top/bottom
+            width = canvas.width;
+            height = canvas.width / videoAspect;
+            x = 0;
+            y = (canvas.height - height) / 2;
+        }
+    } else {
+        // Contain (default): fit inside canvas, letterbox
+        if (videoAspect > canvasAspect) {
+            // Video is wider - fit to width, letterbox top/bottom
+            width = canvas.width;
+            height = canvas.width / videoAspect;
+            x = 0;
+            y = (canvas.height - height) / 2;
+        } else {
+            // Video is taller - fit to height, letterbox sides
+            height = canvas.height;
+            width = canvas.height * videoAspect;
+            x = (canvas.width - width) / 2;
+            y = 0;
+        }
     }
 
     return { x, y, width, height };
@@ -378,6 +407,7 @@ async function loadVideo(file) {
                 `${sourceVideo.duration.toFixed(2)}s`;
             document.getElementById('video-frames').textContent = totalFrames;
             document.getElementById('video-info').style.display = 'block';
+            document.getElementById('video-fit-group').style.display = 'block';
 
             // Hide upload area, show video info
             document.getElementById('video-upload-area').style.display = 'none';
@@ -522,11 +552,27 @@ function clearVideo() {
     currentFrame = 0;
 
     document.getElementById('video-info').style.display = 'none';
+    document.getElementById('video-fit-group').style.display = 'none';
     document.getElementById('video-upload-area').style.display = 'flex';
     document.getElementById('video-upload').value = '';
 }
 
 window.clearVideo = clearVideo;
+
+/**
+ * Recalculate video rect (called when fit mode changes)
+ */
+function recalculateVideoRect() {
+    if (!settings.videoLoaded) return;
+
+    if (mediaType === 'sequence' && sequenceWidth > 0) {
+        videoRect = calculateVideoRect(sequenceWidth, sequenceHeight);
+    } else if (sourceVideo.videoWidth > 0) {
+        videoRect = calculateVideoRect(sourceVideo.videoWidth, sourceVideo.videoHeight);
+    }
+}
+
+window.recalculateVideoRect = recalculateVideoRect;
 
 // ============================================
 // Media Type Detection
@@ -609,6 +655,7 @@ async function loadPNGSequence(files) {
                 `${(files.length / frameRate).toFixed(2)}s`;
             document.getElementById('video-frames').textContent = totalFrames;
             document.getElementById('video-info').style.display = 'block';
+            document.getElementById('video-fit-group').style.display = 'block';
             document.getElementById('video-upload-area').style.display = 'none';
 
             // Store first bitmap

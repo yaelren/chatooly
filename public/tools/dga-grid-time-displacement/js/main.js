@@ -24,6 +24,31 @@ offscreenCanvas.width = 1920;
 offscreenCanvas.height = 1080;
 const offscreenCtx = offscreenCanvas.getContext('2d');
 
+// ============================================
+// Canvas Size Handling
+// ============================================
+
+function setCanvasDimensions() {
+    const rect = canvas.getBoundingClientRect();
+
+    if (rect.width > 0 && rect.height > 0) {
+        // Set canvas dimensions to match CSS size
+        canvas.width = Math.floor(rect.width);
+        canvas.height = Math.floor(rect.height);
+
+        // Update offscreen canvas to match
+        offscreenCanvas.width = canvas.width;
+        offscreenCanvas.height = canvas.height;
+    } else {
+        canvas.width = 1920;
+        canvas.height = 1080;
+        offscreenCanvas.width = 1920;
+        offscreenCanvas.height = 1080;
+    }
+
+    console.log('Canvas dimensions set to:', canvas.width, 'x', canvas.height);
+}
+
 // Frame buffer for smooth playback
 let frameBuffer = [];
 let frameRate = 30;
@@ -305,7 +330,8 @@ window.regenerateNoise = regenerateNoise;
 // ============================================
 
 /**
- * Calculate letterbox dimensions for video
+ * Calculate video dimensions to cover canvas (fill/crop mode)
+ * Video fills the entire canvas, cropping edges if aspect ratios differ
  */
 function calculateVideoRect(videoWidth, videoHeight) {
     const canvasAspect = canvas.width / canvas.height;
@@ -314,17 +340,17 @@ function calculateVideoRect(videoWidth, videoHeight) {
     let width, height, x, y;
 
     if (videoAspect > canvasAspect) {
-        // Video is wider - fit to width
-        width = canvas.width;
-        height = canvas.width / videoAspect;
-        x = 0;
-        y = (canvas.height - height) / 2;
-    } else {
-        // Video is taller - fit to height
+        // Video is wider than canvas - fit to height, crop sides
         height = canvas.height;
         width = canvas.height * videoAspect;
         x = (canvas.width - width) / 2;
         y = 0;
+    } else {
+        // Video is taller than canvas - fit to width, crop top/bottom
+        width = canvas.width;
+        height = canvas.width / videoAspect;
+        x = 0;
+        y = (canvas.height - height) / 2;
     }
 
     return { x, y, width, height };
@@ -1035,19 +1061,32 @@ window.renderHighResolution = function(targetCanvas, scale) {
 // Canvas Resize Handling
 // ============================================
 
-document.addEventListener('chatooly:canvas-resized', (e) => {
+function handleResize() {
+    setCanvasDimensions();
+
     // Update video rect if needed
     if (settings.videoLoaded) {
-        videoRect = calculateVideoRect(sourceVideo.videoWidth, sourceVideo.videoHeight);
+        if (mediaType === 'sequence' && sequenceWidth > 0) {
+            videoRect = calculateVideoRect(sequenceWidth, sequenceHeight);
+        } else {
+            videoRect = calculateVideoRect(sourceVideo.videoWidth, sourceVideo.videoHeight);
+        }
     }
+
     render();
-});
+}
+
+// Listen for Chatooly resize events
+document.addEventListener('chatooly:canvas-resized', handleResize);
 
 // ============================================
 // Initialization
 // ============================================
 
 function init() {
+    // Set canvas dimensions based on actual container size
+    setCanvasDimensions();
+
     // Initialize background manager
     if (window.Chatooly && window.Chatooly.backgroundManager) {
         Chatooly.backgroundManager.init(canvas);
@@ -1058,6 +1097,24 @@ function init() {
 
     // Start animation loop
     startAnimation();
+
+    // Handle window resize
+    window.addEventListener('resize', handleResize);
+
+    // ResizeObserver for container
+    if (typeof ResizeObserver !== 'undefined') {
+        let resizeTimeout = null;
+        const debouncedResize = () => {
+            if (resizeTimeout) clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(handleResize, 50);
+        };
+
+        const resizeObserver = new ResizeObserver(debouncedResize);
+        resizeObserver.observe(canvas);
+        if (canvas.parentElement) {
+            resizeObserver.observe(canvas.parentElement);
+        }
+    }
 
     console.log('Grid Time Displacement initialized');
 }

@@ -18,4 +18,6 @@ window.ChatoolyConfig = {
     description: "Advanced material capture design tool for 3D artists. Create, edit, and export MatCaps and GLB models.",  // Brief description of what your tool does
     version: "1.0.0",
     author: "dekalo"        // Your name or handle
+,
+    createdAt: "2026-01-13"
 };

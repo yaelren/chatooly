@@ -18,4 +18,6 @@ window.ChatoolyConfig = {
     description: "Create stunning 3D pillar charts from CSV data with customizable themes, materials, and GSAP animations",
     version: "1.0.0",
     author: "Claude Code"
+,
+    createdAt: "2025-12-18"
 };

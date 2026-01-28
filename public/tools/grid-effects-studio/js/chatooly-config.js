@@ -18,4 +18,6 @@ window.ChatoolyConfig = {
     description: "יצירת מגוון גרידים דו-ממדיים עם אפקטים מתקדמים, אנימציות, חיבורים ואינטראקטיביות",
     version: "2.0.0",
     author: "Claude Code"
+,
+    createdAt: "2025-12-25"
 };

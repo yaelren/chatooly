@@ -18,4 +18,6 @@ window.ChatoolyConfig = {
     description: "Convert text into letters made of geometric shapes — dots, lines, or circles",  // Brief description of what your tool does
     version: "1.0.0",
     author: ""        // Your name or handle (update this)
+,
+    createdAt: "2025-10-29"
 };

@@ -18,4 +18,6 @@ window.ChatoolyConfig = {
     description: "Build text and shapes using Tetris blocks with stunning 3D effects, rotation, and lighting",
     version: "1.0.0",
     author: "Claude Code"
+,
+    createdAt: "2025-12-22"
 };

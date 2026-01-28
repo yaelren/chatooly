@@ -18,4 +18,6 @@ window.ChatoolyConfig = {
     description: "Transform images into ASCII art with multiple aesthetics and intelligent text integration using WebGL shaders",
     version: "1.0.0",
     author: "Claude Code"
+,
+    createdAt: "2025-12-16"
 };

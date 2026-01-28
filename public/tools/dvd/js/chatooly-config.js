@@ -18,4 +18,6 @@ window.ChatoolyConfig = {
     description: "A customizable DVD screensaver animation tool with retro effects.",  // Brief description of what your tool does
     version: "1.0.0",
     author: "STUDIO VIDEO"        // Your name or handle
+,
+    createdAt: "2025-12-08"
 };

@@ -12,4 +12,6 @@ window.ChatoolyConfig = {
     author: "Chatooly",
     resolution: 2,
     buttonPosition: "bottom-right"
+,
+    createdAt: "2025-12-17"
 };

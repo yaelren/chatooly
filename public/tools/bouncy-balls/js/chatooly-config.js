@@ -18,4 +18,6 @@ window.ChatoolyConfig = {
     description: "Interactive physics simulation with bouncing balls you can control and customize",  // Brief description of what your tool does
     version: "1.0.0",
     author: "Claude Code"        // Your name or handle
+,
+    createdAt: "2025-12-10"
 };

@@ -18,4 +18,6 @@ window.ChatoolyConfig = {
     description: "Transform static bar chart screenshots into dynamic 3D sculptural experiences with advanced materials, lighting, and motion",
     version: "1.0.0",
     author: "Claude Code"
+,
+    createdAt: "2025-12-17"
 };

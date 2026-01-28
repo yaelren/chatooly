@@ -52,11 +52,13 @@ async function readToolMetadata(toolPath, toolSlug) {
             const authorMatch = configContent.match(/author:\s*['"`]([^'"`]+)['"`]/);
             const categoryMatch = configContent.match(/category:\s*['"`]([^'"`]+)['"`]/);
             const tagsMatch = configContent.match(/tags:\s*\[(.*?)\]/s);
-            
+            const createdAtMatch = configContent.match(/createdAt:\s*['"`]([^'"`]+)['"`]/);
+
             if (nameMatch) metadata.name = nameMatch[1];
             if (descMatch) metadata.description = descMatch[1];
             if (authorMatch) metadata.author = authorMatch[1];
             if (categoryMatch) metadata.category = categoryMatch[1];
+            if (createdAtMatch) metadata.createdAt = createdAtMatch[1];
             if (tagsMatch) {
                 const tagsStr = tagsMatch[1];
                 metadata.tags = tagsStr
@@ -65,10 +67,6 @@ async function readToolMetadata(toolPath, toolSlug) {
                     .filter(tag => tag.length > 0);
             }
         }
-        
-        // Get file stats for creation time
-        const stats = fs.statSync(path.join(toolPath, 'index.html'));
-        metadata.createdAt = stats.birthtime.toISOString();
         
     } catch (error) {
         console.warn(`Could not read metadata for ${toolSlug}:`, error.message);

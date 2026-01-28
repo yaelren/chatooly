@@ -18,4 +18,6 @@ window.ChatoolyConfig = {
     description: "Click anywhere to add animated stickers from text or uploaded images",  // Brief description of what your tool does
     version: "1.0.0",
     author: ""        // Your name or handle
+,
+    createdAt: "2025-11-06"
 };

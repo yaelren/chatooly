@@ -18,4 +18,6 @@ window.ChatoolyConfig = {
     description: "Create beautiful animated flower gardens with swaying petals, growing stems, and dancing butterflies",
     version: "1.0.0",
     author: "Claude Code"
+,
+    createdAt: "2025-12-15"
 };

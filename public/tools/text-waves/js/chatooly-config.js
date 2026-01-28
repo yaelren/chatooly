@@ -18,4 +18,6 @@ window.ChatoolyConfig = {
     description: "Create animated text flowing along customizable wave patterns with sine, cosine, and tangent functions",
     version: "1.0.0",
     author: "Chatooly"        // Your name or handle
+,
+    createdAt: "2025-10-04"
 };

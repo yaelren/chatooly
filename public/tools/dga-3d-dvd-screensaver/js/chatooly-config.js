@@ -21,4 +21,6 @@ window.ChatoolyConfig = {
 
     // OPTIONAL: Publishing target
     publishTarget: "chatooly"  // "chatooly" (Studio Video Tool Hub) or "designers" (Designers Tool Hub)
+,
+    createdAt: "2026-01-12"
 };

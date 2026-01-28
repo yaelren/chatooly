@@ -18,4 +18,6 @@ window.ChatoolyConfig = {
     description: "Type text and watch each letter become a bead in a physics-based chain that swings and responds to mouse interaction",  // Brief description of what your tool does
     version: "1.0.0",
     author: ""        // Your name or handle
+,
+    createdAt: "2025-11-30"
 };

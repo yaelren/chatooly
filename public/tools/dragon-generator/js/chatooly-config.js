@@ -18,4 +18,6 @@ window.ChatoolyConfig = {
     description: "Create complex, animated visual patterns with flowing, customizable dragon-like trails",
     version: "1.0.0",
     author: "The Boss"
+,
+    createdAt: "2025-10-21"
 };

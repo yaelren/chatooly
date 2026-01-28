@@ -18,4 +18,6 @@ window.ChatoolyConfig = {
     description: "Create professional employer brand materials and visual assets for recruitment and HR purposes",  // Brief description of what your tool does
     version: "1.0.0",
     author: "Yael Renous - Studio Video"        // Your name or handle
+,
+    createdAt: "2025-11-06"
 };

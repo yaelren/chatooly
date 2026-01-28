@@ -18,4 +18,6 @@ window.ChatoolyConfig = {
     description: "Create animated sliced typography with interactive controls. Supports custom fonts, images, and multiple animation modes.",  // Brief description of what your tool does
     version: "1.0.0",
     author: "Omer"        // Your name or handle
+,
+    createdAt: "2025-12-04"
 };

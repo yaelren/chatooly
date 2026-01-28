@@ -18,4 +18,6 @@ window.ChatoolyConfig = {
     description: "Transform images into animated dither art using custom characters and color palettes",  // Brief description of what your tool does
     version: "1.0.0",
     author: "Studio Video"        // Your name or handle
+,
+    createdAt: "2025-10-29"
 };

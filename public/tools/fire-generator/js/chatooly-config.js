@@ -18,4 +18,6 @@ window.ChatoolyConfig = {
     description: "Creates an 8-bit fire/flame animation with customizable size, smoke, turbulence, and wind",
     version: "1.0.0",
     author: "Amnon"
+,
+    createdAt: "2025-10-21"
 };

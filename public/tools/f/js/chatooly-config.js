@@ -18,4 +18,6 @@ window.ChatoolyConfig = {
     description: "",  // Brief description of what your tool does
     version: "1.0.0",
     author: ""        // Your name or handle
+,
+    createdAt: "2025-11-06"
 };

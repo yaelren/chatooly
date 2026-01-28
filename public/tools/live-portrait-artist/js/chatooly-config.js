@@ -18,4 +18,6 @@ window.ChatoolyConfig = {
     description: "Transform realistic portraits into live illustration performances with artistic controls and playback",
     version: "1.0.0",
     author: "Claude Code"
+,
+    createdAt: "2025-12-15"
 };

@@ -18,4 +18,6 @@ window.ChatoolyConfig = {
     description: "Liquid typography tool with interactive particles",  // Description
     version: "1.0.0",
     author: "Homer Zimmerman"        // Author name
+,
+    createdAt: "2025-11-20"
 };

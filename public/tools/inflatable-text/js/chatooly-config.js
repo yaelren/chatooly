@@ -18,4 +18,6 @@ window.ChatoolyConfig = {
     description: "Type words and watch letters inflate into floating 3D balloons with realistic physics",
     version: "1.0.0",
     author: "Studio Video"
+,
+    createdAt: "2025-11-02"
 };

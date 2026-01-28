@@ -18,4 +18,6 @@ window.ChatoolyConfig = {
     description: "Create stunning animated backgrounds for presentations with a variety of dramatic, animated, and material styles",
     version: "1.0.0",
     author: "Claude Code"
+,
+    createdAt: "2025-12-23"
 };

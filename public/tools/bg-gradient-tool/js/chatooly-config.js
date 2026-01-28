@@ -13,4 +13,6 @@ window.ChatoolyConfig = {
     description: "Control the movement of multiple gradient colors and loop at a chosen duration.",
     version: "1.0.0",
     author: "Guy Garibian"
+,
+    createdAt: "2025-10-21"
 };

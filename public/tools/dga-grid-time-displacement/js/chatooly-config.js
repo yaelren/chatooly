@@ -13,4 +13,6 @@ window.ChatoolyConfig = {
     version: "1.0.0",
     author: "Yael Renous - Studio Video",
     publishTarget: "chatooly"
+,
+    createdAt: "2026-01-13"
 };

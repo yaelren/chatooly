@@ -18,4 +18,6 @@ window.ChatoolyConfig = {
     description: "Create dynamic kinetic text animations with floating, rotating, pulsing, and particle effects",
     version: "1.0.0",
     author: "Claude Code"
+,
+    createdAt: "2025-12-17"
 };

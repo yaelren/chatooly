@@ -19,4 +19,6 @@ window.ChatoolyConfig = {
     version: "1.0.0",
     author: "Yael Renous - Studio Video",
     publishTarget: "chatooly"  // "chatooly" (Studio Video Tool Hub) or "designers" (Designers Tool Hub)
+,
+    createdAt: "2026-01-07"
 };

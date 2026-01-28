@@ -18,4 +18,6 @@ window.ChatoolyConfig = {
     description: "a text array in motion generator",  // Brief description of what your tool does
     version: "1.0.0",
     author: "homri"        // Your name or handle
+,
+    createdAt: "2025-10-21"
 };

@@ -18,4 +18,6 @@ window.ChatoolyConfig = {
     description: "Professional 3D model viewer with advanced lighting, HDRI environments, animations, and high-quality export capabilities",  // Brief description of what your tool does
     version: "1.0.0",
     author: "Claude Code"        // Your name or handle
+,
+    createdAt: "2025-11-25"
 };

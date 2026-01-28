@@ -41,6 +41,66 @@ header {
     display: none;
 }
 
+/* Tools Controls */
+.tools-controls {
+    display: flex;
+    gap: var(--chatooly-spacing-md, 16px);
+    margin-bottom: 64px;
+    align-items: center;
+    flex-wrap: wrap;
+    width: 50%;
+}
+
+.search-input {
+    flex: 1;
+    min-width: 200px;
+    padding: 4px 12px;
+    font-size: var(--chatooly-font-size-base, 1rem);
+    background: var(--chatooly-color-bg-secondary, #2a2a2a);
+    border: 1px solid var(--chatooly-color-border, #444);
+    border-radius: 4px;
+    color: var(--chatooly-color-text-primary, #e5e5e5);
+    outline: none;
+    transition: border-color var(--chatooly-transition-normal, 0.2s ease);
+}
+
+.search-input:focus {
+    border-color: var(--chatooly-color-accent-primary, #007acc);
+}
+
+.search-input::placeholder {
+    color: var(--chatooly-color-text-muted, #888);
+}
+
+.sort-buttons {
+    display: flex;
+    gap: var(--chatooly-spacing-xs, 4px);
+}
+
+.sort-btn {
+    padding: 4px 12px;
+    font-size: var(--chatooly-font-size-sm, 0.875rem);
+    font-weight: var(--chatooly-font-weight-medium, 500);
+    background: var(--chatooly-color-bg-secondary, #2a2a2a);
+    border: 1px solid var(--chatooly-color-border, #444);
+    border-radius: 4px;
+    color: var(--chatooly-color-text-secondary, #ccc);
+    cursor: pointer;
+    transition: all var(--chatooly-transition-normal, 0.2s ease);
+    min-width: 70px;
+}
+
+.sort-btn:hover {
+    background: var(--chatooly-color-bg-tertiary, #333);
+    border-color: var(--chatooly-color-text-secondary, #ccc);
+}
+
+.sort-btn.active {
+    background: var(--chatooly-color-text-primary, #e5e5e5);
+    color: var(--chatooly-color-bg-primary, #1a1a1a);
+    border-color: var(--chatooly-color-text-primary, #e5e5e5);
+}
+
 /* Tools Section */
 .tools-section {
     margin-bottom: var(--chatooly-spacing-2xl, 48px);
@@ -92,13 +152,18 @@ header {
     font-size: 40px;
 }
 
-.tool-creator {
+.tool-meta {
     font-size: 40px;
     color: var(--chatooly-color-text-secondary, #ccc);
     font-weight: var(--chatooly-font-weight-normal, 400);
     margin: 0;
     padding: 0;
     line-height: 1;
+}
+
+.tool-date {
+    font-size: 20px;
+    color: var(--chatooly-color-text-muted, #888);
 }
 
 /* No Tools State */
@@ -129,8 +194,35 @@ header {
         font-size: var(--chatooly-font-size-2xl, 2rem);
     }
 
+    .tools-controls {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+    }
+
+    .search-input {
+        min-width: 100%;
+    }
+
+    .sort-buttons {
+        justify-content: center;
+    }
+
+    .sort-btn {
+        flex: 1;
+        min-width: 70px;
+    }
+
     .tool-name {
         font-size: 60px;
+    }
+
+    .tool-meta {
+        font-size: 24px;
+    }
+
+    .tool-date {
+        font-size: 14px;
     }
 }
 
@@ -139,12 +231,22 @@ header {
         font-size: var(--chatooly-font-size-xl, 1.5rem);
     }
 
+    .sort-btn {
+        padding: 4px 8px;
+        font-size: 0.75rem;
+        min-width: 50px;
+    }
+
     .tool-name {
         font-size: 40px;
     }
 
-    .tool-creator {
-        font-size: 20px;
+    .tool-meta {
+        font-size: 16px;
+    }
+
+    .tool-date {
+        font-size: 12px;
     }
 }
 
